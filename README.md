@@ -1,5 +1,5 @@
 # Smart Contract Security Portfolio
-![image](https://github.com/ThomasHeim11/Smart-Contract-Security-Portfolio/assets/106417552/17c085d9-48aa-4778-905e-dae4055efbea)
+![image](https://github.com/ThomasHeim11/Smart-Contract-Security-Portfolio/assets/106417552/8d43c6a1-d4b4-4af0-b8bf-eeb50f19e430)
 
 ## Overview
 
