@@ -13,24 +13,14 @@ In this portfolio, you'll find comprehensive smart contract audits, demonstratin
 
 ### 2. **Bug Bounty Program**
 
-I have implemented an active bug bounty program to encourage collaboration with the wider community. This initiative not only fosters responsible disclosure but also showcases my commitment to ongoing security improvement. Ethical hackers and security enthusiasts are invited to actively participate and contribute to the fortification of smart contracts.
-
-## How to Engage
-
-1. **Audit Reports:** Explore detailed audit reports to gain insights into the security posture of the smart contracts included in this portfolio.
-
-2. **Bug Bounty Participation:** Encourage security researchers to actively participate in the bug bounty program. Refer to the guidelines for submission details and rewards.
-
-3. **Community Collaboration:** Join the discussion to collaborate with fellow developers and security experts. Share experiences, insights, and best practices to contribute to the collective improvement of smart contract security.
+I've been hands-on in bug bounties, actively participating. This experience not only encourages responsible disclosure but also highlights my commitment to continually improving security. Explore the results in this portfolio, where security isn't just a priority, but an ongoing journey.
 
 ## Contributions Welcome
 
-I invite recruiters and the community to review and engage with this portfolio. It serves as a showcase of my skills and a commitment to driving innovation while maintaining the highest standards of security.
+I invite devs and the community to review and engage with this portfolio. It serves as a showcase of my skills and a commitment to driving innovation while maintaining the highest standards of security.
 
 ## Stay Connected
 
 Stay updated on the latest developments and connect with me:
-
-- Twitter: [@YourHandle](https://twitter.com/YourHandle)
 - LinkedIn: [Your Profile](https://www.linkedin.com/in/thomas-heim11/)
 
