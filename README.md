@@ -22,5 +22,5 @@ I invite devs and the community to review and engage with this portfolio. It ser
 ## Stay Connected
 
 Stay updated on the latest developments and connect with me:
-- LinkedIn: [Your Profile](https://www.linkedin.com/in/thomas-heim11/)
+- LinkedIn: [Thomas Heim](https://www.linkedin.com/in/thomas-heim11/)
 
