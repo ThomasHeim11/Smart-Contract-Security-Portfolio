@@ -13,7 +13,7 @@ import {Base64} from "lib/base64/base64.sol";
 ///    1. `address[] participants`: A list of addresses that enter. You can use this to enter yourself multiple times, or yourself and a group of your friends.
 /// 2. Duplicate addresses are not allowed
 /// 3. Users are allowed to get a refund of their ticket & `value` if they call the `refund` function
-/// 4. Every X seconds, the raffle will be able to draw a winner and be minted a random puppy
+/// 4. Every X seconds, the raffle¨ will be able to draw a winner and be minted a random puppy
 /// 5. The owner of the protocol will set a feeAddress to take a cut of the `value`, and the rest of the funds will be sent to the winner of the puppy.
 contract PuppyRaffle is ERC721, Ownable {
     using Address for address payable;
