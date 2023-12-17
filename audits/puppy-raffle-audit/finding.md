@@ -12,4 +12,15 @@ If we have 2 sets of 100 players enter, the gas cost will be as such:
 
 - 1st 100 players: -6252048 gas
 - 2nd 100 players: -18068138 gas
-  **Recomnended Mitigation:**
+
+This is more than 3x more expensive for the second 100 players.
+
+```javascript
+// @audit Dos Attack
+ for (uint256 i = 0; i < players.length - 1; i++) {
+            for (uint256 j = i + 1; j < players.length; j++) {
+                require(players[i] != players[j], "PuppyRaffle: Duplicate player");
+            }
+```
+
+**Recomnended Mitigation:**
