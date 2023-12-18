@@ -66,3 +66,9 @@ function test_denialOfService() public {
 
 1. Consider allowing duplicates. Users can make new wallets address anyways, so duplicate check dosen't prevent the same person form entering multiple times, only the same wallet address.
 2. Consider using a mapping to check for duplicates. This would allow constant time lookup of whether a user has already entered.
+
+## [L-1] Solidity pragma should be specific, not wide
+
+Consider using a specific version of Solidity in your contracts instead of a wide version. FO for example, instead of `pragma solidity ^0.8.0` use `pragma solidity 0.8.8`
+
+- Found in src/PuppyRaffle.sol: 32:23:35
