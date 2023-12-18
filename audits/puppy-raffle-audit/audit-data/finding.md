@@ -80,13 +80,27 @@ Instances:
 - `PuppyRaffle::rareImageUri` should be `constant`
 - `PuppyRaffle::rareImageUri` should be `constant`
 
-## [I-1] Solidity pragma should be specific, not wide
+### [G-2] Storage variable in a loop should be cached
+
+```diff
++    uint256 playerLength = players.lenght;
+-    for (uint256 i = 0; i < players.length - 1; i++) {
++    for (uint256 i = 0; i < playersLength - 1; i++) {
+-           for (uint256 j = 1; + 1; j < players.length; j++) {
++           for (uint256 j = 1; + 1; j < playersLength; j++) {
+                require(players[i] != players[j], "PuppyRaffle: Duplicate player");
+            }
+        }
+
+```
+
+### [I-1] Solidity pragma should be specific, not wide
 
 Consider using a specific version of Solidity in your contracts instead of a wide version. FO for example, instead of `pragma solidity ^0.8.0` use `pragma solidity 0.8.8`
 
 - Found in src/PuppyRaffle.sol: 32:23:35
 
-## [I-2] Using an outdated version of Solidity is not recommended
+### [I-2] Using an outdated version of Solidity is not recommended
 
 solc frequently releases new compiler versions. Using an old version prevents access to new Solidity security checks. We also recommend complex pragma statement.
 
@@ -101,3 +115,11 @@ The recommendations take into account:
 - Risk of new language features
 - Risk of known bugs
 - Use a simple pragma version that allows any of these versions. Consider using the latest version of Solidity for testing.
+
+### [I-3] Rising checks for `address(0)` when assigning values to address state variable
+
+Assigning values to address state variables without checking for `address(0)`
+
+- Found in src/PuppyRaffle.sol: 8862:23:35
+- Found in src/PuppyRaffle.sol: 3165:24:35
+- Found in src/PuppyRaffle.sol:m 9809:26:35
