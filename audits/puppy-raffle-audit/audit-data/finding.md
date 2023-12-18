@@ -439,3 +439,7 @@ uint256 public constant FEE_PRECENTAGE = 20;
 uint256 public constant POOL_PRECISION= 100;
 
 ```
+
+### [I-6] State changes are missing events
+
+### [I-7] `PuppyRaffle::isActivePlayer` is never used and should be removed
