@@ -191,6 +191,36 @@ function test_denialOfService() public {
 1. Consider allowing duplicates. Users can make new wallets address anyways, so duplicate check dosen't prevent the same person form entering multiple times, only the same wallet address.
 2. Consider using a mapping to check for duplicates. This would allow constant time lookup of whether a user has already entered.
 
+# Low
+
+### [L-1] `PuppyRaffle:getActivePlayerIndex` return 0 for non-existing players and for players at index 0, causing a player at index 0 to incorrectly think they hva not entered the raffle
+
+**Description:** If a player is in the `PuppyRaffle:players` array at index 0, this will return 0, but according to the natspec, it will also return 0 if the player is not in the array.
+
+```javascript
+     function getActivePlayerIndex(address player) external view returns (uint256) {
+        for (uint256 i = 0; i < players.length; i++) {
+            if (players[i] == player) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+```
+
+**Impact:** A player at index 0 may incorrectly think they have not entered the raffle, and attempt to enter the raffle again, wasting gas.
+
+**Proof of Concept:**
+
+1. User enter the raffle. they are the first entrant.
+2. `PuppyRaffle::getActivePlayerIndex` return 0.
+3. User thinks they have not entered correctly due to the function documentation.
+
+**Recommended Mitigation:** The easiest recommendation would be to revert if the player is not in the array instead of returning 0.
+
+You could also reserve the 0th position for any competition, but a better solution might be to return an `int256` where the function returns -1 if the player is not active.
+
 # Gas
 
 ## [G-1] Unchanged state variables should be declared constant or immutable.
