@@ -72,3 +72,19 @@ function test_denialOfService() public {
 Consider using a specific version of Solidity in your contracts instead of a wide version. FO for example, instead of `pragma solidity ^0.8.0` use `pragma solidity 0.8.8`
 
 - Found in src/PuppyRaffle.sol: 32:23:35
+
+## [I-2] Using an outdated version of Solidity is not recommended
+
+solc frequently releases new compiler versions. Using an old version prevents access to new Solidity security checks. We also recommend complex pragma statement.
+
+**Recommendations**
+Deploy with any of the following Solidity versions:
+
+`0.8.18`
+The recommendations take into account:
+
+- Risk related to recent releases
+- Risk of complex cod generation changes
+- Risk of new language features
+- Risk of known bugs
+- Use a simple pragma version that allows any of these versions. Consider using the latest version of Solidity for testing.
