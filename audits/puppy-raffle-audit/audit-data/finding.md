@@ -207,6 +207,94 @@ function test_denialOfService() public {
 1. Consider allowing duplicates. Users can make new wallets address anyways, so duplicate check dosen't prevent the same person form entering multiple times, only the same wallet address.
 2. Consider using a mapping to check for duplicates. This would allow constant time lookup of whether a user has already entered.
 
+### [H-3] Integer overflow of 'PuppyRaffle:totalFees loses fees
+
+**Description:** In solidity version prior to `0.8.0` integers where subject to integer overflows.
+
+```javascript
+uint64 myVar = type(uint64).max
+// 18446744073709551615
+myVar = myVar + 1
+// myVar will be 0
+```
+
+**Impact:** In `PuppyRaffle::selectWinner`, `totalFees` are accumulated for the `feeAddress` to collect later in `PuppyRaffle:withdrawFees`. However, if the `totalFees` variable overflows, the `feeAddress` my not collect the correct amount of fees, leaving the fees permanently stuck in the contract.
+
+**Proof of Concept:**
+
+1. We conclude a raffle of 4 players
+2. We then have 89 players enter a new raffle, and concluded the raffle
+3. `totalFees` will be:
+
+```javascript
+totalFees 80000000000000000 + 1780000000000000
+// and this will overflow!
+totalFees = 153255922629044384
+```
+
+4. You will not be able to withdraw, due to the line in `PuppyRaffle::withdrawFees`:
+
+```javascript
+require(address(this).balance ==
+  uint256(totalFees), "PuppyRaffle: There are currently players active!");
+```
+
+Although you could use `selfdestruct` to send ETH to this contract in order for the values to match and withdraw the feed, this is clearly the intended design of the protocol. At some point, there will be to much `balance` in the contract that the above `require` will be impossible to hit.
+
+<details>
+<summary>Code</summary>
+
+```javascript
+
+    function testTotalFeesOverflow() public playersEntered {
+        // We finish a raffle of 4 to collect some fees
+        vm.warp(block.timestamp + duration + 1);
+        vm.roll(block.number + 1);
+        puppyRaffle.selectWinner();
+        uint256 startingTotalFees = puppyRaffle.totalFees();
+        // startingTotalFees = 800000000000000000
+
+        // We then have 89 players enter a new raffle
+        uint256 playersNum = 89;
+        address[] memory players = new address[](playersNum);
+        for (uint256 i = 0; i < playersNum; i++) {
+            players[i] = address(i);
+        }
+        puppyRaffle.enterRaffle{value: entranceFee * playersNum}(players);
+        // We end the raffle
+        vm.warp(block.timestamp + duration + 1);
+        vm.roll(block.number + 1);
+
+        // And here is where the issue occurs
+        // We will now have fewer fees even though we just finished a second raffle
+        puppyRaffle.selectWinner();
+
+        uint256 endingTotalFees = puppyRaffle.totalFees();
+        console.log("ending total fees", endingTotalFees);
+        assert(endingTotalFees < startingTotalFees);
+
+        // We are also unable to withdraw any fees because of the require check
+        vm.prank(puppyRaffle.feeAddress());
+        vm.expectRevert("PuppyRaffle: There are currently players active!");
+        puppyRaffle.withdrawFees();
+    }
+```
+
+</details>
+
+**Recommended Mitigation:** There a few possible mittigations.
+
+1. Use a newer version of solidity, and a `uint256` instead of `uint64` for `PuppyRaffle::totalFees`
+2. You could also use the `SafeMath` library of OpenZeppelin for version 0.7.6 of solidity, however you would still have a hard time with the `uint64` type if to many fees are collected.
+3. Remove the balance check form `PuppyRaffle:withdrawFeed`
+
+```diff
+- require(address(this).balance == uint256(totalFees), "PuppyRaffle: There are currently players active!");
+
+```
+
+There are more attack vector with the final require, so we recommend removing it regardless.
+
 # Low
 
 ### [L-1] `PuppyRaffle:getActivePlayerIndex` return 0 for non-existing players and for players at index 0, causing a player at index 0 to incorrectly think they hva not entered the raffle
