@@ -77,7 +77,7 @@ Assisting Auditors:
 
 # About Thomas Heim
 
-Thomas Heim is a detail-oriented smart contract auditor with expertise in Solidity. He specializes in conducting thorough audits of smart contracts to ensure the security and reliability of blockchain applications. Thomas is committed to continually assessing and improving security through an ongoing consensus process. His approach is professional and thorough, making him a reliable choice for those in need of a trustworthy smart contract auditing service.
+Thomas Heim is a detail-oriented smart contract auditor with expertise in Solidity. He specializes in conducting thorough audits of smart contracts to ensure the security and reliability of your smart contracts. Thomas is committed to continually assessing and improving security through an ongoing consensus process. His approach is professional and thorough, making him a reliable choice for those in need of a trustworthy smart contract auditing service.
 
 # Disclaimer
 
@@ -127,7 +127,7 @@ Puppy Rafle is a protocol dedicated to raffling off puppy NFTs with variying rar
 | Medium   | 3                      |
 | Low      | 0                      |
 | Info     | 8                      |
-| Total    | 0                      |
+| Total    | 15                     |
 
 # Findings
 
