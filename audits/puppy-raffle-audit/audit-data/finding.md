@@ -121,6 +121,18 @@ contract ReetrancyAttacker {
     }
 ```
 
+### [H-2] Weak randomness in `PuppyRaffle::selectWinner` allows user to influence or predict the winner and predict the winning puppy
+
+**Description:** Hasing `msg.sender`, `block.timestamp`, and `block.difficulty` together creates a predictable find number. A predictable number is not a good random number. Malicious users can manipulate these values or know them or know them ahead of time to chose the winner of the raffle themselves.
+
+_Note_ This additionally mean users could front-run this function and call `refund` if they are not the winner.
+
+**Impact:** Any user can influence the winner of the raffle, winning the same money and selecting the `rarest` puppy.
+
+**Proof of Concept:**
+
+**Recommended Mitigation:**
+
 ### [M-#] Looping through players array to check to duplicates in `PuppyRaffel::enterRaffel` is a potential denial of service (DoS) attack, incrementing gas costs for future entrants.
 
 **Description:** The `PuppyRaffle::enterRaffle` function loops through the `players` array to check for duplicates. However, the longer the `PuppyRaffle::players` array is, the more checks a new player will have to make. This means the gas costs for players who enter right when the raffle stats will be dramatically lower than those who enter later. Every additional address in the `players` array, is an additional check the loop will have to make.
