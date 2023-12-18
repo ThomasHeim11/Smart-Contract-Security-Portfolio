@@ -127,11 +127,15 @@ contract ReetrancyAttacker {
 
 _Note_ This additionally mean users could front-run this function and call `refund` if they are not the winner.
 
-**Impact:** Any user can influence the winner of the raffle, winning the same money and selecting the `rarest` puppy.
+**Impact:** Any user can influence the winner of the raffle, winning the same money and selecting the `rarest` puppy. Making the entire raffle worthless id it becomes a gas war as to who wins the raffle.
 
 **Proof of Concept:**
 
-**Recommended Mitigation:**
+1. Validators can know ahead of time the `block.timestamp` and `block.difficulty` and use that to predict when/how to participate.
+2. User can mine/manipulate their `msg.sender` value to result in their address being used to generate the winner!
+3. Users can revert their `selectWinner` transaction if they don't like the winner or resulting puppy
+
+**Recommended Mitigation:** Consider using a cryptographically provable number generator such as Chainlink VRF.
 
 ### [M-#] Looping through players array to check to duplicates in `PuppyRaffel::enterRaffel` is a potential denial of service (DoS) attack, incrementing gas costs for future entrants.
 
@@ -302,5 +306,25 @@ It`s best to keep code clean and follow CEI (Checks, Effects, Interactions)
         _safeMint(winner, tokenId)
 +       (bool success) = winner.call{value: prizePool}("");
 +       require(success, "PuppyRaffle: Failed to send prize to winner"):
+
+```
+
+### [I-5] Use of "magic" numbers is discouraged
+
+It can be confusing to see number literals in a codebase, and it`s much more readable if the numbers are given a name.
+
+Example:
+
+```javascript
+    uint256 prizePool = (totalAmountCollected * 80) / 100;
+    uint256 fee = (totalAmountCollected * 20) / 100;
+```
+
+Instead you can use:
+
+```javascript
+uint256 public constant PRIZE_POOL_PERCENTAGE = 80;
+uint256 public constant FEE_PRECENTAGE = 20;
+uint256 public constant POOL_PRECISION= 100;
 
 ```
