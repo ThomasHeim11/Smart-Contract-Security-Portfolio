@@ -1,0 +1,6 @@
+[submodule "competitive_audits/voting_booth/lib/forge-std"]
+	path = competitive_audits/voting_booth/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "competitive_audits/voting_booth/lib/openzeppelin-contracts"]
+	path = competitive_audits/voting_booth/lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
