@@ -152,7 +152,7 @@ contract VotingBooth {
         // This system of voting doesn't require a strict majority to
         // pass the proposal (it didn't require 3 For votes), it just
         // requires the quorum to be reached (enough people to vote)
-        //
+        //q: why *100?
         if (totalCurrentVotes * 100 / s_totalAllowedVoters >= MIN_QUORUM) {
             // mark voting as having been completed
             s_votingComplete = true;
