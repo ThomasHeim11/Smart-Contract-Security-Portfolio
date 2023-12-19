@@ -7,7 +7,7 @@ The contract has a bug in the \_distributeRewards function related to the calcul
 The bug may lead to discrepancies in the distribution of rewards among voters, potentially favoring the last voter with a slightly higher reward due to inconsistent rounding. While this does not directly compromise the security of the contract, it affects the expected behavior and fairness of the reward distribution.
 
 **Proof of Concept:**
-The issue can be observed by analyzing the code logic in the \_distributeRewards function, specifically in the section where rewardPerVoter is calculated. By identifying the inconsistency in rounding methods, one can understand the potential impact on the final reward distribution.
+The issue can be observed by analyzing the code logic in the `VotingBooth::_distributeRewards` function, specifically in the section where rewardPerVoter is calculated. By identifying the inconsistency in rounding methods, one can understand the potential impact on the final reward distribution.
 
 **Recommended Mitigation:**
 To address this issue, it is recommended to consistently calculate rewardPerVoter for all voters using Math.mulDiv with Math.Rounding.Ceil throughout the loop. This ensures uniform rounding and prevents potential discrepancies in reward distribution. The corrected code should resemble the following:
