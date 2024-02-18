@@ -27,13 +27,8 @@ header-includes:
 
 # TSwapPool AuditAudit Report
 
-Prepared by: Thomas Heim
 Lead Auditors:
-
-- [Thomas Heim](https://www.linkedin.com/in/thomas-heim11/)
-  Lead Auditors:
-
-- xxxxxxx
+Thomas Heim
 
 # Table of Contents
 
