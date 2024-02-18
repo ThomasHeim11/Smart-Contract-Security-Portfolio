@@ -42,7 +42,7 @@ contract PoolFactory {
     }
 
     /*//////////////////////////////////////////////////////////////
-                           EXTERNAL FUNCTIONS
+                           EXTxERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
     function createPool(address tokenAddress) external returns (address) {
         if (s_pools[tokenAddress] != address(0)) {
