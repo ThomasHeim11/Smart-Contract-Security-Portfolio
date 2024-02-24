@@ -1,3 +1,126 @@
+---
+title: Thunder Loan Audit Report
+author: Thomas Heim
+date: February 24, 2024
+header-includes:
+  - \usepackage{titling}
+  - \usepackage{graphicx}
+---
+
+\begin{titlepage}
+\centering
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{logo.pdf}
+\end{figure}
+\vspace{2cm}
+{\Huge\bfseries TSwapPool Initial Audit Report\par}
+\vspace{1cm}
+{\Large Version 0.1\par}
+\vspace{2cm}
+{\Large\itshape Thomas Heim\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\maketitle
+
+# Thunder Loan Audit Report
+
+Lead Auditors:
+Thomas Heim
+
+# Table of contents
+
+<details>
+
+<summary>See table</summary>
+
+- [Thunder Loan Audit Report](#thunder-loan-audit-report)
+- [Table of contents](#table-of-contents)
+- [About Thomas Heim](#about-thomas-heim)
+- [Disclaimer](#disclaimer)
+- [Risk Classification](#risk-classification)
+- [Audit Details](#audit-details)
+  - [Scope](#scope)
+- [Protocol Summary](#protocol-summary)
+  - [Roles](#roles)
+- [Executive Summary](#executive-summary)
+  - [Issues found](#issues-found)
+- [Findings](#findings)
+  - [High](#high)
+    - [\[H-1\] Erroneous 'ThunderLoan::updateExchangeRate' in the 'deposit' function causes protocol to think it has more fees than it really does, which blocks redemption and incorrectly sets the exchange rate.](#h-1-erroneous-thunderloanupdateexchangerate-in-the-deposit-function-causes-protocol-to-think-it-has-more-fees-than-it-really-does-which-blocks-redemption-and-incorrectly-sets-the-exchange-rate)
+    - [\[H-2\] All the funds can be stolen if the flash loan is returned using deposit()](#h-2-all-the-funds-can-be-stolen-if-the-flash-loan-is-returned-using-deposit)
+    - [\[H-2\] Mixing up variable location causes storage collision i 'ThunderLoan::s_flashLoanFee' and 'ThunderLoan::s_currentlyFlashLoaning', freezing protocol](#h-2-mixing-up-variable-location-causes-storage-collision-i-thunderloans_flashloanfee-and-thunderloans_currentlyflashloaning-freezing-protocol)
+  - [Medium](#medium)
+    - [\[M-1\] Using TSwap as price oracle leads to price and oracle manipulation attack](#m-1-using-tswap-as-price-oracle-leads-to-price-and-oracle-manipulation-attack)
+
+# About Thomas Heim
+
+Thomas Heim is a detail-oriented smart contract auditor with expertise in Solidity. He specializes in conducting thorough audits of smart contracts to ensure the security and reliability of your smart contracts. Thomas is committed to continually assessing and improving security through an ongoing consensus process. His approach is professional and thorough, making him a reliable choice for those in need of a trustworthy smart contract auditing service.
+
+# Disclaimer
+
+The team makes all effort to find as many vulnerabilities in the code in the given time period, but holds no responsibilities for the findings provided in this document. A security audit by the team is not an endorsement of the underlying business or product. The audit was time-boxed and the review of the code was solely on the security aspects of the Solidity implementation of the contracts.
+
+# Risk Classification
+
+|            |        | Impact |        |     |
+| ---------- | ------ | ------ | ------ | --- |
+|            |        | High   | Medium | Low |
+|            | High   | H      | H/M    | M   |
+| Likelihood | Medium | H/M    | M      | M/L |
+|            | Low    | M      | M/L    | L   |
+
+# Audit Details
+
+**The findings described in this document correspond the following commit hash:**
+
+```
+026da6e73fde0dd0a650d623d0411547e3188909
+```
+
+## Scope
+
+```
+#-- interfaces
+|   #-- IFlashLoanReceiver.sol
+|   #-- IPoolFactory.sol
+|   #-- ITSwapPool.sol
+|   #-- IThunderLoan.sol
+#-- protocol
+|   #-- AssetToken.sol
+|   #-- OracleUpgradeable.sol
+|   #-- ThunderLoan.sol
+#-- upgradedProtocol
+    #-- ThunderLoanUpgraded.sol
+```
+
+# Protocol Summary
+
+Puppy Rafle is a protocol dedicated to raffling off puppy NFTs with variying rarities. A portion of entrance fees go to the winner, and a fee is taken by another address decided by the protocol owner.
+
+## Roles
+
+- Owner: The owner of the protocol who has the power to upgrade the implementation.
+- Liquidity Provider: A user who deposits assets into the protocol to earn interest.
+- User: A user who takes out flash loans from the protocol.
+
+# Executive Summary
+
+## Issues found
+
+| Severity | Number of issues found |
+| -------- | ---------------------- |
+| High     | 2                      |
+| Medium   | 2                      |
+| Low      | 3                      |
+| Info     | 1                      |
+| Gas      | 2                      |
+| Total    | 10                     |
+
+# Findings
+
 ## High
 
 ### [H-1] Erroneous 'ThunderLoan::updateExchangeRate' in the 'deposit' function causes protocol to think it has more fees than it really does, which blocks redemption and incorrectly sets the exchange rate.
