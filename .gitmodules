@@ -13,3 +13,6 @@
 [submodule "7-boss-bridge-audit"]
 	path = 7-boss-bridge-audit
 	url = https://github.com/Cyfrin/7-boss-bridge-audit.git
+[submodule "audits/boss-bridge-audit"]
+	path = audits/boss-bridge-audit
+	url = https://github.com/Cyfrin/7-boss-bridge-audit.git
