@@ -51,9 +51,25 @@ Thomas Heim
   - [High](#high)
     - [\[H-1\] Erroneous 'ThunderLoan::updateExchangeRate' in the 'deposit' function causes protocol to think it has more fees than it really does, which blocks redemption and incorrectly sets the exchange rate.](#h-1-erroneous-thunderloanupdateexchangerate-in-the-deposit-function-causes-protocol-to-think-it-has-more-fees-than-it-really-does-which-blocks-redemption-and-incorrectly-sets-the-exchange-rate)
     - [\[H-2\] All the funds can be stolen if the flash loan is returned using deposit()](#h-2-all-the-funds-can-be-stolen-if-the-flash-loan-is-returned-using-deposit)
-    - [\[H-2\] Mixing up variable location causes storage collision i 'ThunderLoan::s_flashLoanFee' and 'ThunderLoan::s_currentlyFlashLoaning', freezing protocol](#h-2-mixing-up-variable-location-causes-storage-collision-i-thunderloans_flashloanfee-and-thunderloans_currentlyflashloaning-freezing-protocol)
+    - [\[H-3\] Mixing up variable location causes storage collision i 'ThunderLoan::s_flashLoanFee' and 'ThunderLoan::s_currentlyFlashLoaning', freezing protocol](#h-3-mixing-up-variable-location-causes-storage-collision-i-thunderloans_flashloanfee-and-thunderloans_currentlyflashloaning-freezing-protocol)
   - [Medium](#medium)
     - [\[M-1\] Using TSwap as price oracle leads to price and oracle manipulation attack](#m-1-using-tswap-as-price-oracle-leads-to-price-and-oracle-manipulation-attack)
+    - [\[M-2\] Centralization risk for trusted owners](#m-2-centralization-risk-for-trusted-owners)
+      - [Impact:](#impact)
+      - [Contralized owners can brick redemptions by disapproving of a specific token](#contralized-owners-can-brick-redemptions-by-disapproving-of-a-specific-token)
+  - [Low](#low)
+    - [\[L-1\] Empty Function Body - Consider commenting why](#l-1-empty-function-body---consider-commenting-why)
+    - [\[L-2\] Initializers could be front-run](#l-2-initializers-could-be-front-run)
+    - [\[L-3\] Missing critial event emissions](#l-3-missing-critial-event-emissions)
+  - [Informational](#informational)
+    - [\[I-1\] Poor Test Coverage](#i-1-poor-test-coverage)
+    - [\[I-2\] Not using `__gap[50]` for future storage collision mitigation](#i-2-not-using-__gap50-for-future-storage-collision-mitigation)
+    - [\[I-3\] Different decimals may cause confusion. ie: AssetToken has 18, but asset has 6](#i-3-different-decimals-may-cause-confusion-ie-assettoken-has-18-but-asset-has-6)
+    - [\[I-4\] Doesn't follow https://eips.ethereum.org/EIPS/eip-3156](#i-4-doesnt-follow-httpseipsethereumorgeipseip-3156)
+  - [Gas](#gas)
+    - [\[GAS-1\] Using bools for storage incurs overhead](#gas-1-using-bools-for-storage-incurs-overhead)
+    - [\[GAS-2\] Using `private` rather than `public` for constants, saves gas](#gas-2-using-private-rather-than-public-for-constants-saves-gas)
+    - [\[GAS-3\] Unnecessary SLOAD when logging new exchange rate](#gas-3-unnecessary-sload-when-logging-new-exchange-rate)
 
 # About Thomas Heim
 
@@ -112,12 +128,12 @@ Puppy Rafle is a protocol dedicated to raffling off puppy NFTs with variying rar
 
 | Severity | Number of issues found |
 | -------- | ---------------------- |
-| High     | 2                      |
+| High     | 3                      |
 | Medium   | 2                      |
 | Low      | 3                      |
 | Info     | 1                      |
 | Gas      | 2                      |
-| Total    | 10                     |
+| Total    | 11                     |
 
 # Findings
 
@@ -314,7 +330,7 @@ Notice that the **`assetLt()`** checks whether the balance of the AssetToken con
 
 **Recommended Mitigation:** Add a check in deposit() to make it impossible to use it in the same block of the flash loan. For example registring the block.number in a variable in flashloan() and checking it in deposit().
 
-### [H-2] Mixing up variable location causes storage collision i 'ThunderLoan::s_flashLoanFee' and 'ThunderLoan::s_currentlyFlashLoaning', freezing protocol
+### [H-3] Mixing up variable location causes storage collision i 'ThunderLoan::s_flashLoanFee' and 'ThunderLoan::s_currentlyFlashLoaning', freezing protocol
 
 **Description:** 'ThunderLoan.sol' has two variables in the following order:
 
@@ -405,3 +421,152 @@ The following all happens in 1 transaction.
 2. The user then repays the first flash loan, and then repays the second flash loan.
 
 **Recommended Mitigation:** Consider using a different price mechanism, like a Chanlink price feed with a Uniswap TWAP fallback oracle.
+
+### [M-2] Centralization risk for trusted owners
+
+#### Impact:
+
+Contracts have owners with privileged rights to perform admin tasks and need to be trusted to not perform malicious updates or drain funds.
+
+_Instances (2)_:
+
+```solidity
+File: src/protocol/ThunderLoan.sol
+
+223:     function setAllowedToken(IERC20 token, bool allowed) external onlyOwner returns (AssetToken) {
+
+261:     function _authorizeUpgrade(address newImplementation) internal override onlyOwner { }
+```
+
+#### Contralized owners can brick redemptions by disapproving of a specific token
+
+## Low
+
+### [L-1] Empty Function Body - Consider commenting why
+
+_Instances (1)_:
+
+```solidity
+File: src/protocol/ThunderLoan.sol
+
+261:     function _authorizeUpgrade(address newImplementation) internal override onlyOwner { }
+
+```
+
+### [L-2] Initializers could be front-run
+
+Initializers could be front-run, allowing an attacker to either set their own values, take ownership of the contract, and in the best case forcing a re-deployment
+
+_Instances (6)_:
+
+```solidity
+File: src/protocol/OracleUpgradeable.sol
+
+11:     function __Oracle_init(address poolFactoryAddress) internal onlyInitializing {
+
+```
+
+```solidity
+File: src/protocol/ThunderLoan.sol
+
+138:     function initialize(address tswapAddress) external initializer {
+
+138:     function initialize(address tswapAddress) external initializer {
+
+139:         __Ownable_init();
+
+140:         __UUPSUpgradeable_init();
+
+141:         __Oracle_init(tswapAddress);
+
+```
+
+### [L-3] Missing critial event emissions
+
+**Description:** When the `ThunderLoan::s_flashLoanFee` is updated, there is no event emitted.
+
+**Recommended Mitigation:** Emit an event when the `ThunderLoan::s_flashLoanFee` is updated.
+
+```diff
++    event FlashLoanFeeUpdated(uint256 newFee);
+.
+.
+.
+    function updateFlashLoanFee(uint256 newFee) external onlyOwner {
+        if (newFee > s_feePrecision) {
+            revert ThunderLoan__BadNewFee();
+        }
+        s_flashLoanFee = newFee;
++       emit FlashLoanFeeUpdated(newFee);
+    }
+```
+
+## Informational
+
+### [I-1] Poor Test Coverage
+
+```
+Running tests...
+| File                               | % Lines        | % Statements   | % Branches    | % Funcs        |
+| ---------------------------------- | -------------- | -------------- | ------------- | -------------- |
+| src/protocol/AssetToken.sol        | 70.00% (7/10)  | 76.92% (10/13) | 50.00% (1/2)  | 66.67% (4/6)   |
+| src/protocol/OracleUpgradeable.sol | 100.00% (6/6)  | 100.00% (9/9)  | 100.00% (0/0) | 80.00% (4/5)   |
+| src/protocol/ThunderLoan.sol       | 64.52% (40/62) | 68.35% (54/79) | 37.50% (6/16) | 71.43% (10/14) |
+```
+
+### [I-2] Not using `__gap[50]` for future storage collision mitigation
+
+### [I-3] Different decimals may cause confusion. ie: AssetToken has 18, but asset has 6
+
+### [I-4] Doesn't follow https://eips.ethereum.org/EIPS/eip-3156
+
+**Recommended Mitigation:** Aim to get test coverage up to over 90% for all files.
+
+## Gas
+
+### [GAS-1] Using bools for storage incurs overhead
+
+Use `uint256(1)` and `uint256(2)` for true/false to avoid a Gwarmaccess (100 gas), and to avoid Gsset (20000 gas) when changing from ‘false’ to ‘true’, after having been ‘true’ in the past. See [source](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/58f635312aa21f947cae5f8578638a85aa2519f5/contracts/security/ReentrancyGuard.sol#L23-L27).
+
+_Instances (1)_:
+
+```solidity
+File: src/protocol/ThunderLoan.sol
+
+98:     mapping(IERC20 token => bool currentlyFlashLoaning) private s_currentlyFlashLoaning;
+
+```
+
+### [GAS-2] Using `private` rather than `public` for constants, saves gas
+
+If needed, the values can be read from the verified contract source code, or if there are multiple values there can be a single getter function that [returns a tuple](https://github.com/code-423n4/2022-08-frax/blob/90f55a9ce4e25bceed3a74290b854341d8de6afa/src/contracts/FraxlendPair.sol#L156-L178) of the values of all currently-public constants. Saves **3406-3606 gas** in deployment gas due to the compiler not having to create non-payable getter functions for deployment calldata, not having to store the bytes of the value outside of where it's used, and not adding another entry to the method ID table
+
+_Instances (3)_:
+
+```solidity
+File: src/protocol/AssetToken.sol
+
+25:     uint256 public constant EXCHANGE_RATE_PRECISION = 1e18;
+
+```
+
+```solidity
+File: src/protocol/ThunderLoan.sol
+
+95:     uint256 public constant FLASH_LOAN_FEE = 3e15; // 0.3% ETH fee
+
+96:     uint256 public constant FEE_PRECISION = 1e18;
+
+```
+
+### [GAS-3] Unnecessary SLOAD when logging new exchange rate
+
+In `AssetToken::updateExchangeRate`, after writing the `newExchangeRate` to storage, the function reads the value from storage again to log it in the `ExchangeRateUpdated` event.
+
+To avoid the unnecessary SLOAD, you can log the value of `newExchangeRate`.
+
+```diff
+  s_exchangeRate = newExchangeRate;
+- emit ExchangeRateUpdated(s_exchangeRate);
++ emit ExchangeRateUpdated(newExchangeRate);
+```
