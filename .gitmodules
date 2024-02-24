@@ -10,3 +10,6 @@
 [submodule "competitive_audits/voting_booth/lib/openzeppelin-contracts"]
 	path = competitive_audits/voting_booth/lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
+[submodule "7-boss-bridge-audit"]
+	path = 7-boss-bridge-audit
+	url = https://github.com/Cyfrin/7-boss-bridge-audit.git
