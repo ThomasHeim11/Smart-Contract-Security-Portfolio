@@ -1,3 +1,5 @@
+## High
+
 ### [H-1] Erroneous 'ThunderLoan::updateExchangeRate' in the 'deposit' function causes protocol to think it has more fees than it really does, which blocks redemption and incorrectly sets the exchange rate.
 
 **Description:** In the ThunderLoan system, the 'exhangeRate' is responsible for calculating the exchange rate between assetTokens and underlying tokens. In a way, it`s responsible for keeping track of how many fees to give to liqudity providers.
@@ -66,3 +68,5 @@ However, the 'deposit' function, updates this rate, without collecting any fees!
     }
 
 ```
+
+## Medium
