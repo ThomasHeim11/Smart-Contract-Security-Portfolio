@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { Test, console } from "forge-std/Test.sol";
+import { Test, console2 } from "forge-std/Test.sol";
 import { BaseTest, ThunderLoan } from "./BaseTest.t.sol";
 import { AssetToken } from "../../src/protocol/AssetToken.sol";
 import { MockFlashLoanReceiver } from "../mocks/MockFlashLoanReceiver.sol";
@@ -10,6 +10,7 @@ import {BuffMockPoolFactory} from "../mocks/BuffMockPoolFactory.sol";
 import {BuffMockTSwap} from "../mocks/BuffMockTSwap.sol";
 import {IFlashLoanReceiver} from "../../src/interface/IFlashLoanReceiver.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ThunderLoanUpgraded} from "../../src/upgradedProtocol/ThunderLoanUpgraded.sol"
 
 contract ThunderLoanTest is BaseTest {
     uint256 constant AMOUNT = 10e18;
@@ -245,5 +246,20 @@ contract MaliciousFlashLoanReciver is IFlashLoanReciver{
             thunderLoan.repay(IERC20(token),amount + fee);
         }
         return true;
+    }
+
+    
+    function testUpgradeBreaks() public public {
+        uint256 feeBeforeUpgrade = thunderLoan.getFee();
+        vm.startPrank(thunderLoan.owner());
+        ThunderLoanUpgraded upgraded = new ThunderLoanUpgraded();
+        thunderLoan.upgradedToCall(address(upgraded), "");
+        uint256 feeAfterUpgrade = thunderLoan.getFee();
+        vm.stopPrank();
+
+        console2.log("Fee before: ", feeBeforeUpgrade );
+        console2.log("Fee before: ", feeAfterUpgrade );
+        asset(feeBeforeUpgrade != feeAfterUpgrade)
+
     }
 }
