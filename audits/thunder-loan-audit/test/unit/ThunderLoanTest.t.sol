@@ -5,6 +5,10 @@ import { Test, console } from "forge-std/Test.sol";
 import { BaseTest, ThunderLoan } from "./BaseTest.t.sol";
 import { AssetToken } from "../../src/protocol/AssetToken.sol";
 import { MockFlashLoanReceiver } from "../mocks/MockFlashLoanReceiver.sol";
+import {ERC20Mock} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {BuffMockPoolFactory} from "../mocks/BuffMockPoolFactory.sol";
+import {BuffMockTSwap} from "../mocks/BuffMockTSwap.sol";
+import {IFlashLoanReceiver} from "../../src/interface/IFlashLoanReceiver.sol"
 
 contract ThunderLoanTest is BaseTest {
     uint256 constant AMOUNT = 10e18;
@@ -102,4 +106,62 @@ contract ThunderLoanTest is BaseTest {
         vm.startPrank(liquidityProvider);
         thunderLoan.redeem(tokenA, amountToRedeem);
     }
+
+    // @Audit-test
+    function testOracleManipulation() public {
+        thunderLoan = new ThunderLoan();
+        tokenA = new ERC20Mock();
+        proxy = new ERC1967Proxy(address(thunderLoan), "");
+        BuffMockPoolFactory pf = new BuffMockPoolFactory(address(weth));
+        address tswapPool = pf.createPool(address(tokenA));
+        thunderLoan.initialize(address(pf));
+
+        vm.startPrank(liquidityProvider);
+        tokenA.mint(liquidityProvider, 100e18);
+        token.approve(address(tswapPool),100e18);
+        weth.mint(liquidityProvider,100e18);
+        weth.approve(address(tswapPool), 100e18);
+        BuffMockPoolFactory(tswapPool).deposit(100e18,100e18,100e18, block.timestamp);
+        vm.stopPrank();
+
+        vm.prank(thunderLoan.owner());
+        thunderLoan.setAllowedToken(tokenA,true);
+        //Fund
+        vm.startPrank(liquidityProvider);
+        tokenA.mint(liquidityProvider, 100e18);
+        tokenA.approve(address(thunderLoan), 100e18);
+        thunderLoan.deposit(tokenA, 100e18);
+        vm.stopPrank();
+
+        uint256 normalFeeCost = thunderLoan.getCalculatedFee(tokenA, 100e18);
+        console2.log("Fee:", normalFeeCost);
+
+        uint256 amountToBorrow = 50e18;
+
+
+
+    }
+}
+
+contract MaliciousFlashLoanReciver is IFlashLoanReciver{
+    ThunderLoan thunderLoan;
+    address repayAddress;
+    BuffMockTSwap;
+
+    constructor(address _tswapPool, address _thunderLoan, address _repayAddresss){
+        tswapPool = BuffMockTSwap(_tswapPool);
+        thunderLoan = ThunderLoan(_thunderLoan);
+        repayAddress = _repayAddresss;
+    }
+
+    interface IFlashLoanReceiver {
+    function executeOperation(
+        address token,
+        uint256 amount,
+        uint256 fee,
+        address initiator,
+        bytes calldata params
+    )
+        external
+        returns (bool);
 }
