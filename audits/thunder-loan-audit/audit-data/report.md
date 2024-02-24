@@ -70,3 +70,27 @@ However, the 'deposit' function, updates this rate, without collecting any fees!
 ```
 
 ## Medium
+
+### [M-1] Using TSwap as price oracle leads to price and oracle manipulation attack
+
+**Description:** The TSwap protocol is a constant product formula based on AMM(automated market maker). The price of a token is determined by how many reserves are on either side of the pool. Because of this, it is easy for malicious user to manipulate the price of a token by buying or selling a large amount of the token in the same transaction, essentially ignoring protocol fees.
+
+**Impact:** Liquidity providers will drastically reduced fees for providing liquidity.
+
+**Proof of Concept:**
+The following all happens in 1 transaction.
+
+1. User takes a flash loan from 'ThunderLoan' for 1000 'tokenA'. They are charged the original fee 'fee1'. During the flash loan, they do the following;
+   1. User sells 1000 'fee1', tanking the price.
+   2. Instead of repaying right away, the user takes out another flash loan for another 1000 'tokenA'. 4. Due to the fact that the way 'ThunderLoan' calculates price based on the 'TSwapPool' this second flash loan is substantially cheaper.
+
+```javascript
+    function getPriceInWeth(address token) public view returns (uint256) {
+        address swapPoolOfToken = IPoolFactory(s_poolFactory).getPool(token);
+        return ITSwapPool(swapPoolOfToken).getPriceOfOnePoolTokenInWeth();
+    }
+```
+
+2. The user then repays the first flash loan, and then repays the second flash loan.
+
+**Recommended Mitigation:** Consider using a different price mechanism, like a Chanlink price feed with a Uniswap TWAP fallback oracle.
