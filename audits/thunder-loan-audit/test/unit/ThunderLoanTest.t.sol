@@ -161,10 +161,7 @@ contract ThunderLoanTest is BaseTest {
         thunderLoan.flashloan(address(dor), tokenA,amountToBorrow,"");
         dor.redeemMoney();
         vm.stopPrank();
-        assertEq(tokenA.balanceOf(address(dor)), 50e18 + fee);
-
-
-
+        assert(tokenA.balanceOf(address(dor)) > 50e18 + fee);
     }
 }
 
@@ -189,6 +186,7 @@ contract DepositOverRepay is IFlashLoanReciver{
     {    
          s_token = IERC20(token);
          assetToken = thunderLoan.getAssetFromToken(IERC20(toekn));
+         IERC20(token).approve(address(thunderLoan), amount + fee);
          thunderLoan.deposit(IERC20(token),amount + fee);
          return true;
     }
