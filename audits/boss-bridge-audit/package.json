@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@openzeppelin/cli": "^2.8.2"
+    "@openzeppelin/cli": "^2.8.2",
+    "@openzeppelin/contracts": "^5.0.1"
   }
 }
