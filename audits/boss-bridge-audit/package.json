@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@openzeppelin/cli": "^2.8.2"
+  }
+}
