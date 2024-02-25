@@ -10,6 +10,3 @@
 [submodule "competitive_audits/voting_booth/lib/openzeppelin-contracts"]
 	path = competitive_audits/voting_booth/lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
-[submodule "audits/boss-bridge-audit"]
-	path = audits/boss-bridge-audit
-	url = https://github.com/ThomasHeim11/Smart-Contract-Security-Portfolio.git
