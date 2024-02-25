@@ -121,8 +121,8 @@ Withdrawals must be approved operators (or "signers"). Essentially they are expe
 | -------- | ---------------------- |
 | High     | 4                      |
 | Medium   | 1                      |
-| Low      | 1                      |
-| Info     | 0                      |
+| Low      | 3                      |
+| Info     | 1                      |
 | Gas      | 0                      |
 | Total    | 6                      |
 
