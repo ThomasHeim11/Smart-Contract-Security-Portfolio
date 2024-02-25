@@ -223,6 +223,7 @@ contract L1BossBridgeTest is Test {
     {
         return vm.sign(privateKey, MessageHashUtils.toEthSignedMessageHash(keccak256(message)));
     }
+    //@Audit-test
 
     function TestCanMoveApprovedTokenOfOtherUsers() public {
         vm.prank(user);
@@ -237,5 +238,16 @@ contract L1BossBridgeTest is Test {
         assertEq(token.balanceOf(user), 0);
         assertEq(token.balanceOf(address(vault)), depositAmount);
         vm.stopPrank();
+    }
+    //@Audit-test
+
+    function testCanTransferFromVaultToVault() public {
+        address attacker = makeAddr("attacker");
+        uint256 vaultBalance = 500 ether;
+        deal(address(token), address(vault), attacker, vaultBalance);
+
+        vm.expectEmit(address(tokenBridge));
+        emit Deposit(address(vault), attacker, vaultBalance);
+        tokenBridge.depositTokensToL2(address(vault), attacker, vaultBalance);
     }
 }
