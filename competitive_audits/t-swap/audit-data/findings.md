@@ -52,5 +52,3 @@ The issue was identified through manual review of the smart contract code and th
 ## Recommendations
 
 - **Immediate Action**: Developers should explicitly specify the target EVM version when compiling smart contracts with Solidity 0.8.20, ensuring compatibility with the intended deployment blockchain network.
-- **Code Review and Testing**: Conduct thorough code reviews and testing on various networks to ensure compatibility and functionality, especially when targeting deployment on L2 chains or networks that may not support the latest EVM opcodes.
-- **Documentation and Best Practices**: Update project documentation to highlight the importance of specifying the target EVM version during compilation. Encourage the adoption of best practices in smart contract development to prevent similar issues.
