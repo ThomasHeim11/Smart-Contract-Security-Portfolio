@@ -16,3 +16,9 @@
 [submodule "competitive_audits/moonwell/lib/openzeppelin-contracts"]
 	path = competitive_audits/moonwell/lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
+[submodule "competitive_audits/t-swap/lib/forge-std"]
+	path = competitive_audits/t-swap/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "competitive_audits/t-swap/lib/openzeppelin-contracts"]
+	path = competitive_audits/t-swap/lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
