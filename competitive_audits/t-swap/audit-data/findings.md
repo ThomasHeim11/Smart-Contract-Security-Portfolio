@@ -68,6 +68,38 @@ To mitigate the risks associated with uninitialized state variables, the followi
 
 ---
 
+### [H-2]`TSwapPool::deposit` is missing deadline check causing transactions to complete even after the deadline
+
+##Description:
+The `deposit` function accepts a deadline parameter, which according to the documentation is "The deadline for the transaction to be completed by". However, this parameter is never used. As a consequence, operationrs that add liquidity to the pool might be executed at unexpected times, in market conditions where the deposit rate is unfavorable.
+
+<!-- MEV attacks -->
+
+## Impact:
+
+Transactions could be sent when market conditions are unfavorable to deposit, even when adding a deadline parameter.
+
+##Proof of Concept:
+The `deadline` parameter is unused.
+
+## Recommended Mitigation:
+
+Consider making the following change to the function.
+
+```diff
+function deposit(
+        uint256 wethToDeposit,
+        uint256 minimumLiquidityTokensToMint, // LP tokens -> if empty, we can pick 100% (100% == 17 tokens)
+        uint256 maximumPoolTokensToDeposit,
+        uint64 deadline
+    )
+        external
++      revertIfDeadlinePassed(deadline)
+        revertIfZero(wethToDeposit)
+        returns (uint256 liquidityTokensToMint)
+    {
+```
+
 Reference: [Slither Detector Documentation: Uninitialized State Variables](https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables)
 
 ## Medium

@@ -50,6 +50,7 @@ contract PoolFactory {
         }
         string memory liquidityTokenName = string.concat("T-Swap ", IERC20(tokenAddress).name());
         string memory liquidityTokenSymbol = string.concat("ts", IERC20(tokenAddress).name());
+        //TODO Is this creating underflow?
         TSwapPool tPool = new TSwapPool(tokenAddress, i_wethToken, liquidityTokenName, liquidityTokenSymbol);
         s_pools[tokenAddress] = address(tPool);
         s_tokens[address(tPool)] = tokenAddress;
