@@ -448,3 +448,51 @@ To mitigate the risk associated with missing zero-address validation, consider t
 2. **Use Safe Assignments**: Ensure all state variable assignments and initializations verify inputs to prevent unintended states or vulnerabilities.
 
 By addressing this vulnerability and following these recommendations, the `PoolFactory` contract can be strengthened to enhance security and reliability.
+
+## [L-3] `TSwapPool::LiquidityAdded` event has parameters out of order
+
+## Description:
+
+When the `LiquidityAdded` event is emitted in the `TSwapPool::_addLiquidityMintAndTransfer` function, it logs values in an incorrect order. The `poolTokensToDeposit` value should go in the third parameter position, whereas the `wethToDeposit` value should go second.
+
+## Impact:
+
+Event emission is incorrect, leading to off-chain functions potentially malfunctioning.
+
+## Recommended Mitigation:
+
+```diff
+- emit LiquidityAdded(msg.sender, poolTokensToDeposit, wethToDeposit);
++ emit LiquidityAdded(msg.sender, wethToDeposit, poolTokensToDeposit);
+```
+
+### [L-4] Default value returned by `TSwapPool::swapExactInput` results in incorrect return value given
+
+## Description:
+
+The `swapExactInput` function is expected to return the actual amount of tokens bought by the caller. However, while it declares the named return value `ouput` it is never assigned a value, nor uses an explict return statement.
+
+## Impact:
+
+The return value will always be 0, giving incorrect information to the caller.
+
+## Recommended Mitigation:
+
+```diff
+    {
+        uint256 inputReserves = inputToken.balanceOf(address(this));
+        uint256 outputReserves = outputToken.balanceOf(address(this));
+
+-        uint256 outputAmount = getOutputAmountBasedOnInput(inputAmount, inputReserves, outputReserves);
++        output = getOutputAmountBasedOnInput(inputAmount, inputReserves, outputReserves);
+
+-        if (output < minOutputAmount) {
+-            revert TSwapPool__OutputTooLow(outputAmount, minOutputAmount);
++        if (output < minOutputAmount) {
++            revert TSwapPool__OutputTooLow(outputAmount, minOutputAmount);
+        }
+
+-        _swap(inputToken, inputAmount, outputToken, outputAmount);
++        _swap(inputToken, inputAmount, outputToken, output);
+    }
+```
