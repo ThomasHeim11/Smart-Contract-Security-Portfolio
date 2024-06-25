@@ -68,6 +68,8 @@ To mitigate the risks associated with uninitialized state variables, the followi
 
 ---
 
+Reference: [Slither Detector Documentation: Uninitialized State Variables](https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables)
+
 ### [H-2]`TSwapPool::deposit` is missing deadline check causing transactions to complete even after the deadline
 
 ##Description:
@@ -99,8 +101,6 @@ function deposit(
         returns (uint256 liquidityTokensToMint)
     {
 ```
-
-Reference: [Slither Detector Documentation: Uninitialized State Variables](https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables)
 
 ## Medium
 
