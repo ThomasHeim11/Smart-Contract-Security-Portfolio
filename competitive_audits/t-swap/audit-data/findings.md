@@ -155,6 +155,35 @@ To mitigate the risks associated with strict equality checks, consider the follo
 
 By addressing the identified vulnerability and following these recommendations, the `TSwapPool` contract can be made more secure and reliable for users.
 
+### [M-3] Reentrancy Vulnerability in TSwapPool.sol
+
+## Summary
+
+This report identifies a reentrancy vulnerability in the `TSwapPool` smart contract method `_swap`, detected during a Slither analysis. The vulnerability occurs due to an external call (`outputToken.safeTransfer(msg.sender, 1_000_000_000_000_000_000)`) being made before emitting the `Swap` event. Reentrancy vulnerabilities can allow an attacker to manipulate contract state by recursively calling back into the contract before the initial call completes.
+
+## Vulnerability Details
+
+### Reentrancy in `_swap` Method
+
+- **Location**: `TSwapPool.sol`, lines 383-412
+- **Code**: `outputToken.safeTransfer(msg.sender, 1_000_000_000_000_000_000);` (line 400)
+- **Description**: The `_swap` method transfers tokens to `msg.sender` before emitting the `Swap` event. This sequence could potentially enable reentrant attacks where the recipient contract re-enters the `TSwapPool` contract to call its functions again, possibly modifying state in unexpected ways.
+- **Reference**: [Slither Detector Documentation: Reentrancy Vulnerabilities](https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3)
+
+## Impact
+
+If exploited, this vulnerability could lead to various attacks such as draining contract funds, manipulating token balances, or disrupting normal contract operations. The ability to call back into the contract before state changes are finalized poses a significant risk to the integrity and security of the `TSwapPool` contract.
+
+## Recommendations
+
+To mitigate the reentrancy vulnerability and enhance the security of the `TSwapPool` contract, consider the following recommendations:
+
+1. **Update State Before External Calls**: Ensure that state modifications are completed before any external calls to avoid potential reentrant behavior.
+
+2. **Use Checks-Effects-Interactions Pattern**: Implement the Checks-Effects-Interactions pattern where state changes are performed first, followed by external calls and event emissions.
+
+By addressing these recommendations, the `TSwapPool` contract can mitigate the risk of reentrancy attacks and strengthen overall security measures.
+
 ## Low
 
 ### [L-1] Missing Zero-Address Validation in PoolFactory.sol
