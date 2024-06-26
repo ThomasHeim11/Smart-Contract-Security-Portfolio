@@ -4,7 +4,7 @@
 
 ## Overview 🌐
 
-Greetings! I extend a warm welcome to my **Smart Contract Security Portfolio** – a manifestation of my unwavering commitment to enhancing the security standards of decentralized applications. As a seasoned blockchain developer, I've made this repository to highlight my proficiency in smart contract audits and proactive vulnerability management, coupled with engaging bounty programs. For each protocol my audit report is inside the audit-report folder. 
+Greetings!  For each protocol my audit report is inside the audit-report folder. I extend a warm welcome to my **Smart Contract Security Portfolio** – a manifestation of my unwavering commitment to enhancing the security standards of decentralized applications. As a seasoned blockchain developer, I've made this repository to highlight my proficiency in smart contract audits and proactive vulnerability management, coupled with engaging bounty programs.
 
 ## Key Highlights 🚀
 
