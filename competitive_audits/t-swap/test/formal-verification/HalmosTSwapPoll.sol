@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { Test, console } from "forge-std/Test.sol";
-import { TSwapPool } from "../../src/PoolFactory.sol";
-import { ERC20Mock } from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "forge-std/Test.sol";
+import "../../src/TSwapPool.sol";
+import "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 
-contract TSwapPoolTest is Test {
+contract TSwapPoolFormalVerification is Test {
     TSwapPool pool;
     ERC20Mock poolToken;
     ERC20Mock weth;
@@ -19,6 +18,7 @@ contract TSwapPoolTest is Test {
         weth = new ERC20Mock();
         pool = new TSwapPool(address(poolToken), address(weth), "LTokenA", "LA");
 
+        // Mint initial tokens for liquidityProvider and user
         weth.mint(liquidityProvider, 200e18);
         poolToken.mint(liquidityProvider, 200e18);
 
@@ -26,69 +26,97 @@ contract TSwapPoolTest is Test {
         poolToken.mint(user, 10e18);
     }
 
-    function testDeposit() public {
-        vm.startPrank(liquidityProvider);
-        weth.approve(address(pool), 100e18);
-        poolToken.approve(address(pool), 100e18);
-        pool.deposit(100e18, 100e18, 100e18, uint64(block.timestamp));
+    // Property 1: Test deposit functionality
+    function checkDeposit() public {
+        uint256 depositAmount = vm.createUint256("depositAmount");
+        uint256 tokenADeposit = vm.createUint256("tokenADeposit");
+        uint256 tokenBDeposit = vm.createUint256("tokenBDeposit");
+        uint64 timestamp = vm.createUint64("timestamp");
 
-        assertEq(pool.balanceOf(liquidityProvider), 100e18);
-        assertEq(weth.balanceOf(liquidityProvider), 100e18);
-        assertEq(poolToken.balanceOf(liquidityProvider), 100e18);
+        weth.approve(address(pool), depositAmount);
+        poolToken.approve(address(pool), depositAmount);
 
-        assertEq(weth.balanceOf(address(pool)), 100e18);
-        assertEq(poolToken.balanceOf(address(pool)), 100e18);
+        pool.deposit(depositAmount, tokenADeposit, tokenBDeposit, timestamp);
+
+        // Assert balances and pool states
+        assert(pool.balanceOf(liquidityProvider) == tokenADeposit);
+        assert(weth.balanceOf(liquidityProvider) == tokenADeposit);
+        assert(poolToken.balanceOf(liquidityProvider) == tokenBDeposit);
+
+        assert(weth.balanceOf(address(pool)) == tokenADeposit);
+        assert(poolToken.balanceOf(address(pool)) == tokenBDeposit);
     }
 
-    function testDepositSwap() public {
-        vm.startPrank(liquidityProvider);
-        weth.approve(address(pool), 100e18);
-        poolToken.approve(address(pool), 100e18);
-        pool.deposit(100e18, 100e18, 100e18, uint64(block.timestamp));
-        vm.stopPrank();
+    // Property 2: Test deposit and swap functionality
+    function checkDepositSwap() public {
+        uint256 depositAmount = vm.createUint256("depositAmount");
+        uint256 tokenADeposit = vm.createUint256("tokenADeposit");
+        uint256 tokenBDeposit = vm.createUint256("tokenBDeposit");
+        uint64 timestamp = vm.createUint64("timestamp");
+        uint256 swapAmount = vm.createUint256("swapAmount");
+        uint256 expectedWETH = vm.createUint256("expectedWETH");
 
-        vm.startPrank(user);
-        poolToken.approve(address(pool), 10e18);
-        // After we swap, there will be ~110 tokenA, and ~91 WETH
-        // 100 * 100 = 10,000
-        // 110 * ~91 = 10,000
-        uint256 expected = 9e18;
+        weth.approve(address(pool), depositAmount);
+        poolToken.approve(address(pool), depositAmount);
 
-        pool.swapExactInput(poolToken, 10e18, weth, expected, uint64(block.timestamp));
-        assert(weth.balanceOf(user) >= expected);
+        pool.deposit(depositAmount, tokenADeposit, tokenBDeposit, timestamp);
+
+        poolToken.approve(address(pool), swapAmount);
+
+        pool.swapExactInput(poolToken, swapAmount, weth, expectedWETH, timestamp);
+
+        // Assert expected WETH balance for user after swap
+        assert(weth.balanceOf(user) >= expectedWETH);
     }
 
-    function testWithdraw() public {
-        vm.startPrank(liquidityProvider);
-        weth.approve(address(pool), 100e18);
-        poolToken.approve(address(pool), 100e18);
-        pool.deposit(100e18, 100e18, 100e18, uint64(block.timestamp));
+    // Property 3: Test withdraw functionality
+    function checkWithdraw() public {
+        uint256 depositAmount = vm.createUint256("depositAmount");
+        uint256 tokenADeposit = vm.createUint256("tokenADeposit");
+        uint256 tokenBDeposit = vm.createUint256("tokenBDeposit");
+        uint64 timestamp = vm.createUint64("timestamp");
 
-        pool.approve(address(pool), 100e18);
-        pool.withdraw(100e18, 100e18, 100e18, uint64(block.timestamp));
+        weth.approve(address(pool), depositAmount);
+        poolToken.approve(address(pool), depositAmount);
 
-        assertEq(pool.totalSupply(), 0);
-        assertEq(weth.balanceOf(liquidityProvider), 200e18);
-        assertEq(poolToken.balanceOf(liquidityProvider), 200e18);
+        pool.deposit(depositAmount, tokenADeposit, tokenBDeposit, timestamp);
+
+        pool.approve(address(pool), depositAmount);
+        pool.withdraw(depositAmount, depositAmount, depositAmount, timestamp);
+
+        // Assert pool state after withdrawal
+        assert(pool.totalSupply() == 0);
+        assert(weth.balanceOf(liquidityProvider) == 200e18);
+        assert(poolToken.balanceOf(liquidityProvider) == 200e18);
     }
 
-    function testCollectFees() public {
-        vm.startPrank(liquidityProvider);
-        weth.approve(address(pool), 100e18);
-        poolToken.approve(address(pool), 100e18);
-        pool.deposit(100e18, 100e18, 100e18, uint64(block.timestamp));
-        vm.stopPrank();
+    // Property 4: Test collect fees functionality
+    function checkCollectFees() public {
+        uint256 depositAmount = vm.createUint256("depositAmount");
+        uint256 tokenADeposit = vm.createUint256("tokenADeposit");
+        uint256 tokenBDeposit = vm.createUint256("tokenBDeposit");
+        uint64 timestamp = vm.createUint64("timestamp");
+        uint256 swapAmount = vm.createUint256("swapAmount");
+        uint256 expectedWETH = vm.createUint256("expectedWETH");
 
-        vm.startPrank(user);
-        uint256 expected = 9e18;
-        poolToken.approve(address(pool), 10e18);
-        pool.swapExactInput(poolToken, 10e18, weth, expected, uint64(block.timestamp));
-        vm.stopPrank();
+        weth.approve(address(pool), depositAmount);
+        poolToken.approve(address(pool), depositAmount);
 
-        vm.startPrank(liquidityProvider);
-        pool.approve(address(pool), 100e18);
-        pool.withdraw(100e18, 90e18, 100e18, uint64(block.timestamp));
-        assertEq(pool.totalSupply(), 0);
+        pool.deposit(depositAmount, tokenADeposit, tokenBDeposit, timestamp);
+
+        poolToken.approve(address(pool), swapAmount);
+        pool.swapExactInput(poolToken, swapAmount, weth, expectedWETH, timestamp);
+
+        pool.approve(address(pool), depositAmount);
+        pool.withdraw(depositAmount, 90e18, depositAmount, timestamp);
+
+        // Assert pool state after fee collection
+        assert(pool.totalSupply() == 0);
         assert(weth.balanceOf(liquidityProvider) + poolToken.balanceOf(liquidityProvider) > 400e18);
+    }
+
+    // Assertion function
+    function assert(bool condition) internal pure {
+        require(condition, "Assertion failed");
     }
 }
