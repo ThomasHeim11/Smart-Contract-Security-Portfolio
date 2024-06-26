@@ -22,3 +22,6 @@
 [submodule "competitive_audits/t-swap/lib/openzeppelin-contracts"]
 	path = competitive_audits/t-swap/lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
+[submodule "competitive_audits/t-swap/lib/halmos-cheatcodes"]
+	path = competitive_audits/t-swap/lib/halmos-cheatcodes
+	url = https://github.com/a16z/halmos-cheatcodes
