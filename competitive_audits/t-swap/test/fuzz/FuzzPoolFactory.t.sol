@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 
 import "ds-test/test.sol";
-import "./PoolFactory.sol";
+import { PoolFactory } from "../../src/PoolFactory.sol";
 import "forge-std/Vm.sol";
 import "forge-std/Test.sol";
 
