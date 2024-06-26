@@ -13,6 +13,7 @@ contract TSwapPoolTest is Test {
 
     address liquidityProvider = makeAddr("liquidityProvider");
     address user = makeAddr("user");
+    address otherUser = makeAddr("otherUser");
 
     function setUp() public {
         poolToken = new ERC20Mock();
@@ -24,6 +25,9 @@ contract TSwapPoolTest is Test {
 
         weth.mint(user, 10e18);
         poolToken.mint(user, 10e18);
+
+        weth.mint(otherUser, 10e18);
+        poolToken.mint(otherUser, 10e18);
     }
 
     function testDeposit() public {
@@ -49,9 +53,6 @@ contract TSwapPoolTest is Test {
 
         vm.startPrank(user);
         poolToken.approve(address(pool), 10e18);
-        // After we swap, there will be ~110 tokenA, and ~91 WETH
-        // 100 * 100 = 10,000
-        // 110 * ~91 = 10,000
         uint256 expected = 9e18;
 
         pool.swapExactInput(poolToken, 10e18, weth, expected, uint64(block.timestamp));
@@ -90,5 +91,103 @@ contract TSwapPoolTest is Test {
         pool.withdraw(100e18, 90e18, 100e18, uint64(block.timestamp));
         assertEq(pool.totalSupply(), 0);
         assert(weth.balanceOf(liquidityProvider) + poolToken.balanceOf(liquidityProvider) > 400e18);
+    }
+
+    function testRevertIfDeadlinePassed() public {
+        vm.startPrank(liquidityProvider);
+        weth.approve(address(pool), 100e18);
+        poolToken.approve(address(pool), 100e18);
+        vm.expectRevert(
+            abi.encodeWithSelector(TSwapPool.TSwapPool__DeadlineHasPassed.selector, uint64(block.timestamp - 1))
+        );
+        pool.deposit(100e18, 100e18, 100e18, uint64(block.timestamp - 1));
+        vm.stopPrank();
+    }
+
+    function testRevertIfZero() public {
+        vm.startPrank(liquidityProvider);
+        weth.approve(address(pool), 100e18);
+        poolToken.approve(address(pool), 100e18);
+
+        vm.expectRevert(TSwapPool.TSwapPool__MustBeMoreThanZero.selector);
+        pool.deposit(0, 100e18, 100e18, uint64(block.timestamp));
+
+        vm.expectRevert(TSwapPool.TSwapPool__MustBeMoreThanZero.selector);
+        pool.withdraw(0, 100e18, 100e18, uint64(block.timestamp));
+
+        vm.expectRevert(TSwapPool.TSwapPool__MustBeMoreThanZero.selector);
+        pool.getOutputAmountBasedOnInput(0, 100e18, 100e18);
+
+        vm.expectRevert(TSwapPool.TSwapPool__MustBeMoreThanZero.selector);
+        pool.getInputAmountBasedOnOutput(0, 100e18, 100e18);
+
+        vm.stopPrank();
+    }
+
+    function testWethDepositAmountTooLow() public {
+        vm.startPrank(liquidityProvider);
+        weth.approve(address(pool), 100e18);
+        poolToken.approve(address(pool), 100e18);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TSwapPool.TSwapPool__WethDepositAmountTooLow.selector, 1_000_000_000, 1_000_000_000 - 1
+            )
+        );
+        pool.deposit(1_000_000_000 - 1, 100e18, 100e18, uint64(block.timestamp));
+        vm.stopPrank();
+    }
+
+    function testMaxPoolTokenDepositTooHigh() public {
+        vm.startPrank(liquidityProvider);
+        weth.approve(address(pool), 100e18);
+        poolToken.approve(address(pool), 100e18);
+        pool.deposit(100e18, 100e18, 100e18, uint64(block.timestamp));
+
+        vm.expectRevert(abi.encodeWithSelector(TSwapPool.TSwapPool__MaxPoolTokenDepositTooHigh.selector, 1e18, 1e20));
+        pool.deposit(1e18, 1e18, 1e18, uint64(block.timestamp));
+        vm.stopPrank();
+    }
+
+    function testMinLiquidityTokensToMintTooLow() public {
+        vm.startPrank(liquidityProvider);
+        weth.approve(address(pool), 100e18);
+        poolToken.approve(address(pool), 100e18);
+        pool.deposit(100e18, 100e18, 100e18, uint64(block.timestamp));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(TSwapPool.TSwapPool__MinLiquidityTokensToMintTooLow.selector, 200e18, 100e18)
+        );
+        pool.deposit(100e18, 200e18, 100e18, uint64(block.timestamp));
+        vm.stopPrank();
+    }
+
+    function testInvalidToken() public {
+        vm.startPrank(user);
+        ERC20Mock unknownToken = new ERC20Mock();
+        unknownToken.mint(user, 100e18);
+
+        unknownToken.approve(address(pool), 100e18);
+        vm.expectRevert(TSwapPool.TSwapPool__InvalidToken.selector);
+        pool.swapExactInput(unknownToken, 100e18, weth, 1e18, uint64(block.timestamp));
+
+        unknownToken.approve(address(pool), 100e18);
+        vm.expectRevert(TSwapPool.TSwapPool__InvalidToken.selector);
+        pool.swapExactOutput(unknownToken, weth, 1e18, uint64(block.timestamp));
+
+        vm.stopPrank();
+    }
+
+    function testOutputTooLow() public {
+        vm.startPrank(liquidityProvider);
+        weth.approve(address(pool), 100e18);
+        poolToken.approve(address(pool), 100e18);
+        pool.deposit(100e18, 100e18, 100e18, uint64(block.timestamp));
+        vm.stopPrank();
+
+        vm.startPrank(user);
+        poolToken.approve(address(pool), 10e18);
+        vm.expectRevert(abi.encodeWithSelector(TSwapPool.TSwapPool__OutputTooLow.selector, 1e18, 10e18));
+        pool.swapExactInput(poolToken, 10e18, weth, 10e18, uint64(block.timestamp));
+        vm.stopPrank();
     }
 }
