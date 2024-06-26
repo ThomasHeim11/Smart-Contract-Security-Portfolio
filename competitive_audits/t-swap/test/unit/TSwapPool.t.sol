@@ -92,7 +92,7 @@ contract TSwapPoolTest is Test {
         assertEq(pool.totalSupply(), 0);
         assert(weth.balanceOf(liquidityProvider) + poolToken.balanceOf(liquidityProvider) > 400e18);
     }
-
+    @Audit TSwapPool::deposit is missing deadline check causing transactions to complete even after the deadline
     function testRevertIfDeadlinePassed() public {
         vm.startPrank(liquidityProvider);
         weth.approve(address(pool), 100e18);
