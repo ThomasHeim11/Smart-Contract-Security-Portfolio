@@ -140,37 +140,37 @@ Passing an arbitrary `from` address to `transferFrom` (or `safeTransferFrom`) ca
 
 Contracts have owners with privileged rights to perform admin tasks and need to be trusted to not perform malicious updates or drain funds.
 
-- Found in src/Size.sol [Line: 107](src/Size.sol#L107)
+- Found in src/Size.sol [Line: 107](src/Size.sol#L107)✅
 
   ```solidity
       function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
   ```
 
-- Found in src/Size.sol [Line: 113](src/Size.sol#L113)
+- Found in src/Size.sol [Line: 113](src/Size.sol#L113)✅
 
   ```solidity
           onlyRole(DEFAULT_ADMIN_ROLE)
   ```
 
-- Found in src/Size.sol [Line: 123](src/Size.sol#L123)
+- Found in src/Size.sol [Line: 123](src/Size.sol#L123)✅
 
   ```solidity
           onlyRole(BORROW_RATE_UPDATER_ROLE)
   ```
 
-- Found in src/Size.sol [Line: 132](src/Size.sol#L132)
+- Found in src/Size.sol [Line: 132](src/Size.sol#L132)✅
 
   ```solidity
       function pause() public override(ISizeAdmin) onlyRole(PAUSER_ROLE) {
   ```
 
-- Found in src/Size.sol [Line: 137](src/Size.sol#L137)
+- Found in src/Size.sol [Line: 137](src/Size.sol#L137)✅
 
   ```solidity
       function unpause() public override(ISizeAdmin) onlyRole(PAUSER_ROLE) {
   ```
 
-- Found in src/Size.sol [Line: 234](src/Size.sol#L234)
+- Found in src/Size.sol [Line: 234](src/Size.sol#L234)✅
 
   ```solidity
           onlyRole(KEEPER_ROLE)
