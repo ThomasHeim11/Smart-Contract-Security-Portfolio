@@ -358,6 +358,41 @@ Manual Review
 
 Switch to \_safeMint(): Replace all instances of \_mint() with \_safeMint() in ERC721 token minting operations. \_safeMint() performs additional checks to ensure the recipient address is ERC721-compatible.
 
+## M-4 Using ERC721::\_mint() Can Be Dangerous in NonTransferrableToken.sol
+
+## Impact
+
+Using \_mint() without verifying the recipient can handle ERC721 tokens may lead to scenarios where tokens are minted to addresses that do not support ERC721, rendering the tokens inaccessible and potentially causing loss of value.
+
+## Proof of Concept
+
+- Code Reference: This would be a representation of an ERC721 token minting function that uses \_mint() instead of \_safeMint().
+- Found in src/token/NonTransferrableToken.sol [Line: 42](src/token/NonTransferrableToken.sol#L42)
+
+  ```solidity
+      function transfer(address to, uint256 value) public virtual override onlyOwner returns (bool) {
+  ```
+
+## Tools Used
+
+Manuel Review
+
+## Recommended Mitigation Steps
+
+To mitigate this issue, replace any usage of \_mint() with \_safeMint() to ensure that the recipient address can handle ERC721 tokens:
+
+- 1 Use \_safeMint():
+  Replace \_mint(to, tokenId) with \_safeMint(to, tokenId) in all minting functions.
+
+```javascript
+function mintToken(address to, uint256 tokenId) external onlyOwner {
+    _safeMint(to, tokenId); // This ensures `to` can handle ERC721 tokens
+}
+```
+
+- 2 Contract Interface Implementation:
+- Ensure that recipient contracts implement the IERC721Receiver interface to handle safe transfers of ERC721 tokens.
+
 # Low Issues
 
 ## L-1 Missing Return Statement in approve Function of NonTransferrableToken.sol
