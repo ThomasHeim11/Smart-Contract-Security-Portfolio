@@ -99,3 +99,35 @@ Manual review
 - Use msg.sender as the from parameter in ERC20's transferFrom calls whenever possible to ensure that token transfers are initiated only by the caller.
 
 - Implement robust access control mechanisms to validate and authorize token transfers based on the intended user's permissions and roles.
+
+## H-3: Findings Report for Unauthorized Token Transfer Risk in SellCreditMarket.sol
+
+## Impact
+
+Allowing an arbitrary address to be used as the from parameter in the transferFrom function poses a significant security risk. It means that anyone could potentially transfer tokens from someone else's address without proper authorization, leading to unauthorized token transfers and potential loss of funds for the token owner. This vulnerability exposes users to financial risks and undermines the security of the protocol.
+
+## Proof of Concept
+
+- Found in src/libraries/actions/SellCreditMarket.sol [Line: 201](src/libraries/actions/SellCreditMarket.sol#L201)
+
+  ```solidity
+          state.data.borrowAToken.transferFrom(params.lender, msg.sender, cashAmountOut);
+  ```
+
+- Found in src/libraries/actions/SellCreditMarket.sol [Line: 202](src/libraries/actions/SellCreditMarket.sol#L202)
+
+  ```solidity
+          state.data.borrowAToken.transferFrom(params.lender, state.feeConfig.feeRecipient, fees);
+  ```
+
+These lines of code allow token transfers from the params.lender address without verifying that the caller has the necessary authorization, creating a potential for misuse and unauthorized transfers.
+
+## Tools Used
+
+Manual review
+
+## Recommended Mitigation Steps
+
+- Use msg.sender as the from parameter in ERC20's transferFrom calls whenever possible to ensure that token transfers are initiated only by the caller.
+
+- Implement robust access control mechanisms to validate and authorize token transfers based on the intended user's permissions and roles.
