@@ -1,0 +1,38 @@
+Saving last configuration file to .certora_internal/24_06_27_13_26_17_923/run.conf
+There is no TAC file. Going to script EVMVerifier/certoraBuild.py to main_with_args()
+Creating dir /Users/thomasheim/Programming/security_porto/competitive_audits/t-swap/.certora_internal/24_06_27_13_26_17_923/.certora_config
+In /Users/thomasheim/Programming/security_porto/competitive_audits/t-swap/certora/spec/PoolFactory.spec, found the imports: []
+copying spec file /Users/thomasheim/Programming/security_porto/competitive_audits/t-swap/certora/spec/PoolFactory.spec to /Users/thomasheim/Programming/security_porto/competitive_audits/t-swap/.certora_internal/24_06_27_13_26_17_923/.certora_sources/.0_PoolFactory.spec.spec
+writing /Users/thomasheim/Programming/security_porto/competitive_audits/t-swap/.certora_internal/24_06_27_13_26_17_923/.certora_verify.json
+Path to typechecker is /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/certora_jars/Typechecker.jar
+running ['java', '-jar', '/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/certora_jars/Typechecker.jar', '-buildDirectory', '/Users/thomasheim/Programming/security_porto/competitive_audits/t-swap/.certora_internal/24_06_27_13_26_17_923']
+
+building file src/PoolFactory.sol
+Running cmd solc --version
+stdout, stderr = .certora_internal/24_06_27_13_26_17_923/.certora_config/version_check_solc.stdout, .certora_internal/24_06_27_13_26_17_923/.certora_config/version_check_solc.stderr
+Exitcode 0
+Solc run solc --version time: 0.1365
+Running cmd solc -o ".certora_internal/24_06_27_13_26_17_923/.certora_config/PoolFactory.sol_0/" --overwrite --allow-paths ".",. --standard-json
+stdout, stderr = .certora_internal/24_06_27_13_26_17_923/.certora_config/PoolFactory.sol_0.standard.json.stdout, .certora_internal/24_06_27_13_26_17_923/.certora_config/PoolFactory.sol_0.standard.json.stderr
+Exitcode 0
+Solc run solc -o ".certora_internal/24_06_27_13_26_17_923/.certora_config/PoolFactory.sol_0/" --overwrite --allow-paths ".",. --standard-json time: 0.1179
+reading standard json data from .certora_internal/24_06_27_13_26_17_923/.certora_config/PoolFactory.sol_0.standard.json.stdout
+build failed
+Failure traceback: 
+CertoraUserInputError: solc had an error:
+ParserError: Source "forge-std/interfaces/IERC20.sol" not found: File not found. Searched the following locations: "".
+  --> /Users/thomasheim/Programming/security_porto/competitive_audits/t-swap/src/PoolFactory.sol:18:1:
+   |
+18 | import { IERC20 } from "forge-std/interfaces/IERC20.sol";
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Encountered an error running Certora Prover:
+solc had an error:
+ParserError: Source "forge-std/interfaces/IERC20.sol" not found: File not found. Searched the following locations: "".
+  --> /Users/thomasheim/Programming/security_porto/competitive_audits/t-swap/src/PoolFactory.sol:18:1:
+   |
+18 | import { IERC20 } from "forge-std/interfaces/IERC20.sol";
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
