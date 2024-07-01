@@ -1,6 +1,6 @@
 # High Issues
 
-## H-1: Arbitrary `from` passed to `transferFrom` (or `safeTransferFrom`) in DepositTokenLibrary.sol ✅
+## H-1: Arbitrary `from` passed to `transferFrom` (or `safeTransferFrom`) in DepositTokenLibrary.sol
 
 ## Impact
 
@@ -169,6 +169,64 @@ Implement a function that allows authorized users to withdraw ETH from the contr
 By implementing either of these recommendations, the contract can ensure that funds are not accidentally lost and can be retrieved if necessary. This will enhance the contract's usability and security.
 
 # Medium Issues
+
+## M-1: Centralization Risk for trusted owners in Size.sol
+
+## Impact
+
+The contracts identified in src/Size.sol utilize role-based access control (RBAC) through OpenZeppelin's AccessControlUpgradeable library. Roles such as DEFAULT_ADMIN_ROLE, BORROW_RATE_UPDATER_ROLE, PAUSER_ROLE, and KEEPER_ROLE are assigned specific privileged functionalities. While RBAC enhances security by restricting access to critical functions, it introduces centralization risks as these roles are entrusted with significant control over contract operations.
+
+Centralization Risk: Owners assigned roles (DEFAULT_ADMIN_ROLE, BORROW_RATE_UPDATER_ROLE, PAUSER_ROLE, KEEPER_ROLE) have the authority to perform critical administrative tasks. Malicious actions or errors by these privileged accounts can lead to unauthorized changes, fund drainage, or disruption of contract operations.
+
+## Proof of Concept
+
+- Found in src/Size.sol [Line: 107](src/Size.sol#L107)
+
+  ```solidity
+      function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
+  ```
+
+- Found in src/Size.sol [Line: 113](src/Size.sol#L113)
+
+  ```solidity
+          onlyRole(DEFAULT_ADMIN_ROLE)
+  ```
+
+- Found in src/Size.sol [Line: 123](src/Size.sol#L123)
+
+  ```solidity
+          onlyRole(BORROW_RATE_UPDATER_ROLE)
+  ```
+
+- Found in src/Size.sol [Line: 132](src/Size.sol#L132)
+
+  ```solidity
+      function pause() public override(ISizeAdmin) onlyRole(PAUSER_ROLE) {
+  ```
+
+- Found in src/Size.sol [Line: 137](src/Size.sol#L137)
+
+  ```solidity
+      function unpause() public override(ISizeAdmin) onlyRole(PAUSER_ROLE) {
+  ```
+
+- Found in src/Size.sol [Line: 234](src/Size.sol#L234)
+
+  ```solidity
+          onlyRole(KEEPER_ROLE)
+  ```
+
+## Tools Used
+
+Manual review
+
+## Recommended Mitigation Steps
+
+To mitigate the centralization risks associated with role-based access control:
+
+- Minimize Role Scope: Review and limit the functionalities assigned to each role (DEFAULT_ADMIN_ROLE, BORROW_RATE_UPDATER_ROLE, PAUSER_ROLE, KEEPER_ROLE) to essential administrative tasks only.
+
+- Multi-Sig or Time-Lock: Implement multi-signature schemes or time-locked transactions for critical operations to require multiple approvals or delays, reducing the impact of single-point vulnerabilities.
 
 # Low Issues
 
