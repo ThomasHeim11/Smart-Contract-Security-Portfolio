@@ -122,13 +122,13 @@ Passing an arbitrary `from` address to `transferFrom` (or `safeTransferFrom`) ca
           state.data.collateralToken.transferFrom(debtPosition.borrower, msg.sender, assignedCollateral);
   ```
 
-- Found in src/libraries/actions/SellCreditMarket.sol [Line: 201](src/libraries/actions/SellCreditMarket.sol#L201)
+- Found in src/libraries/actions/SellCreditMarket.sol [Line: 201](src/libraries/actions/SellCreditMarket.sol#L201)✅
 
   ```solidity
           state.data.borrowAToken.transferFrom(params.lender, msg.sender, cashAmountOut);
   ```
 
-- Found in src/libraries/actions/SellCreditMarket.sol [Line: 202](src/libraries/actions/SellCreditMarket.sol#L202)
+- Found in src/libraries/actions/SellCreditMarket.sol [Line: 202](src/libraries/actions/SellCreditMarket.sol#L202)✅
 
   ```solidity
           state.data.borrowAToken.transferFrom(params.lender, state.feeConfig.feeRecipient, fees);
