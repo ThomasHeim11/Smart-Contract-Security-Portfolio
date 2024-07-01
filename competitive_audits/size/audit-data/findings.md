@@ -228,7 +228,7 @@ To mitigate the centralization risks associated with role-based access control:
 
 - Multi-Sig or Time-Lock: Implement multi-signature schemes or time-locked transactions for critical operations to require multiple approvals or delays, reducing the impact of single-point vulnerabilities.
 
-## M-1: Centralization Risk for trusted owners in NonTransferrableScaledToken.sol
+## M-2: Centralization Risk for trusted owners in NonTransferrableScaledToken.sol
 
 ## Impact
 
@@ -260,7 +260,7 @@ Contracts have owners with privileged rights to perform admin tasks and need to 
       function burnScaled(address from, uint256 scaledAmount) external onlyOwner {
   ```
 
-- Found in src/token/NonTransferrableScaledToken.sol [Line: 76](src/token/NonTransferrableScaledToken.sol#L76)✅
+- Found in src/token/NonTransferrableScaledToken.sol [Line: 76](src/token/NonTransferrableScaledToken.sol#L76)
 
   ```solidity
       function transferFrom(address from, address to, uint256 value) public virtual override onlyOwner returns (bool) {
@@ -275,6 +275,54 @@ Manual Review
 Correct Function Visibility: Ensure functions intended to modify state are properly declared with the external or public visibility modifier where necessary (mint, burn functions).
 
 Modifier Consistency: Verify that functions using the onlyOwner modifier are consistently applied and do not inadvertently allow unauthorized access.
+
+## M-3: Centralization Risk for trusted owners in NonTransferrableScaledToken.sol
+
+## Impact
+
+Contracts have owners with privileged rights to perform admin tasks and need to be trusted to not perform malicious updates or drain funds.
+
+## Proof of Concept
+
+- Found in src/token/NonTransferrableToken.sol [Line: 14](src/token/NonTransferrableToken.sol#L14)
+
+  ```solidity
+  contract NonTransferrableToken is Ownable, ERC20 {
+  ```
+
+- Found in src/token/NonTransferrableToken.sol [Line: 29](src/token/NonTransferrableToken.sol#L29)
+
+  ```solidity
+      function mint(address to, uint256 value) external virtual onlyOwner {
+  ```
+
+- Found in src/token/NonTransferrableToken.sol [Line: 33](src/token/NonTransferrableToken.sol#L33)
+
+  ```solidity
+      function burn(address from, uint256 value) external virtual onlyOwner {
+  ```
+
+- Found in src/token/NonTransferrableToken.sol [Line: 37](src/token/NonTransferrableToken.sol#L37)
+
+  ```solidity
+      function transferFrom(address from, address to, uint256 value) public virtual override onlyOwner returns (bool) {
+  ```
+
+- Found in src/token/NonTransferrableToken.sol [Line: 42](src/token/NonTransferrableToken.sol#L42)
+
+  ```solidity
+      function transfer(address to, uint256 value) public virtual override onlyOwner returns (bool) {
+  ```
+
+## Tools Used
+
+Manual review
+
+## Recommended Mitigation Steps
+
+- Role-Based Access Control (RBAC): Implement a more granular access control mechanism beyond sole ownership, such as role-based permissions.
+
+- Multi-Signature Approval: Consider implementing multi-signature approval mechanisms for critical operations to require consensus among multiple parties.
 
 # Low Issues
 
