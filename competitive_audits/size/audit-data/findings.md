@@ -132,7 +132,7 @@ Manual review
 
 - Implement robust access control mechanisms to validate and authorize token transfers based on the intended user's permissions and roles.
 
-## H-3:
+## H-3: Inability to Withdraw ETH in Size.sol
 
 ## Impact
 
@@ -167,3 +167,37 @@ Implement a function that allows authorized users to withdraw ETH from the contr
 ```
 
 By implementing either of these recommendations, the contract can ensure that funds are not accidentally lost and can be retrieved if necessary. This will enhance the contract's usability and security.
+
+# Medium Issues
+
+# Low Issues
+
+## L-1 Missing Return Statement in approve Function of NonTransferrableToken.sol
+
+## Impact
+
+The approve function in the NonTransferrableToken contract does not contain a return statement, even though the ERC-20 standard expects one. This could potentially lead to unexpected behaviors when interacting with other contracts that rely on the ERC-20 standard.
+
+The absence of an explicit return statement in the approve function can cause interoperability issues with other smart contracts that expect a boolean return value upon calling this function. This may lead to unwanted behaviors, such as transaction failures or incorrect state assumptions, which can affect the usability and reliability of the token in a broader ecosystem.
+
+## Proof of Concept
+
+The approve function is intended to always revert with an error (Errors.NOT_SUPPORTED()), but it does not explicitly return a boolean value as expected by the ERC-20 standard.
+
+## Tools Used
+
+Manual review
+
+## Recommended Mitigation Steps
+
+To comply with the ERC-20 standard and avoid any unintended behaviors, make sure all functions that are expected to return a value explicitly do so. In this case, ensure the approve function has a return statement.
+
+Suggested Code Modifcation
+
+```diff
+function approve(address, uint256) public virtual override returns (bool) {
+    revert Errors.NOT_SUPPORTED();
++   return false; // Ensure the function explicitly returns a value
+}
+
+```
