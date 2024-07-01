@@ -131,3 +131,39 @@ Manual review
 - Use msg.sender as the from parameter in ERC20's transferFrom calls whenever possible to ensure that token transfers are initiated only by the caller.
 
 - Implement robust access control mechanisms to validate and authorize token transfers based on the intended user's permissions and roles.
+
+## H-3:
+
+## Impact
+
+Detailed description of the impact of this finding. The Size contract does not provide a mechanism to withdraw ETH, making it impossible to recover funds sent to it. This can lead to a permanent loss of any ETH accidentally or intentionally sent to the contract.
+
+The lack of a withdrawal function in the Size contract poses a critical risk as it leads to the irreversible loss of any ETH sent to the contract. Users and developers may accidentally send ETH to the contract, which would then be irretrievable due to the absence of a withdrawal mechanism. This can result in significant financial loss and erode trust in the contract's safety and usability.
+
+## Proof of Concept
+
+The Size contract code includes the payable attribute, which allows it to receive ETH. However, there is no corresponding function to withdraw the ETH, leading to potential loss of funds.
+
+## Tools Used
+
+Manual Review
+
+## Recommended Mitigation Steps
+
+Option 1: Remove Payable Attribute
+If the contract does not need to handle ETH, remove the payable attribute from the contract functions to prevent accidental ETH transfers.
+
+Option 2: Add Withdrawal Feature
+Implement a function that allows authorized users to withdraw ETH from the contract. Below is an example implementation:
+
+```diff
++ /// @notice Withdraw ETH from the contract
++ /// @param recipient The address to receive the withdrawn ETH
++ /// @param amount The amount of ETH to withdraw
++ function withdrawETH(address payable recipient, uint256 amount) + external onlyRole(DEFAULT_ADMIN_ROLE) {
++ require(address(this).balance >= amount, "Insufficient balance");
++ recipient.transfer(amount);
++ }
+```
+
+By implementing either of these recommendations, the contract can ensure that funds are not accidentally lost and can be retrieved if necessary. This will enhance the contract's usability and security.
