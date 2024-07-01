@@ -276,7 +276,7 @@ Correct Function Visibility: Ensure functions intended to modify state are prope
 
 Modifier Consistency: Verify that functions using the onlyOwner modifier are consistently applied and do not inadvertently allow unauthorized access.
 
-## M-3: Centralization Risk for trusted owners in NonTransferrableScaledToken.sol
+## M-3: Centralization Risk for trusted owners in NonTransferrableToken.sol
 
 ## Impact
 
