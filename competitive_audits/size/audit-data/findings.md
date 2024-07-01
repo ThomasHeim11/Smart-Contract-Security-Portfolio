@@ -228,6 +228,54 @@ To mitigate the centralization risks associated with role-based access control:
 
 - Multi-Sig or Time-Lock: Implement multi-signature schemes or time-locked transactions for critical operations to require multiple approvals or delays, reducing the impact of single-point vulnerabilities.
 
+## M-1: Centralization Risk for trusted owners in NonTransferrableScaledToken.sol
+
+## Impact
+
+Contracts have owners with privileged rights to perform admin tasks and need to be trusted to not perform malicious updates or drain funds.
+
+## Proof of Concept
+
+- Found in src/token/NonTransferrableScaledToken.sol [Line: 42](src/token/NonTransferrableScaledToken.sol#L42)
+
+  ```solidity
+      function mint(address, uint256) external view override onlyOwner {
+  ```
+
+- Found in src/token/NonTransferrableScaledToken.sol [Line: 50](src/token/NonTransferrableScaledToken.sol#L50)
+
+  ```solidity
+      function mintScaled(address to, uint256 scaledAmount) external onlyOwner {
+  ```
+
+- Found in src/token/NonTransferrableScaledToken.sol [Line: 56](src/token/NonTransferrableScaledToken.sol#L56)
+
+  ```solidity
+      function burn(address, uint256) external view override onlyOwner {
+  ```
+
+- Found in src/token/NonTransferrableScaledToken.sol [Line: 64](src/token/NonTransferrableScaledToken.sol#L64)
+
+  ```solidity
+      function burnScaled(address from, uint256 scaledAmount) external onlyOwner {
+  ```
+
+- Found in src/token/NonTransferrableScaledToken.sol [Line: 76](src/token/NonTransferrableScaledToken.sol#L76)✅
+
+  ```solidity
+      function transferFrom(address from, address to, uint256 value) public virtual override onlyOwner returns (bool) {
+  ```
+
+## Tools Used
+
+Manual Review
+
+## Recommended Mitigation Steps
+
+Correct Function Visibility: Ensure functions intended to modify state are properly declared with the external or public visibility modifier where necessary (mint, burn functions).
+
+Modifier Consistency: Verify that functions using the onlyOwner modifier are consistently applied and do not inadvertently allow unauthorized access.
+
 # Low Issues
 
 ## L-1 Missing Return Statement in approve Function of NonTransferrableToken.sol
