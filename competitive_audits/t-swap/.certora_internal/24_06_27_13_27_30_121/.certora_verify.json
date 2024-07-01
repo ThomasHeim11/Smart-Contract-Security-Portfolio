@@ -1,0 +1,8 @@
+{
+    "importFilesToOrigRelpaths": {},
+    "primary_contract": "PoolFactory",
+    "specfile": "/Users/thomasheim/Programming/security_porto/competitive_audits/t-swap/certora/spec/PoolFactory.spec",
+    "specfileOrigRelpath": "certora/spec/PoolFactory.spec",
+    "specfilesToImportDecls": {},
+    "type": "spec"
+}
