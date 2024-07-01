@@ -200,7 +200,7 @@ Contracts have owners with privileged rights to perform admin tasks and need to 
       function burnScaled(address from, uint256 scaledAmount) external onlyOwner {
   ```
 
-- Found in src/token/NonTransferrableScaledToken.sol [Line: 76](src/token/NonTransferrableScaledToken.sol#L76)
+- Found in src/token/NonTransferrableScaledToken.sol [Line: 76](src/token/NonTransferrableScaledToken.sol#L76)✅
 
   ```solidity
       function transferFrom(address from, address to, uint256 value) public virtual override onlyOwner returns (bool) {
