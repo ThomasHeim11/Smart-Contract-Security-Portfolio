@@ -424,3 +424,5 @@ function approve(address, uint256) public virtual override returns (bool) {
 }
 
 ```
+
+## L-2 Missing Return Statement in approve Function of NonTransferrableToken.sol
