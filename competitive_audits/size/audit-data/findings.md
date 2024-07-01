@@ -324,6 +324,40 @@ Manual review
 
 - Multi-Signature Approval: Consider implementing multi-signature approval mechanisms for critical operations to require consensus among multiple parties.
 
+## M-4 Using ERC721::\_mint() Can Be Dangerous in NonTransferrableScaledToken.sol
+
+## Impact
+
+Using ERC721::\_mint() can mint ERC721 tokens to addresses which don't support ERC721 tokens. Use \_safeMint() instead of \_mint() for ERC721.
+
+## Proof of Concept
+
+- Found in src/token/NonTransferrableScaledToken.sol [Line: 51](src/token/NonTransferrableScaledToken.sol#L51)
+
+  ```solidity
+          _mint(to, scaledAmount);
+  ```
+
+- Description: Calls \_mint(to, scaledAmount) to mint tokens to the specified address (to).
+- Impact: \_mint() does not perform checks to ensure that the recipient address (to) supports ERC721 tokens, potentially leading to unintended behavior or loss of tokens.
+
+- Found in src/token/NonTransferrableScaledToken.sol [Line: 80](src/token/NonTransferrableScaledToken.sol#L80)
+
+  ```solidity
+          _mint(to, scaledAmount);
+  ```
+
+- Description: Also uses \_mint(to, scaledAmount) within a transfer operation, similarly exposing the risk.
+- Impact: This operation could also lead to unintended minting to addresses that do not support ERC721.
+
+## Tools Used
+
+Manual Review
+
+## Recommended Mitigation Steps
+
+Switch to \_safeMint(): Replace all instances of \_mint() with \_safeMint() in ERC721 token minting operations. \_safeMint() performs additional checks to ensure the recipient address is ERC721-compatible.
+
 # Low Issues
 
 ## L-1 Missing Return Statement in approve Function of NonTransferrableToken.sol
