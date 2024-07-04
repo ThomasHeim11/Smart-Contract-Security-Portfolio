@@ -40,3 +40,18 @@
 [submodule "competitive_audits/MondrianWalletV2/lib/foundry-devops"]
 	path = competitive_audits/MondrianWalletV2/lib/foundry-devops
 	url = https://github.com/cyfrin/foundry-devops
+[submodule "competitive_audits/MondrianWalletV2/minimal-account-abstraction/lib/forge-std"]
+	path = competitive_audits/MondrianWalletV2/minimal-account-abstraction/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "competitive_audits/MondrianWalletV2/minimal-account-abstraction/lib/openzeppelin-contracts"]
+	path = competitive_audits/MondrianWalletV2/minimal-account-abstraction/lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
+[submodule "competitive_audits/MondrianWalletV2/minimal-account-abstraction/lib/account-abstraction"]
+	path = competitive_audits/MondrianWalletV2/minimal-account-abstraction/lib/account-abstraction
+	url = https://github.com/eth-infinitism/account-abstraction
+[submodule "competitive_audits/MondrianWalletV2/minimal-account-abstraction/lib/foundry-era-contracts"]
+	path = competitive_audits/MondrianWalletV2/minimal-account-abstraction/lib/foundry-era-contracts
+	url = https://github.com/cyfrin/foundry-era-contracts
+[submodule "competitive_audits/MondrianWalletV2/minimal-account-abstraction/lib/foundry-devops"]
+	path = competitive_audits/MondrianWalletV2/minimal-account-abstraction/lib/foundry-devops
+	url = https://github.com/cyfrin/foundry-devops
