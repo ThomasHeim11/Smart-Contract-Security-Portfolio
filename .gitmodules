@@ -55,3 +55,6 @@
 [submodule "competitive_audits/MondrianWalletV2/minimal-account-abstraction/lib/foundry-devops"]
 	path = competitive_audits/MondrianWalletV2/minimal-account-abstraction/lib/foundry-devops
 	url = https://github.com/cyfrin/foundry-devops
+[submodule "competitive_audits/MondrianWalletV2/lib/openzeppelin-contracts-upgradeable"]
+	path = competitive_audits/MondrianWalletV2/lib/openzeppelin-contracts-upgradeable
+	url = https://github.com/openzeppelin/openzeppelin-contracts-upgradeable
