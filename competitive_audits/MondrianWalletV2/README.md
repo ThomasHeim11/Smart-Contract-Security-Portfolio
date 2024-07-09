@@ -53,8 +53,8 @@ The wallet should be able to do anything a normal EoA can do, but with limited f
 ## Installation
 
 ```bash
-git clone https://github.com/PatrickAlphaC/minimal-account-abstraction
-cd minimal-account-abstraction
+git clone https://github.com/Cyfrin/2024-07-Mondrian-Wallet_v2.git
+cd 2024-07-Mondrian-Wallet_v2
 make
 ```
 
