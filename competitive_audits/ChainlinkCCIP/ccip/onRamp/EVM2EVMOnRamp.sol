@@ -239,7 +239,7 @@ contract EVM2EVMOnRamp is IEVM2AnyOnRamp, ILinkAvailable, AggregateRateLimiter, 
   // ================================================================
   // │                          Messaging                           │
   // ================================================================
-
+  //@audit Why +1?
   /// @inheritdoc IEVM2AnyOnRamp
   function getExpectedNextSequenceNumber() external view returns (uint64) {
     return s_sequenceNumber + 1;
@@ -287,7 +287,7 @@ contract EVM2EVMOnRamp is IEVM2AnyOnRamp, ILinkAvailable, AggregateRateLimiter, 
       // Rate limit on aggregated token value
       if (value > 0) _rateLimitValue(value);
     }
-
+    //@audit why is this safe?
     // Convert feeToken to link if not already in link
     if (message.feeToken == i_linkToken) {
       // Since there is only 1b link this is safe
@@ -546,7 +546,7 @@ contract EVM2EVMOnRamp is IEVM2AnyOnRamp, ILinkAvailable, AggregateRateLimiter, 
         tokenTransferBytesOverhead
       );
     }
-
+    //@audit is the math mathing?
     // Calculate execution gas fee on destination chain in USD with 36 decimals.
     // We add the message gas limit, the overhead gas, the gas of passing message data to receiver, and token transfer gas together.
     // We then multiply this gas total with the gas multiplier and gas price, converting it into USD with 36 decimals.
@@ -563,7 +563,7 @@ contract EVM2EVMOnRamp is IEVM2AnyOnRamp, ILinkAvailable, AggregateRateLimiter, 
     return
       ((premiumFee * feeTokenConfig.premiumMultiplierWeiPerEth) + executionCost + dataAvailabilityCost) / feeTokenPrice;
   }
-
+  //@audit Is the math mathing?
   /// @notice Returns the estimated data availability cost of the message.
   /// @dev To save on gas, we use a single destGasPerDataAvailabilityByte value for both zero and non-zero bytes.
   /// @param dataAvailabilityGasPrice USD per data availability gas in 18 decimals.
@@ -571,6 +571,7 @@ contract EVM2EVMOnRamp is IEVM2AnyOnRamp, ILinkAvailable, AggregateRateLimiter, 
   /// @param numberOfTokens number of distinct token transfers in the message.
   /// @param tokenTransferBytesOverhead additional token transfer data passed to destination, e.g. USDC attestation.
   /// @return dataAvailabilityCostUSD36Decimal total data availability cost in USD with 36 decimals.
+
   function _getDataAvailabilityCost(
     uint112 dataAvailabilityGasPrice,
     uint256 messageDataLength,
@@ -640,7 +641,7 @@ contract EVM2EVMOnRamp is IEVM2AnyOnRamp, ILinkAvailable, AggregateRateLimiter, 
         } else {
           tokenPrice = feeTokenPrice;
         }
-
+        //@audit math is mathing?
         // Calculate token transfer value, then apply fee ratio
         // ratio represents multiples of 0.1bps, or 1e-5
         bpsFeeUSDWei = (tokenPrice._calcUSDValueFromTokenAmount(tokenAmount.amount) * transferFeeConfig.deciBps) / 1e5;
@@ -876,7 +877,7 @@ contract EVM2EVMOnRamp is IEVM2AnyOnRamp, ILinkAvailable, AggregateRateLimiter, 
   // ================================================================
   // │                        Link monitoring                       │
   // ================================================================
-
+  //@audit math?
   /// @notice Calculate remaining LINK balance after paying nops
   /// @dev Allow keeper to monitor funds available for paying nops
   /// @return balance if nops were to be paid

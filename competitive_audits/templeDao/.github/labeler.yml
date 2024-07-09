@@ -1,4 +1,0 @@
-dapp:
-  - apps/dapp/**/*
-protocol:
-  - apps/protocol/**/*

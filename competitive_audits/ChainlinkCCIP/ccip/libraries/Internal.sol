@@ -7,11 +7,13 @@ import {Client} from "./Client.sol";
 // Library for CCIP internal definitions common to multiple contracts.
 library Internal {
   error InvalidEVMAddress(bytes encodedAddress);
-
+  //@audit should it me higher or lower?
   /// @dev The minimum amount of gas to perform the call with exact gas.
   /// We include this in the offramp so that we can redeploy to adjust it
   /// should a hardfork change the gas costs of relevant opcodes in callWithExactGas.
+
   uint16 internal constant GAS_FOR_CALL_EXACT_CHECK = 5_000;
+  //@audit can it still be hacked?
   // @dev We limit return data to a selector plus 4 words. This is to avoid
   // malicious contracts from returning large amounts of data and causing
   // repeated out-of-gas scenarios.
@@ -43,10 +45,11 @@ library Internal {
     uint224 value; // ───────╮ Value in uint224, packed.
     uint32 timestamp; // ────╯ Timestamp of the most recent price update.
   }
-
+  //@audit check if correct.
   /// @dev Gas price is stored in 112-bit unsigned int. uint224 can pack 2 prices.
   /// When packing L1 and L2 gas prices, L1 gas price is left-shifted to the higher-order bits.
   /// Using uint8 type, which cannot be higher than other bit shift operands, to avoid shift operand type warning.
+
   uint8 public constant GAS_PRICE_BITS = 112;
 
   struct PoolUpdate {
@@ -105,18 +108,20 @@ library Internal {
     bytes[] sourceTokenData; //                 array of token data, one per token
     bytes32 messageId; //                       a hash of the message data
   }
-
+  //@audit is this correct?
   /// @dev EVM2EVMMessage struct has 13 fields, including 3 variable arrays.
   /// Each variable array takes 1 more slot to store its length.
   /// When abi encoded, excluding array contents,
   /// EVM2EVMMessage takes up a fixed number of 16 lots, 32 bytes each.
   /// For structs that contain arrays, 1 more slot is added to the front, reaching a total of 17.
-  uint256 public constant MESSAGE_FIXED_BYTES = 32 * 17;
 
+  uint256 public constant MESSAGE_FIXED_BYTES = 32 * 17;
+  //@audit correct?
   /// @dev Each token transfer adds 1 EVMTokenAmount and 1 bytes.
   /// When abiEncoded, each EVMTokenAmount takes 2 slots, each bytes takes 2 slots, excl bytes contents
   uint256 public constant MESSAGE_FIXED_BYTES_PER_TOKEN = 32 * 4;
 
+  //@audit is the return correct?
   function _toAny2EVMMessage(
     EVM2EVMMessage memory original,
     Client.EVMTokenAmount[] memory destTokenAmounts
@@ -132,6 +137,7 @@ library Internal {
 
   bytes32 internal constant EVM_2_EVM_MESSAGE_HASH = keccak256("EVM2EVMMessageHashV2");
 
+  //@audit correct hash???
   function _hash(EVM2EVMMessage memory original, bytes32 metadataHash) internal pure returns (bytes32) {
     // Fixed-size message fields are included in nested hash to reduce stack pressure.
     // This hashing scheme is also used by RMN. If changing it, please notify the RMN maintainers.
@@ -166,11 +172,14 @@ library Internal {
     if (encodedAddress.length != 32) revert InvalidEVMAddress(encodedAddress);
     return _validateEVMAddressFromUint256(abi.decode(encodedAddress, (uint256)));
   }
-
+  // @audit Is this a way to hack this? Is it possible to genrate an address in this range?
+  // @audit Fuzz testing or/and formal verification.
   /// @dev We disallow the first 1024 addresses to never allow calling precompiles. It is extremely unlikely that
   /// anyone would ever be able to generate an address in this range.
+
   uint256 public constant PRECOMPILE_SPACE = 1024;
 
+  //@audit Is the casting correct?
   /// @notice This method provides a safe way to convert a uint256 to an address.
   /// It will revert if the uint256 is not a valid EVM address, or a precompile address.
   /// @return The address if it is valid, the function will revert otherwise.

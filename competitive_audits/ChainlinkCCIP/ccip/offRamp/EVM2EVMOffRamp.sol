@@ -175,6 +175,7 @@ contract EVM2EVMOffRamp is IAny2EVMOffRamp, AggregateRateLimiter, ITypeAndVersio
   /// @param sequenceNumber The sequence number of the message to get the execution state for.
   /// @return The current execution state of the message.
   /// @dev we use the literal number 128 because using a constant increased gas usage.
+  //@audit Is the math mathing??? Using constant instead???
   function getExecutionState(uint64 sequenceNumber) public view returns (Internal.MessageExecutionState) {
     return Internal.MessageExecutionState(
       (s_executionStates[sequenceNumber / 128] >> ((sequenceNumber % 128) * MESSAGE_EXECUTION_STATE_BIT_WIDTH))
@@ -186,6 +187,7 @@ contract EVM2EVMOffRamp is IAny2EVMOffRamp, AggregateRateLimiter, ITypeAndVersio
   /// @param sequenceNumber The sequence number for which the state will be saved.
   /// @param newState The new value the state will be in after this function is called.
   /// @dev we use the literal number 128 because using a constant increased gas usage.
+  //@audit Is the math mathing??? Using constant instead???
   function _setExecutionState(uint64 sequenceNumber, Internal.MessageExecutionState newState) internal {
     uint256 offset = (sequenceNumber % 128) * MESSAGE_EXECUTION_STATE_BIT_WIDTH;
     uint256 bitmap = s_executionStates[sequenceNumber / 128];
@@ -217,7 +219,7 @@ contract EVM2EVMOffRamp is IAny2EVMOffRamp, AggregateRateLimiter, ITypeAndVersio
   function manuallyExecute(Internal.ExecutionReport memory report, uint256[] memory gasLimitOverrides) external {
     // We do this here because the other _execute path is already covered OCR2BaseXXX.
     _checkChainForked();
-
+    //@audit Is it possoble for DOS attack in this code snippet?
     uint256 numMsgs = report.messages.length;
     if (numMsgs != gasLimitOverrides.length) revert ManualExecutionGasLimitMismatch();
     for (uint256 i = 0; i < numMsgs; ++i) {
@@ -240,6 +242,7 @@ contract EVM2EVMOffRamp is IAny2EVMOffRamp, AggregateRateLimiter, ITypeAndVersio
   /// @param manualExecGasLimits An array of gas limits to use for manual execution.
   /// @dev If called from the DON, this array is always empty.
   /// @dev If called from manual execution, this array is always same length as messages.
+  //@audit is the casting correct and can it be exploited?
   function _execute(Internal.ExecutionReport memory report, uint256[] memory manualExecGasLimits) internal {
     if (IRMN(i_rmnProxy).isCursed(bytes16(uint128(i_sourceChainSelector)))) revert CursedByRMN();
 
@@ -248,7 +251,7 @@ contract EVM2EVMOffRamp is IAny2EVMOffRamp, AggregateRateLimiter, ITypeAndVersio
     if (numMsgs != report.offchainTokenData.length) revert UnexpectedTokenData();
 
     bytes32[] memory hashedLeaves = new bytes32[](numMsgs);
-
+    // @audit can this for-loop be axploited?
     for (uint256 i = 0; i < numMsgs; ++i) {
       Internal.EVM2EVMMessage memory message = report.messages[i];
       // We do this hash here instead of in _verifyMessages to avoid two separate loops
@@ -675,7 +678,7 @@ contract EVM2EVMOffRamp is IAny2EVMOffRamp, AggregateRateLimiter, ITypeAndVersio
         abi.decode(encodedSourceTokenData[i], (Internal.SourceTokenData)),
         offchainTokenData[i]
       );
-
+      //@audit is the value updated correct?
       if (s_rateLimitedTokensDestToSource.contains(destTokenAmounts[i].token)) {
         value += _getTokenValue(destTokenAmounts[i], IPriceRegistry(s_dynamicConfig.priceRegistry));
       }

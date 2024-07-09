@@ -166,7 +166,7 @@ contract USDCTokenPool is TokenPool, ITypeAndVersion {
     emit Minted(msg.sender, releaseOrMintIn.receiver, releaseOrMintIn.amount);
     return Pool.ReleaseOrMintOutV1({destinationAmount: releaseOrMintIn.amount});
   }
-
+  //@audit formal verification
   /// @notice Validates the USDC encoded message against the given parameters.
   /// @param usdcMessage The USDC encoded message
   /// @param sourceTokenData The expected source chain token data to check against
@@ -181,6 +181,7 @@ contract USDCTokenPool is TokenPool, ITypeAndVersion {
   ///     * recipient             32         bytes32    52
   ///     * destinationCaller     32         bytes32    84
   ///     * messageBody           dynamic    bytes      116
+
   function _validateMessage(bytes memory usdcMessage, SourceTokenDataPayload memory sourceTokenData) internal view {
     uint32 version;
     // solhint-disable-next-line no-inline-assembly
@@ -198,6 +199,7 @@ contract USDCTokenPool is TokenPool, ITypeAndVersion {
     uint32 destinationDomain;
     uint64 nonce;
 
+    //@audit Formal verification?
     // solhint-disable-next-line no-inline-assembly
     assembly {
       sourceDomain := mload(add(usdcMessage, 8)) // 4 + 4 = 8
