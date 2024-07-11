@@ -1,0 +1,8 @@
+{
+    "importFilesToOrigRelpaths": {},
+    "primary_contract": "EVM2EVMOffRamp",
+    "specfile": "ccip/test/audit-test/formal-verification/off_ramp.spec",
+    "specfileOrigRelpath": "ccip/test/audit-test/formal-verification/off_ramp.spec",
+    "specfilesToImportDecls": {},
+    "type": "spec"
+}

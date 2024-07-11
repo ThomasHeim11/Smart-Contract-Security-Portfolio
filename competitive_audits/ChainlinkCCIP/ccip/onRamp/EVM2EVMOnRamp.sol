@@ -239,7 +239,7 @@ contract EVM2EVMOnRamp is IEVM2AnyOnRamp, ILinkAvailable, AggregateRateLimiter, 
   // ================================================================
   // │                          Messaging                           │
   // ================================================================
-  //@audit Why +1?
+  //@audit Why +1?✅
   /// @inheritdoc IEVM2AnyOnRamp
   function getExpectedNextSequenceNumber() external view returns (uint64) {
     return s_sequenceNumber + 1;
