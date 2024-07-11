@@ -1,8 +1,0 @@
-{
-    "importFilesToOrigRelpaths": {},
-    "primary_contract": "EVM2EVMOffRamp",
-    "specfile": "/Users/thomasheim/Programming/security_porto/competitive_audits/ChainlinkCCIP/ccip/test/audit-test/formal-verification/off_ramp.spec",
-    "specfileOrigRelpath": "ccip/test/audit-test/formal-verification/off_ramp.spec",
-    "specfilesToImportDecls": {},
-    "type": "spec"
-}
