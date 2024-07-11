@@ -2,9 +2,9 @@
 pragma solidity 0.8.24;
 
 import {ITypeAndVersion} from "../../shared/interfaces/ITypeAndVersion.sol";
-//@audit Intrface in scope
+//@audit Intrface in scope✅
 import {IPoolV1} from "../interfaces/IPool.sol";
-//@audit Intrface in scope
+//@audit Intrface in scope✅
 import {ITokenAdminRegistry} from "../interfaces/ITokenAdminRegistry.sol";
 
 import {OwnerIsCreator} from "../../shared/access/OwnerIsCreator.sol";

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.24;
-//@audit Interface in scoope.
+//@audit Interface in scoope.✅
 
 import {IPoolV1} from "../interfaces/IPool.sol";
 import {IRMN} from "../interfaces/IRMN.sol";
@@ -154,7 +154,7 @@ abstract contract TokenPool is IPoolV1, OwnerIsCreator {
   /// @dev This function should always be called before executing a lock or burn. Not doing so would allow
   /// for various exploits.
 
-  //@audit whre is return???
+  //@audit whre is return???✅
   function _validateLockOrBurn(Pool.LockOrBurnInV1 memory lockOrBurnIn) internal {
     if (!isSupportedToken(lockOrBurnIn.localToken)) revert InvalidToken(lockOrBurnIn.localToken);
     if (IRMN(i_rmnProxy).isCursed(bytes16(uint128(lockOrBurnIn.remoteChainSelector)))) revert CursedByRMN();
@@ -174,7 +174,7 @@ abstract contract TokenPool is IPoolV1, OwnerIsCreator {
   /// @dev This function should always be called before executing a lock or burn. Not doing so would allow
   /// for various exploits.
 
-  //@audit Where is return stamnet???
+  //@audit Where is return stamnet???✅
   function _validateReleaseOrMint(Pool.ReleaseOrMintInV1 memory releaseOrMintIn) internal {
     if (!isSupportedToken(releaseOrMintIn.localToken)) revert InvalidToken(releaseOrMintIn.localToken);
     if (IRMN(i_rmnProxy).isCursed(bytes16(uint128(releaseOrMintIn.remoteChainSelector)))) revert CursedByRMN();
