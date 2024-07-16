@@ -1,3 +1,0 @@
-[submodule "lib/wormhole-solidity-sdk"]
-	path = lib/wormhole-solidity-sdk
-	url = https://github.com/wormhole-foundation/wormhole-solidity-sdk
