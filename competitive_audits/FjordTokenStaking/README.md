@@ -134,4 +134,6 @@ Common ERC20 Hooks: Many ERC20 tokens incorporate hooks like beforeTransfer, aft
 Recommendation
 It is recommended to use well-established and standard-compliant ERC20 tokens to avoid these issues. If an exotic token with hooks or other custom features must be used, thorough testing should be conducted to understand its behavior and the potential impact on the auction process. Some Hooks should be disable if possible during the Auction.
 
+**Additional Known Issues as detected by LightChaser can be found [here](https://github.com/Cyfrin/2024-08-fjord/issues/1)**
+
 [//]: # (known-issues-close)
