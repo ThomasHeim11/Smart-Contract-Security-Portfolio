@@ -6,11 +6,13 @@ import { ERC20Burnable } from
     "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import { SafeMath } from "lib/openzeppelin-contracts/contracts/utils/math/SafeMath.sol";
 
+//@audit does the contact handle edge cases?
 /**
  * @title Auction
  * @dev Contract to create auctions where users can bid using FjordPoints.
  */
 contract FjordAuction {
+    // @audit why uisng safe math for uint256? isnet uint256 already safe?after 0.8.0?
     using SafeMath for uint256;
 
     /**
@@ -156,6 +158,8 @@ contract FjordAuction {
      * @notice Allows users to withdraw part or all of their bids before the auction ends.
      * @param amount The amount of FjordPoints to withdraw.
      */
+    //@audit can user withdraw all bids at once?
+    //@audit block.timstamb be usesd in a hack?
     function unbid(uint256 amount) external {
         if (block.timestamp > auctionEndTime) {
             revert AuctionAlreadyEnded();
@@ -174,10 +178,11 @@ contract FjordAuction {
         fjordPoints.transfer(msg.sender, amount);
         emit BidWithdrawn(msg.sender, amount);
     }
-
+    //@audit block.timstamb be usesd in a hack?
     /**
      * @notice Ends the auction and calculates claimable tokens for each bidder based on their bid proportion.
      */
+
     function auctionEnd() external {
         if (block.timestamp < auctionEndTime) {
             revert AuctionNotYetEnded();
