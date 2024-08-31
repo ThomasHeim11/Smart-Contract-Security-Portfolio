@@ -1,0 +1,33 @@
+{
+  "name": "0x-settler",
+  "version": "0.0.1",
+  "description": "Proof of concept settlement contracts utilizing [Permit2](https://github.com/Uniswap/permit2) to perform trades without any passive allowance.",
+  "main": "js/generate-table.js",
+  "type": "module",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compare_gas": "node js/compare-gas-results.js",
+    "generate_table": "node js/generate-table.js",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0xProject/0x-settler.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/0xProject/0x-settler/issues"
+  },
+  "homepage": "https://github.com/0xProject/0x-settler#readme",
+  "devDependencies": {
+    "chalk": "^5.2.0",
+    "husky": "^8.0.3",
+    "markdown-table": "^3.0.3",
+    "string-width": "^6.1.0"
+  }
+}
