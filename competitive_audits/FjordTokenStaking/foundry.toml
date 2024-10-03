@@ -13,7 +13,7 @@ libs = ['lib']
 gas_reports = ["*"]
 
 [profile.default.invariant]
-fuzz_runs = 256
+fuzz_runs = 1000
 fail_on_revert = true
 
 [profile.invariant]

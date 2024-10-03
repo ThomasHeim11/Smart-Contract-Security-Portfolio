@@ -14,6 +14,7 @@ error ConfusedDeputy();
 abstract contract AllowanceHolderBase is TransientStorageLayout, FreeMemory {
     using SafeTransferLib for IERC20;
     using CheckCall for address payable;
+    //@audit is this correct?
 
     function _rejectIfERC20(address payable maybeERC20, bytes calldata data) private view DANGEROUS_freeMemory {
         // We could just choose a random address for this check, but to make
@@ -107,8 +108,10 @@ abstract contract AllowanceHolderBase is TransientStorageLayout, FreeMemory {
         // `safeTransferFrom` does not check that `token` actually contains
         // code. It is the responsibility of integrating code to check for that
         // if vacuous success is a security concern.
+        //@audit sendt issue to imunifi.
         IERC20(token).safeTransferFrom(owner, recipient, amount);
     }
+    //@audit heavy use of assembly, is this best practice?
 
     fallback() external payable {
         uint256 selector;

@@ -21,9 +21,10 @@ abstract contract AllowanceHolderContext is Context {
             }
         }
     }
-
+    //@audit best practice?
     // this is here to avoid foot-guns and make it very explicit that we intend
     // to pass the confused deputy check in AllowanceHolder
+
     function balanceOf(address) external pure {
         assembly ("memory-safe") {
             mstore8(0x00, 0x00)

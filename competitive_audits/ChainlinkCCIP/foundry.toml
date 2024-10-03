@@ -2,13 +2,14 @@
 auto_detect_solc = true
 optimizer = true
 optimizer_runs = 3600
+out = "out"
 
 solc_version = '0.8.24'
 src = 'ccip'
 test = 'test'
 script = 'test'
 evm_version = 'paris'
-out = 'foundry-artifacts'
+# out = 'foundry-artifacts'
 cache_path = 'foundry-cache'
 libs = ['foundry-lib']
 bytecode_hash = "none"

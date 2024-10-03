@@ -2,6 +2,7 @@
 pragma solidity =0.8.21;
 
 import { ERC20 } from "solmate/tokens/ERC20.sol";
+//@audit Can this be exoloited?
 
 contract FjordToken is ERC20 {
     constructor() ERC20("Fjord Foundry", "FJO", 18) {

@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 contract ScoreBoard {
+    //@audit is this correct
     uint256 private constant START_TIME = 1723752000; // Thu Aug 15 2024 20:00:00 GMT+0000
     uint256 private constant NUM_MATCHES = 9;
 
@@ -51,49 +52,37 @@ contract ScoreBoard {
         results[matchNumber] = result;
     }
 
-    function confirmPredictionPayment(
-        address player,
-        uint256 matchNumber
-    ) public onlyThePredicter {
+    function confirmPredictionPayment(address player, uint256 matchNumber) public onlyThePredicter {
         playersPredictions[player].isPaid[matchNumber] = true;
     }
+    //@audit is this correct?
 
-    function setPrediction(
-        address player,
-        uint256 matchNumber,
-        Result result
-    ) public {
-        if (block.timestamp <= START_TIME + matchNumber * 68400 - 68400)
+    function setPrediction(address player, uint256 matchNumber, Result result) public {
+        if (block.timestamp <= START_TIME + matchNumber * 68400 - 68400) {
             playersPredictions[player].predictions[matchNumber] = result;
+        }
         playersPredictions[player].predictionsCount = 0;
         for (uint256 i = 0; i < NUM_MATCHES; ++i) {
-            if (
-                playersPredictions[player].predictions[i] != Result.Pending &&
-                playersPredictions[player].isPaid[i]
-            ) ++playersPredictions[player].predictionsCount;
+            if (playersPredictions[player].predictions[i] != Result.Pending && playersPredictions[player].isPaid[i]) {
+                ++playersPredictions[player].predictionsCount;
+            }
         }
     }
 
     function clearPredictionsCount(address player) public onlyThePredicter {
         playersPredictions[player].predictionsCount = 0;
     }
+    //@audit is this correct?
 
     function getPlayerScore(address player) public view returns (int8 score) {
         for (uint256 i = 0; i < NUM_MATCHES; ++i) {
-            if (
-                playersPredictions[player].isPaid[i] &&
-                playersPredictions[player].predictions[i] != Result.Pending
-            ) {
-                score += playersPredictions[player].predictions[i] == results[i]
-                    ? int8(2)
-                    : -1;
+            if (playersPredictions[player].isPaid[i] && playersPredictions[player].predictions[i] != Result.Pending) {
+                score += playersPredictions[player].predictions[i] == results[i] ? int8(2) : -1;
             }
         }
     }
 
     function isEligibleForReward(address player) public view returns (bool) {
-        return
-            results[NUM_MATCHES - 1] != Result.Pending &&
-            playersPredictions[player].predictionsCount > 1;
+        return results[NUM_MATCHES - 1] != Result.Pending && playersPredictions[player].predictionsCount > 1;
     }
 }

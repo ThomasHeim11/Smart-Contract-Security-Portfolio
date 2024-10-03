@@ -10,14 +10,17 @@ contract ContestManager is Ownable {
     mapping(address => uint256) public contestToTotalRewards;
 
     error ContestManager__InsufficientFunds();
+    //@audit Is this safe?
 
     constructor() Ownable(msg.sender) {}
 
     function createContest(address[] memory players, uint256[] memory rewards, IERC20 token, uint256 totalRewards)
         public
+        //@audit security risk???
         onlyOwner
         returns (address)
     {
+        //@audit is this safe?
         // Create a new Pot contract
         Pot pot = new Pot(players, rewards, token, totalRewards);
         contests.push(address(pot));
@@ -36,6 +39,7 @@ contract ContestManager is Ownable {
 
         token.transferFrom(msg.sender, address(pot), totalRewards);
     }
+    //@audit is this safe?
 
     function getContests() public view returns (address[] memory) {
         return contests;
@@ -46,6 +50,7 @@ contract ContestManager is Ownable {
     }
 
     function getContestRemainingRewards(address contest) public view returns (uint256) {
+        //@audit is this correct type casting?
         Pot pot = Pot(contest);
         return pot.getRemainingRewards();
     }
@@ -53,6 +58,7 @@ contract ContestManager is Ownable {
     function closeContest(address contest) public onlyOwner {
         _closeContest(contest);
     }
+    //@audit is this correct?
 
     function _closeContest(address contest) internal {
         Pot pot = Pot(contest);

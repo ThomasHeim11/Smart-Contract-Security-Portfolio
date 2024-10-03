@@ -1,8 +1,0 @@
-/CODEOWNERS	@duncancmt @dekz
-/foundry.toml	@duncancmt @dekz
-/sh/	@duncancmt
-/script/	@duncancmt @dekz
-/.github/	@dekz
-/js/	@dekz
-/package-lock.json	@dekz
-/package.json	@dekz

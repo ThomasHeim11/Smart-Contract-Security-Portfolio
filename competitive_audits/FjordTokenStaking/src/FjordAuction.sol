@@ -137,11 +137,17 @@ contract FjordAuction {
         auctionEndTime = block.timestamp.add(_biddingTime);
         totalTokens = _totalTokens;
     }
-
+    //@audit Slither- Reentrancy
+    /*Reentrancy in FjordAuction.bid(uint256) (src/FjordAuction.sol#145-155):
+    External calls:
+    - fjordPoints.transferFrom(msg.sender,address(this),amount) (src/FjordAuction.sol#153)
+    Event emitted after the call(s):
+    - BidAdded(msg.sender,amount) (src/FjordAuction.sol#154) */
     /**
      * @notice Places a bid in the auction.
      * @param amount The amount of FjordPoints to bid.
      */
+
     function bid(uint256 amount) external {
         if (block.timestamp > auctionEndTime) {
             revert AuctionAlreadyEnded();
@@ -153,6 +159,12 @@ contract FjordAuction {
         fjordPoints.transferFrom(msg.sender, address(this), amount);
         emit BidAdded(msg.sender, amount);
     }
+    //@audit Reentrancy-Slither
+    /*Reentrancy in FjordAuction.unbid(uint256) (src/FjordAuction.sol#163-180):
+    External calls:
+    - fjordPoints.transfer(msg.sender,amount) (src/FjordAuction.sol#178)
+    Event emitted after the call(s):
+    - BidWithdrawn(msg.sender,amount) (src/FjordAuction.sol#179) */
 
     /**
      * @notice Allows users to withdraw part or all of their bids before the auction ends.
@@ -205,6 +217,12 @@ contract FjordAuction {
         uint256 pointsToBurn = fjordPoints.balanceOf(address(this));
         fjordPoints.burn(pointsToBurn);
     }
+    //@audit Reentrancy-Slither
+    /*Reentrancy in FjordAuction.claimTokens() (src/FjordAuction.sol#212-227):
+    External calls:
+    - auctionToken.transfer(msg.sender,claimable) (src/FjordAuction.sol#225)
+    Event emitted after the call(s):
+    - TokensClaimed(msg.sender,claimable) (src/FjordAuction.sol#226) */
 
     /**
      * @notice Allows users to claim their tokens after the auction has ended.

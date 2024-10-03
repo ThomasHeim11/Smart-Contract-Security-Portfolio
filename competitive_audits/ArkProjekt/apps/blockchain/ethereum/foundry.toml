@@ -4,7 +4,10 @@ out = "out"
 libs = ["lib"]
 gas_limit = 999999999
 fs_permissions = [{ access = "read-write", path = "./logs"}]
+fuzz_runs = 10000
 
+[fuzz]
+runs = 1000
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
 
 [rpc_endpoints]

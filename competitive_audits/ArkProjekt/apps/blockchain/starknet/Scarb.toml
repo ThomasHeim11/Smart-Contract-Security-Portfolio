@@ -13,6 +13,9 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag 
 sierra = true
 casm = true
 
+[cairo]
+sierra-replace-ids = true
+
 [lib]
 
 [tool.sncast.katana]

@@ -19,12 +19,7 @@ import {Errors} from "../utils/Errors.sol";
  * @notice Only support ERC20 or native token
  * @notice Only support white listed token
  */
-contract TokenManager is
-    TokenManagerStorage,
-    Rescuable,
-    Related,
-    ITokenManager
-{
+contract TokenManager is TokenManagerStorage, Rescuable, Related, ITokenManager {
     constructor() Rescuable() {}
 
     modifier onlyInTokenWhiteList(bool _isPointToken, address _tokenAddress) {
@@ -34,12 +29,13 @@ contract TokenManager is
 
         _;
     }
-
+    // @audit centralized modifier!!!
     /**
      * @notice Set wrapped native token
      * @dev Caller must be owner
      * @param _wrappedNativeToken Wrapped native token
      */
+
     function initialize(address _wrappedNativeToken) external onlyOwner {
         wrappedNativeToken = _wrappedNativeToken;
     }
@@ -53,12 +49,7 @@ contract TokenManager is
      * @notice Capital pool should be deployed
      * @dev Support ERC20 token and native token
      */
-    function tillIn(
-        address _accountAddress,
-        address _tokenAddress,
-        uint256 _amount,
-        bool _isPointToken
-    )
+    function tillIn(address _accountAddress, address _tokenAddress, uint256 _amount, bool _isPointToken)
         external
         payable
         onlyRelatedContracts(tadleFactory, _msgSender())
@@ -69,9 +60,7 @@ contract TokenManager is
             return;
         }
 
-        address capitalPoolAddr = tadleFactory.relatedContracts(
-            RelatedContractLibraries.CAPITAL_POOL
-        );
+        address capitalPoolAddr = tadleFactory.relatedContracts(RelatedContractLibraries.CAPITAL_POOL);
         if (capitalPoolAddr == address(0x0)) {
             revert Errors.ContractIsNotDeployed();
         }
@@ -90,13 +79,8 @@ contract TokenManager is
             _safe_transfer(wrappedNativeToken, capitalPoolAddr, _amount);
         } else {
             /// @notice token is ERC20 token
-            _transfer(
-                _tokenAddress,
-                _accountAddress,
-                capitalPoolAddr,
-                _amount,
-                capitalPoolAddr
-            );
+            //@audit does this work for all ERC20 eg USDT?
+            _transfer(_tokenAddress, _accountAddress, capitalPoolAddr, _amount, capitalPoolAddr);
         }
 
         emit TillIn(_accountAddress, _tokenAddress, _amount, _isPointToken);
@@ -115,17 +99,14 @@ contract TokenManager is
         address _accountAddress,
         address _tokenAddress,
         uint256 _amount
-    ) external onlyRelatedContracts(tadleFactory, _msgSender()) {
-        userTokenBalanceMap[_accountAddress][_tokenAddress][
-            _tokenBalanceType
-        ] += _amount;
+    )
+        //@audit what is this? is this coorect updated ?
+        external
+        onlyRelatedContracts(tadleFactory, _msgSender())
+    {
+        userTokenBalanceMap[_accountAddress][_tokenAddress][_tokenBalanceType] += _amount;
 
-        emit AddTokenBalance(
-            _accountAddress,
-            _tokenAddress,
-            _tokenBalanceType,
-            _amount
-        );
+        emit AddTokenBalance(_accountAddress, _tokenAddress, _tokenBalanceType, _amount);
     }
 
     /**
@@ -134,21 +115,14 @@ contract TokenManager is
      * @param _tokenAddress Token address
      * @param _tokenBalanceType Token balance type
      */
-    function withdraw(
-        address _tokenAddress,
-        TokenBalanceType _tokenBalanceType
-    ) external whenNotPaused {
-        uint256 claimAbleAmount = userTokenBalanceMap[_msgSender()][
-            _tokenAddress
-        ][_tokenBalanceType];
+    function withdraw(address _tokenAddress, TokenBalanceType _tokenBalanceType) external whenNotPaused {
+        uint256 claimAbleAmount = userTokenBalanceMap[_msgSender()][_tokenAddress][_tokenBalanceType];
 
         if (claimAbleAmount == 0) {
             return;
         }
 
-        address capitalPoolAddr = tadleFactory.relatedContracts(
-            RelatedContractLibraries.CAPITAL_POOL
-        );
+        address capitalPoolAddr = tadleFactory.relatedContracts(RelatedContractLibraries.CAPITAL_POOL);
 
         if (_tokenAddress == wrappedNativeToken) {
             /**
@@ -157,13 +131,7 @@ contract TokenManager is
              * @dev withdraw native token to token manager contract
              * @dev transfer native token to msg sender
              */
-            _transfer(
-                wrappedNativeToken,
-                capitalPoolAddr,
-                address(this),
-                claimAbleAmount,
-                capitalPoolAddr
-            );
+            _transfer(wrappedNativeToken, capitalPoolAddr, address(this), claimAbleAmount, capitalPoolAddr);
 
             IWrappedNativeToken(wrappedNativeToken).withdraw(claimAbleAmount);
             payable(msg.sender).transfer(claimAbleAmount);
@@ -172,20 +140,10 @@ contract TokenManager is
              * @dev token is ERC20 token
              * @dev transfer from capital pool to msg sender
              */
-            _safe_transfer_from(
-                _tokenAddress,
-                capitalPoolAddr,
-                _msgSender(),
-                claimAbleAmount
-            );
+            _safe_transfer_from(_tokenAddress, capitalPoolAddr, _msgSender(), claimAbleAmount);
         }
 
-        emit Withdraw(
-            _msgSender(),
-            _tokenAddress,
-            _tokenBalanceType,
-            claimAbleAmount
-        );
+        emit Withdraw(_msgSender(), _tokenAddress, _tokenBalanceType, claimAbleAmount);
     }
 
     /**
@@ -194,13 +152,10 @@ contract TokenManager is
      * @param _tokens Token addresses
      * @param _isWhiteListed Is white listed
      */
-    function updateTokenWhiteListed(
-        address[] calldata _tokens,
-        bool _isWhiteListed
-    ) external onlyOwner {
+    function updateTokenWhiteListed(address[] calldata _tokens, bool _isWhiteListed) external onlyOwner {
         uint256 _tokensLength = _tokens.length;
 
-        for (uint256 i = 0; i < _tokensLength; ) {
+        for (uint256 i = 0; i < _tokensLength;) {
             _updateTokenWhiteListed(_tokens[i], _isWhiteListed);
             unchecked {
                 ++i;
@@ -213,10 +168,7 @@ contract TokenManager is
      * @param _token Token address
      * @param _isWhiteListed Is white listed
      */
-    function _updateTokenWhiteListed(
-        address _token,
-        bool _isWhiteListed
-    ) internal {
+    function _updateTokenWhiteListed(address _token, bool _isWhiteListed) internal {
         tokenWhiteListed[_token] = _isWhiteListed;
 
         emit UpdateTokenWhiteListed(_token, _isWhiteListed);
@@ -230,20 +182,13 @@ contract TokenManager is
      * @param _to To address
      * @param _amount Transfer amount
      */
-    function _transfer(
-        address _token,
-        address _from,
-        address _to,
-        uint256 _amount,
-        address _capitalPoolAddr
-    ) internal {
+    function _transfer(address _token, address _from, address _to, uint256 _amount, address _capitalPoolAddr)
+        internal
+    {
         uint256 fromBalanceBef = IERC20(_token).balanceOf(_from);
         uint256 toBalanceBef = IERC20(_token).balanceOf(_to);
 
-        if (
-            _from == _capitalPoolAddr &&
-            IERC20(_token).allowance(_from, address(this)) == 0x0
-        ) {
+        if (_from == _capitalPoolAddr && IERC20(_token).allowance(_from, address(this)) == 0x0) {
             ICapitalPool(_capitalPoolAddr).approve(address(this));
         }
 

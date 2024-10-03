@@ -6,12 +6,12 @@ import "./sn/Cairo.sol";
 
 import "starknet/IStarknetMessaging.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
-
+//@audit centralized risk
 /**
- @title Starklane state.
-*/
-contract StarklaneState is Ownable {
+ * @title Starklane state.
+ */
 
+contract StarklaneState is Ownable {
     // StarknetCore.
     IStarknetMessaging _starknetCoreAddress;
 
@@ -22,46 +22,32 @@ contract StarklaneState is Ownable {
     felt252 _starklaneL2Selector;
 
     /**
-       @notice Retrieves info about Starklane L2 mapping.
-
-       @return (starklane L2 address, starklane L2 selector).
-    */
-    function l2Info()
-        external
-        view
-        returns (snaddress, felt252)
-    {
+     * @notice Retrieves info about Starklane L2 mapping.
+     *
+     *    @return (starklane L2 address, starklane L2 selector).
+     */
+    function l2Info() external view returns (snaddress, felt252) {
         return (_starklaneL2Address, _starklaneL2Selector);
     }
 
     /**
-       @notice Sets Starklane L2 address.
-
-       @param l2Address Starklane L2 address.
-    */
-    function setStarklaneL2Address(
-        uint256 l2Address
-    )
-        public
-        onlyOwner
-    {
+     * @notice Sets Starklane L2 address.
+     *
+     *    @param l2Address Starklane L2 address.
+     */
+    //@audit centralized risk
+    function setStarklaneL2Address(uint256 l2Address) public onlyOwner {
         _starklaneL2Address = Cairo.snaddressWrap(l2Address);
     }
-
+    //@audit centralized risk
     /**
-       @notice Sets Starklane L2 selector of Starklane L2 contract to be
-       called when a message arrives into Starknet.
+     * @notice Sets Starklane L2 selector of Starklane L2 contract to be
+     *    called when a message arrives into Starknet.
+     *
+     *    @param l2Selector Starklane L2 selector.
+     */
 
-       @param l2Selector Starklane L2 selector.
-    */
-    function setStarklaneL2Selector(
-        uint256 l2Selector
-    )
-        public
-        onlyOwner
-    {
+    function setStarklaneL2Selector(uint256 l2Selector) public onlyOwner {
         _starklaneL2Selector = Cairo.felt252Wrap(l2Selector);
     }
-
-
 }

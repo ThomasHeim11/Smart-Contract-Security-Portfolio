@@ -35,31 +35,43 @@ contract AuctionFactory {
         if (msg.sender != owner) {
             revert NotOwner();
         }
+        //@audit what is the purpose of the _; here? can it be exploited?
         _;
     }
+    //@audit is this best practice?
 
     function setOwner(address _newOwner) external onlyOwner {
         if (_newOwner == address(0)) revert InvalidAddress();
         owner = _newOwner;
     }
-
+    //@audit reentrancy-slither
+    /*Reentrancy in AuctionFactory.createAuction(address,uint256,uint256,bytes32) (src/FjordAuctionFactory.sol#54-72):
+    External calls:
+    - IERC20(auctionToken).transferFrom(msg.sender,auctionAddress,totalTokens) (src/FjordAuctionFactory.sol#69)
+    Event emitted after the call(s):
+    - AuctionCreated(auctionAddress) (src/FjordAuctionFactory.sol#71)
+    */
     /**
      * @notice Creates a new auction contract using create2.
      * @param biddingTime The duration of the auction in seconds.
      * @param totalTokens The total number of tokens to be auctioned.
      * @param salt A unique salt for create2 to generate a deterministic address.
      */
+
     function createAuction(
         address auctionToken,
         uint256 biddingTime,
         uint256 totalTokens,
         bytes32 salt
-    ) external onlyOwner {
+    )
+        //@audit has this been reported before? using onlyOwner vauribility.
+        external
+        onlyOwner
+    {
         address auctionAddress = address(
             new FjordAuction{ salt: salt }(fjordPoints, auctionToken, biddingTime, totalTokens)
         );
 
-        // Transfer the auction tokens from the msg.sender to the new auction contract
         IERC20(auctionToken).transferFrom(msg.sender, auctionAddress, totalTokens);
 
         emit AuctionCreated(auctionAddress);

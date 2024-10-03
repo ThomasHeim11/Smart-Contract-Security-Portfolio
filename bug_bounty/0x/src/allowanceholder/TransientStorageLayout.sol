@@ -2,6 +2,7 @@
 pragma solidity ^0.8.25;
 
 import {TransientStorageBase} from "./TransientStorageBase.sol";
+//@audit heavy assembly
 
 abstract contract TransientStorageLayout is TransientStorageBase {
     /// @dev The key for this ephemeral allowance is keccak256(abi.encodePacked(operator, owner, token)).

@@ -28,6 +28,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2",
     "dotenv-cli": "^7.0.0"
   }
 }

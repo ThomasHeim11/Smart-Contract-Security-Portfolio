@@ -22,6 +22,7 @@ contract AllowanceHolder is TransientStorageMock, AllowanceHolderBase {
     bytes32 private _sentinel;
 
     constructor() {
+        //@audit is this correct?
         require(address(this) == 0x0000000000005E88410CcDFaDe4a5EfaE4b49562 || block.chainid == 31337);
         uint256 _sentinelSlot;
         assembly ("memory-safe") {

@@ -1,0 +1,13 @@
+{
+    "topics": [
+        {
+            "name": "type_check",
+            "messages": [
+                {
+                    "message": "Error in spec file (off_ramp.spec:21:3): Syntax error: unexpected token near `}`",
+                    "location": []
+                }
+            ]
+        }
+    ]
+}

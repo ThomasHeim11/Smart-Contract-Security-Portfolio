@@ -10,6 +10,7 @@ import { IFjordPoints } from "./interfaces/IFjordPoints.sol";
  * @title FjordPoints
  * @dev ERC20 token to represent points distributed based on locked tokens in Staking contract.
  */
+//@audit is ERC20Burnable implemented correctly?
 
 contract FjordPoints is ERC20, ERC20Burnable, IFjordPoints {
     using SafeMath for uint256;
@@ -49,7 +50,7 @@ contract FjordPoints is ERC20, ERC20Burnable, IFjordPoints {
 
     /// @notice The staking contract address
     address public staking;
-
+    //@audit CAN THIS BE EXPLOITED?
     /// @notice Duration of each epoch for points distribution
     uint256 public constant EPOCH_DURATION = 1 weeks;
 
@@ -111,19 +112,21 @@ contract FjordPoints is ERC20, ERC20Burnable, IFjordPoints {
      * @param amount The amount of points claimed.
      */
     event PointsClaimed(address indexed user, uint256 amount);
-
+    //@audit can this be exploited?
     /**
      * @dev Sets the staking contract address and initializes the ERC20 token.
      */
+
     constructor() ERC20("BjordBoint", "BJB") {
         owner = msg.sender;
         lastDistribution = block.timestamp;
         pointsPerEpoch = 100 ether;
     }
-
+    //@audit has this been reported?
     /**
      * @dev Modifier to check if the caller is the owner of the contract.
      */
+
     modifier onlyOwner() {
         if (msg.sender != owner) revert CallerDisallowed();
         _;
@@ -138,11 +141,12 @@ contract FjordPoints is ERC20, ERC20Burnable, IFjordPoints {
         }
         _;
     }
-
+    //@audit is the math correct here?
     /**
      * @dev Modifier to update pending points for a user.
      * @param user The address of the user to update points for.
      */
+
     modifier updatePendingPoints(address user) {
         UserInfo storage userInfo = users[user];
         uint256 owed = userInfo.stakedAmount.mul(pointsPerToken.sub(userInfo.lastPointsPerToken))
@@ -159,16 +163,18 @@ contract FjordPoints is ERC20, ERC20Burnable, IFjordPoints {
         distributePoints();
         _;
     }
+    //@audit is this best practice?
 
     function setOwner(address _newOwner) external onlyOwner {
         if (_newOwner == address(0)) revert InvalidAddress();
         owner = _newOwner;
     }
-
+    //@audit has this been reported before?
     /**
      * @notice Updates the staking contract.
      * @param _staking The address of the staking contract.
      */
+
     function setStakingContract(address _staking) external onlyOwner {
         if (_staking == address(0)) {
             revert InvalidAddress();
@@ -176,11 +182,12 @@ contract FjordPoints is ERC20, ERC20Burnable, IFjordPoints {
 
         staking = _staking;
     }
-
+    //@audit has this been reported before?
     /**
      * @notice Updates the points distributed per epoch.
      * @param _points The amount of points to be distributed per epoch.
      */
+
     function setPointsPerEpoch(uint256 _points) external onlyOwner checkDistribution {
         if (_points == 0) {
             revert();
@@ -188,12 +195,13 @@ contract FjordPoints is ERC20, ERC20Burnable, IFjordPoints {
 
         pointsPerEpoch = _points;
     }
-
+    //@audit can the amount of staked token be lost or not correct amount???
     /**
      * @notice Records the amount of tokens staked by a user.
      * @param user The address of the user staking tokens.
      * @param amount The amount of tokens being staked.
      */
+
     function onStaked(address user, uint256 amount)
         external
         onlyStaking
@@ -205,12 +213,13 @@ contract FjordPoints is ERC20, ERC20Burnable, IFjordPoints {
         totalStaked = totalStaked.add(amount);
         emit Staked(user, amount);
     }
-
+    //@audit can this be exploted so all staked tokens are lost?
     /**
      * @notice Records the amount of tokens unstaked by a user.
      * @param user The address of the user unstaking tokens.
      * @param amount The amount of tokens being unstaked.
      */
+
     function onUnstaked(address user, uint256 amount)
         external
         onlyStaking
@@ -225,10 +234,11 @@ contract FjordPoints is ERC20, ERC20Burnable, IFjordPoints {
         totalStaked = totalStaked.sub(amount);
         emit Unstaked(user, amount);
     }
-
+    //@audit is this correct math?
     /**
      * @notice Distributes points based on the locked amounts in the staking contract.
      */
+
     function distributePoints() public {
         if (block.timestamp < lastDistribution + EPOCH_DURATION) {
             return;
@@ -246,10 +256,11 @@ contract FjordPoints is ERC20, ERC20Burnable, IFjordPoints {
 
         emit PointsDistributed(pointsPerEpoch, pointsPerToken);
     }
-
+    //@audit can an exploit make it so the user cant claim tokens?
     /**
      * @notice Allows users to claim their accumulated points.
      */
+
     function claimPoints() external checkDistribution updatePendingPoints(msg.sender) {
         UserInfo storage userInfo = users[msg.sender];
         uint256 pointsToClaim = userInfo.pendingPoints;

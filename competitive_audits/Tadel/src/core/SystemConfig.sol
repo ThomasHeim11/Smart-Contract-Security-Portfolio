@@ -22,10 +22,7 @@ contract SystemConfig is SystemConfigStorage, Rescuable, ISystemConfig {
      * @param _basePlatformFeeRate Base platform fee rate, default is 0.5%
      * @param _baseReferralRate Base referral rate, default is 30%
      */
-    function initialize(
-        uint256 _basePlatformFeeRate,
-        uint256 _baseReferralRate
-    ) external onlyOwner {
+    function initialize(uint256 _basePlatformFeeRate, uint256 _baseReferralRate) external onlyOwner {
         basePlatformFeeRate = _basePlatformFeeRate;
         baseReferralRate = _baseReferralRate;
     }
@@ -38,11 +35,7 @@ contract SystemConfig is SystemConfigStorage, Rescuable, ISystemConfig {
      * @notice _referrerRate + _authorityRate = baseReferralRate + referralExtraRate
      * @notice _referrer != _msgSender()
      */
-    function updateReferrerInfo(
-        address _referrer,
-        uint256 _referrerRate,
-        uint256 _authorityRate
-    ) external {
+    function updateReferrerInfo(address _referrer, uint256 _referrerRate, uint256 _authorityRate) external {
         if (_msgSender() == _referrer) {
             revert InvalidReferrer(_referrer);
         }
@@ -71,12 +64,7 @@ contract SystemConfig is SystemConfigStorage, Rescuable, ISystemConfig {
         referralInfo.referrerRate = _referrerRate;
         referralInfo.authorityRate = _authorityRate;
 
-        emit UpdateReferrerInfo(
-            msg.sender,
-            _referrer,
-            _referrerRate,
-            _authorityRate
-        );
+        emit UpdateReferrerInfo(msg.sender, _referrer, _referrerRate, _authorityRate);
     }
 
     /**
@@ -87,16 +75,9 @@ contract SystemConfig is SystemConfigStorage, Rescuable, ISystemConfig {
      * @notice _marketPlaceName must be unique
      * @notice _fixedratio is true if the market place is arbitration required
      */
-    function createMarketPlace(
-        string calldata _marketPlaceName,
-        bool _fixedratio
-    ) external onlyOwner {
-        address marketPlace = GenerateAddress.generateMarketPlaceAddress(
-            _marketPlaceName
-        );
-        MarketPlaceInfo storage marketPlaceInfo = marketPlaceInfoMap[
-            marketPlace
-        ];
+    function createMarketPlace(string calldata _marketPlaceName, bool _fixedratio) external onlyOwner {
+        address marketPlace = GenerateAddress.generateMarketPlaceAddress(_marketPlaceName);
+        MarketPlaceInfo storage marketPlaceInfo = marketPlaceInfoMap[marketPlace];
 
         if (marketPlaceInfo.status != MarketPlaceStatus.UnInitialized) {
             revert MarketPlaceAlreadyInitialized();
@@ -123,14 +104,14 @@ contract SystemConfig is SystemConfigStorage, Rescuable, ISystemConfig {
         uint256 _tokenPerPoint,
         uint256 _tge,
         uint256 _settlementPeriod
-    ) external onlyOwner {
-        address marketPlace = GenerateAddress.generateMarketPlaceAddress(
-            _marketPlaceName
-        );
+    )
+        //@audit centralization risk!
+        external
+        onlyOwner
+    {
+        address marketPlace = GenerateAddress.generateMarketPlaceAddress(_marketPlaceName);
 
-        MarketPlaceInfo storage marketPlaceInfo = marketPlaceInfoMap[
-            marketPlace
-        ];
+        MarketPlaceInfo storage marketPlaceInfo = marketPlaceInfoMap[marketPlace];
 
         if (marketPlaceInfo.status != MarketPlaceStatus.Online) {
             revert MarketPlaceNotOnline(marketPlaceInfo.status);
@@ -141,14 +122,7 @@ contract SystemConfig is SystemConfigStorage, Rescuable, ISystemConfig {
         marketPlaceInfo.tge = _tge;
         marketPlaceInfo.settlementPeriod = _settlementPeriod;
 
-        emit UpdateMarket(
-            _marketPlaceName,
-            marketPlace,
-            _tokenAddress,
-            _tokenPerPoint,
-            _tge,
-            _settlementPeriod
-        );
+        emit UpdateMarket(_marketPlaceName, marketPlace, _tokenAddress, _tokenPerPoint, _tge, _settlementPeriod);
     }
 
     /**
@@ -157,16 +131,9 @@ contract SystemConfig is SystemConfigStorage, Rescuable, ISystemConfig {
      * @param _status Market place status
      * @notice Caller must be owner
      */
-    function updateMarketPlaceStatus(
-        string calldata _marketPlaceName,
-        MarketPlaceStatus _status
-    ) external onlyOwner {
-        address marketPlace = GenerateAddress.generateMarketPlaceAddress(
-            _marketPlaceName
-        );
-        MarketPlaceInfo storage marketPlaceInfo = marketPlaceInfoMap[
-            marketPlace
-        ];
+    function updateMarketPlaceStatus(string calldata _marketPlaceName, MarketPlaceStatus _status) external onlyOwner {
+        address marketPlace = GenerateAddress.generateMarketPlaceAddress(_marketPlaceName);
+        MarketPlaceInfo storage marketPlaceInfo = marketPlaceInfoMap[marketPlace];
         marketPlaceInfo.status = _status;
     }
 
@@ -176,14 +143,8 @@ contract SystemConfig is SystemConfigStorage, Rescuable, ISystemConfig {
      * @param _platformFeeRate Platform fee rate of user
      * @notice Caller must be owner
      */
-    function updateUserPlatformFeeRate(
-        address _accountAddress,
-        uint256 _platformFeeRate
-    ) external onlyOwner {
-        require(
-            _platformFeeRate <= Constants.PLATFORM_FEE_DECIMAL_SCALER,
-            "Invalid platform fee rate"
-        );
+    function updateUserPlatformFeeRate(address _accountAddress, uint256 _platformFeeRate) external onlyOwner {
+        require(_platformFeeRate <= Constants.PLATFORM_FEE_DECIMAL_SCALER, "Invalid platform fee rate");
         userPlatformFeeRate[_accountAddress] = _platformFeeRate;
 
         emit UpdateUserPlatformFeeRate(_accountAddress, _platformFeeRate);
@@ -196,10 +157,8 @@ contract SystemConfig is SystemConfigStorage, Rescuable, ISystemConfig {
      * @notice Caller must be owner
      * @notice _extraRate + baseReferralRate <= REFERRAL_RATE_DECIMAL_SCALER
      */
-    function updateReferralExtraRateMap(
-        address _referrer,
-        uint256 _extraRate
-    ) external onlyOwner {
+    //@audit centralization risk!
+    function updateReferralExtraRateMap(address _referrer, uint256 _extraRate) external onlyOwner {
         uint256 totalRate = _extraRate + baseReferralRate;
         if (totalRate > Constants.REFERRAL_RATE_DECIMAL_SCALER) {
             revert InvalidTotalRate(totalRate);
@@ -226,16 +185,14 @@ contract SystemConfig is SystemConfigStorage, Rescuable, ISystemConfig {
     }
 
     /// @dev Get referral info by referrer
-    function getReferralInfo(
-        address _referrer
-    ) external view returns (ReferralInfo memory) {
+    function getReferralInfo(address _referrer) external view returns (ReferralInfo memory) {
         return referralInfoMap[_referrer];
     }
 
     /// @dev Get marketPlace info by marketPlace
-    function getMarketPlaceInfo(
-        address _marketPlace
-    ) external view returns (MarketPlaceInfo memory) {
+    function getMarketPlaceInfo(address _marketPlace) external view returns (MarketPlaceInfo memory) {
         return marketPlaceInfoMap[_marketPlace];
     }
 }
+
+//

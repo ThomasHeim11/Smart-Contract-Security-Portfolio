@@ -6,6 +6,7 @@ import {ScoreBoard} from "./ScoreBoard.sol";
 
 contract ThePredicter {
     using Address for address payable;
+    //@audit is this correct
 
     uint256 private constant START_TIME = 1723752000; // Thu Aug 15 2024 20:00:00 GMT+0000
 
@@ -32,11 +33,7 @@ contract ThePredicter {
     error ThePredicter__PredictionsAreClosed();
     error ThePredicter__UnauthorizedAccess();
 
-    constructor(
-        address _scoreBoard,
-        uint256 _entranceFee,
-        uint256 _predictionFee
-    ) {
+    constructor(address _scoreBoard, uint256 _entranceFee, uint256 _predictionFee) {
         organizer = msg.sender;
         scoreBoard = ScoreBoard(_scoreBoard);
         entranceFee = _entranceFee;
@@ -47,7 +44,7 @@ contract ThePredicter {
         if (msg.value != entranceFee) {
             revert ThePredicter__IncorrectEntranceFee();
         }
-
+        //@audit is this correct
         if (block.timestamp > START_TIME - 14400) {
             revert ThePredicter__RegistrationIsOver();
         }
@@ -61,7 +58,7 @@ contract ThePredicter {
 
     function cancelRegistration() public {
         if (playersStatus[msg.sender] == Status.Pending) {
-            (bool success, ) = msg.sender.call{value: entranceFee}("");
+            (bool success,) = msg.sender.call{value: entranceFee}("");
             require(success, "Failed to withdraw");
             playersStatus[msg.sender] = Status.Canceled;
             return;
@@ -73,6 +70,7 @@ contract ThePredicter {
         if (msg.sender != organizer) {
             revert ThePredicter__UnauthorizedAccess();
         }
+        //@audit is this correct
         if (players.length >= 30) {
             revert ThePredicter__AllPlacesAreTaken();
         }
@@ -82,14 +80,11 @@ contract ThePredicter {
         }
     }
 
-    function makePrediction(
-        uint256 matchNumber,
-        ScoreBoard.Result prediction
-    ) public payable {
+    function makePrediction(uint256 matchNumber, ScoreBoard.Result prediction) public payable {
         if (msg.value != predictionFee) {
             revert ThePredicter__IncorrectPredictionFee();
         }
-
+        //@audit is this correct
         if (block.timestamp > START_TIME + matchNumber * 68400 - 68400) {
             revert ThePredicter__PredictionsAreClosed();
         }
@@ -102,9 +97,9 @@ contract ThePredicter {
         if (msg.sender != organizer) {
             revert ThePredicter__NotEligibleForWithdraw();
         }
-
+        // @audit is this correct
         uint256 fees = address(this).balance - players.length * entranceFee;
-        (bool success, ) = msg.sender.call{value: fees}("");
+        (bool success,) = msg.sender.call{value: fees}("");
         require(success, "Failed to withdraw");
     }
 
@@ -131,14 +126,12 @@ contract ThePredicter {
         uint256 shares = uint8(score);
         uint256 totalShares = uint256(totalPositivePoints);
         uint256 reward = 0;
-
-        reward = maxScore < 0
-            ? entranceFee
-            : (shares * players.length * entranceFee) / totalShares;
+        //@audit is this correct
+        reward = maxScore < 0 ? entranceFee : (shares * players.length * entranceFee) / totalShares;
 
         if (reward > 0) {
             scoreBoard.clearPredictionsCount(msg.sender);
-            (bool success, ) = msg.sender.call{value: reward}("");
+            (bool success,) = msg.sender.call{value: reward}("");
             require(success, "Failed to withdraw");
         }
     }

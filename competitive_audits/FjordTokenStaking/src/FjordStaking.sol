@@ -301,6 +301,7 @@ contract FjordStaking is ISablierV2LockupRecipient {
             authorizedSablierSenders[_authorizedSablierSender] = true;
         }
     }
+    //@audit reported for centrelized risk?
 
     modifier onlyOwner() {
         if (msg.sender != owner) revert CallerDisallowed();
@@ -326,6 +327,7 @@ contract FjordStaking is ISablierV2LockupRecipient {
         if (msg.sender != address(sablier)) revert CallerDisallowed();
         _;
     }
+    //@audit correct marth?
 
     function getEpoch(uint256 _timestamp) public view returns (uint16) {
         if (_timestamp < startTime) return 0;
@@ -343,6 +345,7 @@ contract FjordStaking is ISablierV2LockupRecipient {
     function getStreamOwner(uint256 _streamID) public view returns (address) {
         return _streamIDOwners[_streamID];
     }
+    //@audit centlized risk onlyOwner next four functions
 
     function setOwner(address _newOwner) external onlyOwner {
         if (_newOwner == address(0)) revert InvalidZeroAddress();
@@ -361,6 +364,12 @@ contract FjordStaking is ISablierV2LockupRecipient {
     function removeAuthorizedSablierSender(address _address) external onlyOwner {
         if (authorizedSablierSenders[_address]) authorizedSablierSenders[_address] = false;
     }
+    //@audit reentrancy-slither
+    /*Reentrancy in FjordStaking.stake(uint256) (src/FjordStaking.sol#371-394):
+    External calls:
+    - points.onStaked(msg.sender,_amount) (src/FjordStaking.sol#391)
+    Event emitted after the call(s):
+    - Staked(msg.sender,currentEpoch,_amount) (src/FjordStaking.sol#393) */
 
     /// @notice Stake FJORD tokens into the contract.
     /// @dev This function allows users to stake a certain number of FJORD tokens.
@@ -390,6 +399,14 @@ contract FjordStaking is ISablierV2LockupRecipient {
         emit Staked(msg.sender, currentEpoch, _amount);
     }
 
+    //@audit slither-reentrancy
+    /*Reentrancy in FjordStaking.stakeVested(uint256) (src/FjordStaking.sol#400-442):
+    External calls:
+    - sablier.transferFrom({from:msg.sender,to:address(this),tokenId:_streamID}) (src/FjordStaking.sol#438)
+    - points.onStaked(msg.sender,_amount) (src/FjordStaking.sol#439)
+    Event emitted after the call(s):
+    - VestedStaked(msg.sender,currentEpoch,_streamID,_amount) (src/FjordStaking.sol#441) */
+
     /// @notice Stake vested FJORD tokens into the contract.
     /// @dev This function allows users to stake a certain their NFT from
     /// sablier that contains FJORD tokens.
@@ -410,7 +427,7 @@ contract FjordStaking is ISablierV2LockupRecipient {
         uint128 refundedAmount = sablier.getRefundedAmount(_streamID);
 
         if (depositedAmount - (withdrawnAmount + refundedAmount) <= 0) revert InvalidAmount();
-
+        //@audit correct math?
         uint256 _amount = depositedAmount - (withdrawnAmount + refundedAmount);
 
         //EFFECT
@@ -437,6 +454,13 @@ contract FjordStaking is ISablierV2LockupRecipient {
 
         emit VestedStaked(msg.sender, currentEpoch, _streamID, _amount);
     }
+
+    //@audit slither-reentrancy
+    /*Reentrancy in FjordStaking.unstake(uint16,uint256) (src/FjordStaking.sol#452-497):
+    External calls:
+    - points.onUnstaked(msg.sender,_amount) (src/FjordStaking.sol#494)
+    Event emitted after the call(s):
+    - Unstaked(msg.sender,_epoch,_amount) (src/FjordStaking.sol#496) */
 
     /// @notice Unstake FJORD tokens from the contract.
     /// @dev This function allows users to unstake a certain number of FJORD tokens,
@@ -516,8 +540,8 @@ contract FjordStaking is ISablierV2LockupRecipient {
 
         _unstakeVested(msg.sender, _streamID, data.amount);
     }
-
     /// @notice Partial or fully unstake vested .
+
     function _unstakeVested(address streamOwner, uint256 _streamID, uint256 amount) internal {
         NFTData storage data = _streamIDs[streamOwner][_streamID];
         DepositReceipt storage dr = deposits[streamOwner][data.epoch];
@@ -562,11 +586,12 @@ contract FjordStaking is ISablierV2LockupRecipient {
 
         emit VestedUnstaked(streamOwner, epoch, amount, _streamID);
     }
-
+    //@audit can this be exploited?
     /// @notice Unstake from all epochs.
     /// @dev This function allows users to unstake from all the epochs at once,
     /// while also claiming all the pending rewards.
     /// @return totalStakedAmount The total amount that has been unstaked.
+
     function unstakeAll()
         external
         checkEpochRollover
@@ -642,6 +667,7 @@ contract FjordStaking is ISablierV2LockupRecipient {
         }
 
         rewardAmount = ud.unclaimedRewards;
+        //@audit correct math?
         penaltyAmount = rewardAmount / 2;
         rewardAmount -= penaltyAmount;
 
@@ -697,7 +723,7 @@ contract FjordStaking is ISablierV2LockupRecipient {
 
             if (totalStaked > 0) {
                 uint256 currentBalance = fjordToken.balanceOf(address(this));
-
+                //@audit correct math?
                 // no distribute the rewards to the users coming in the current epoch
                 uint256 pendingRewards = (currentBalance + totalVestedStaked + newVestedStaked)
                     - totalStaked - newStaked - totalRewards;
@@ -809,6 +835,14 @@ contract FjordStaking is ISablierV2LockupRecipient {
     function onStreamRenounced(uint256 /*streamId*/ ) external override onlySablier {
         // Left blank intentionally
     }
+    //@audit reentracy-slither
+    /*Reentrancy in FjordStaking.onStreamCanceled(uint256,address,uint128,uint128) (src/FjordStaking.sol#828-848):
+    External calls:
+    - _unstakeVested(streamOwner,streamId,amount) (src/FjordStaking.sol#845)
+    - sablier.transferFrom({from:address(this),to:streamOwner,tokenId:_streamID}) (src/FjordStaking.sol#561)
+    - points.onUnstaked(msg.sender,amount) (src/FjordStaking.sol#564)
+    Event emitted after the call(s):
+    - SablierCanceled(streamOwner,streamId,sender,amount) (src/FjordStaking.sol#847) */
 
     /// @notice onStreamCanceled never be called with non-cancelable stream
     /// @notice Responds to sender-triggered cancellations.

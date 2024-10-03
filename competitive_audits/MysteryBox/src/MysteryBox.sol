@@ -84,7 +84,6 @@ contract MysteryBox {
 
     function claimAllRewards() public {
         uint256 totalValue = 0;
-        //@audit for-lop can be used to get more rewards?
         for (uint256 i = 0; i < rewardsOwned[msg.sender].length; i++) {
             totalValue += rewardsOwned[msg.sender][i].value;
         }
