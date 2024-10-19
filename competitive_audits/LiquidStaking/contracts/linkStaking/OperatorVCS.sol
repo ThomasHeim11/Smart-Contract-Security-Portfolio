@@ -93,6 +93,7 @@ contract OperatorVCS is VaultControllerStrategy {
      * @dev rewards are paid in the stakingPool LST
      *
      */
+    //@audit shawod
     function onTokenTransfer(address, uint256, bytes calldata) external {
         if (msg.sender != address(stakingPool)) revert UnauthorizedToken();
     }
@@ -112,6 +113,7 @@ contract OperatorVCS is VaultControllerStrategy {
      * @param _receiver address to receive rewards
      * @param _amount amount to withdraw
      */
+    //@audit can attacker withraw all funds???
     function withdrawOperatorRewards(address _receiver, uint256 _amount) external returns (uint256) {
         if (!vaultMapping[msg.sender]) revert SenderNotAuthorized();
 
@@ -352,6 +354,7 @@ contract OperatorVCS is VaultControllerStrategy {
      * @param _rewardsReceiver address authorized to claim rewards for the vault
      * @param _pfAlertsController address of the price feed alerts contract
      */
+    //@audit can the be added many vaults to exploit and break protocol??
     function addVault(address _operator, address _rewardsReceiver, address _pfAlertsController) external onlyOwner {
         bytes memory data = abi.encodeWithSignature(
             "initialize(address,address,address,address,address,address,address)",

@@ -293,4 +293,51 @@ describe('OperatorVault', () => {
     await newVault.connect(signers[1]).setRewardsReceiver(accounts[0])
     assert.equal(await newVault.rewardsReceiver(), accounts[0])
   })
+  //@audit
+  // it('deposit should work correctly', async () => {
+  //   const { adrs, strategy, token, stakingController, vault } = await loadFixture(deployFixture)
+
+  //   // Initial deposit
+  //   await strategy.deposit(toEther(100))
+  //   assert.equal(fromEther(await token.balanceOf(adrs.stakingController)), 200)
+  //   assert.equal(fromEther(await stakingController.getStakerPrincipal(adrs.vault)), 200)
+  //   assert.equal(fromEther(await vault.getTotalDeposits()), 200)
+  //   assert.equal(fromEther(await vault.getUnclaimedRewards()), 0)
+  //   assert.equal(fromEther(await vault.trackedTotalDeposits()), 200)
+
+  //   // Edge Cases
+  //   // Case 1: Deposit zero amount
+  //   await strategy.deposit(toEther(0))
+  //   assert.equal(fromEther(await token.balanceOf(adrs.stakingController)), 200)
+  //   assert.equal(fromEther(await stakingController.getStakerPrincipal(adrs.vault)), 200)
+  //   assert.equal(fromEther(await vault.getTotalDeposits()), 200)
+  //   assert.equal(fromEther(await vault.getUnclaimedRewards()), 0)
+  //   assert.equal(fromEther(await vault.trackedTotalDeposits()), 200)
+
+  //   // Case 2: Deposit a very large amount
+  //   const largeAmount = ethers.constants.MaxUint256
+  //   await strategy.deposit(largeAmount)
+  //   assert.equal(
+  //     fromEther(await token.balanceOf(adrs.stakingController)),
+  //     fromEther(largeAmount.add(200))
+  //   )
+  //   assert.equal(
+  //     fromEther(await stakingController.getStakerPrincipal(adrs.vault)),
+  //     fromEther(largeAmount.add(200))
+  //   )
+  //   assert.equal(fromEther(await vault.getTotalDeposits()), fromEther(largeAmount.add(200)))
+  //   assert.equal(fromEther(await vault.getUnclaimedRewards()), 0)
+  //   assert.equal(fromEther(await vault.trackedTotalDeposits()), fromEther(largeAmount.add(200)))
+
+  //   // Case 3: Deposit from a non-vault controller address
+  //   await expect(
+  //     strategy.connect(adrs.nonVaultController).deposit(toEther(100))
+  //   ).to.be.revertedWithCustomError(strategy, 'OnlyVaultController()')
+
+  //   // Case 4: Deposit with insufficient balance
+  //   await expect(strategy.deposit(toEther(1000000))).to.be.revertedWith(
+  //     'ERC20: transfer amount exceeds balance'
+  //   )
+  // })
+  //@audit
 })

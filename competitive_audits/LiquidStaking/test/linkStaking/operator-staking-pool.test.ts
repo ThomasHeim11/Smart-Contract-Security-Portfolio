@@ -142,4 +142,59 @@ describe('OperatorStakingPool', () => {
       'OperatorNotFound()'
     )
   })
+  //@audit
+  it('removeOperators should work correctly', async () => {
+    const { signers, accounts, opPool, lst } = await loadFixture(deployFixture)
+
+    // Initial deposits
+    await lst.transferAndCall(opPool.target, toEther(1000), '0x')
+    await lst.connect(signers[1]).transferAndCall(opPool.target, toEther(500), '0x')
+
+    // Remove operators
+    await opPool.removeOperators([accounts[0], accounts[2]])
+
+    // Assertions
+    assert.deepEqual(await opPool.getOperators(), [accounts[1]])
+    assert.equal(await opPool.isOperator(accounts[0]), false)
+    assert.equal(await opPool.isOperator(accounts[1]), true)
+    assert.equal(await opPool.isOperator(accounts[2]), false)
+
+    assert.equal(fromEther(await opPool.getOperatorPrincipal(accounts[0])), 0)
+    assert.equal(fromEther(await opPool.getOperatorStaked(accounts[0])), 0)
+    assert.equal(fromEther(await opPool.getOperatorPrincipal(accounts[1])), 500)
+    assert.equal(fromEther(await opPool.getOperatorStaked(accounts[1])), 500)
+    assert.equal(fromEther(await opPool.getTotalPrincipal()), 500)
+    assert.equal(fromEther(await opPool.getTotalStaked()), 500)
+
+    // Attempt to remove non-existing operators
+    await expect(opPool.removeOperators([accounts[0], accounts[1]])).to.be.revertedWithCustomError(
+      opPool,
+      'OperatorNotFound()'
+    )
+
+    // Edge Cases
+    // Case 1: Remove an operator with zero staked amount
+    // Assuming accounts[2] is not an operator anymore
+    await expect(opPool.removeOperators([accounts[2]])).to.be.revertedWithCustomError(
+      opPool,
+      'OperatorNotFound()'
+    )
+
+    // Case 2: Remove an operator with non-zero staked amount
+    // Assuming accounts[1] is the only operator with non-zero staked amount
+    await opPool.removeOperators([accounts[1]])
+    assert.equal(await opPool.isOperator(accounts[1]), false)
+    assert.equal(fromEther(await opPool.getOperatorPrincipal(accounts[1])), 0)
+    assert.equal(fromEther(await opPool.getOperatorStaked(accounts[1])), 0)
+
+    // Case 3: Remove all operators
+    // Assuming no operators left to remove
+    assert.deepEqual(await opPool.getOperators(), [])
+
+    // Case 4: Remove an operator that does not exist
+    await expect(opPool.removeOperators([accounts[3]])).to.be.revertedWithCustomError(
+      opPool,
+      'OperatorNotFound()'
+    )
+  })
 })

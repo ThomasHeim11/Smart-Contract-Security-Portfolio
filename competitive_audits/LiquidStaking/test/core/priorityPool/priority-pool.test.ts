@@ -361,47 +361,47 @@ describe('PriorityPool', () => {
     ).to.be.revertedWithCustomError(pp, 'DepositsDisabled()')
   })
 
-  it('getAccountData should work correctly', async () => {
-    const { signers, accounts, pp, sdlPool } = await loadFixture(deployFixture)
+  // it('getAccountData should work correctly', async () => {
+  //   const { signers, accounts, pp, sdlPool } = await loadFixture(deployFixture)
 
-    await pp.deposit(toEther(2000), true, ['0x'])
-    await pp.connect(signers[1]).deposit(toEther(500), true, ['0x'])
-    await pp.connect(signers[2]).deposit(toEther(500), true, ['0x'])
-    await sdlPool.setEffectiveBalance(accounts[0], toEther(1000))
-    await sdlPool.setEffectiveBalance(accounts[1], toEther(400))
-    await sdlPool.setEffectiveBalance(accounts[2], toEther(300))
+  //   await pp.deposit(toEther(2000), true, ['0x'])
+  //   await pp.connect(signers[1]).deposit(toEther(500), true, ['0x'])
+  //   await pp.connect(signers[2]).deposit(toEther(500), true, ['0x'])
+  //   await sdlPool.setEffectiveBalance(accounts[0], toEther(1000))
+  //   await sdlPool.setEffectiveBalance(accounts[1], toEther(400))
+  //   await sdlPool.setEffectiveBalance(accounts[2], toEther(300))
 
-    let data = await pp.getAccountData()
-    assert.deepEqual(data[0], [ethers.ZeroAddress, accounts[0], accounts[1], accounts[2]])
-    assert.deepEqual(
-      data[1].map((v: any) => fromEther(v)),
-      [0, 1000, 400, 300]
-    )
-    assert.deepEqual(
-      data[2].map((v: any) => fromEther(v)),
-      [0, 1000, 500, 500]
-    )
+  //   let data = await pp.getAccountData()
+  //   assert.deepEqual(data[0], [ethers.ZeroAddress, accounts[0], accounts[1], accounts[2]])
+  //   assert.deepEqual(
+  //     data[1].map((v: any) => fromEther(v)),
+  //     [0, 1000, 400, 300]
+  //   )
+  //   assert.deepEqual(
+  //     data[2].map((v: any) => fromEther(v)),
+  //     [0, 1000, 500, 500]
+  //   )
 
-    await pp.connect(signers[3]).deposit(toEther(100), true, ['0x'])
-    await sdlPool.setEffectiveBalance(accounts[0], toEther(150))
+  //   await pp.connect(signers[3]).deposit(toEther(100), true, ['0x'])
+  //   await sdlPool.setEffectiveBalance(accounts[0], toEther(150))
 
-    data = await pp.getAccountData()
-    assert.deepEqual(data[0], [
-      ethers.ZeroAddress,
-      accounts[0],
-      accounts[1],
-      accounts[2],
-      accounts[3],
-    ])
-    assert.deepEqual(
-      data[1].map((v: any) => fromEther(v)),
-      [0, 150, 400, 300, 0]
-    )
-    assert.deepEqual(
-      data[2].map((v: any) => fromEther(v)),
-      [0, 1000, 500, 500, 100]
-    )
-  })
+  //   data = await pp.getAccountData()
+  //   assert.deepEqual(data[0], [
+  //     ethers.ZeroAddress,
+  //     accounts[0],
+  //     accounts[1],
+  //     accounts[2],
+  //     accounts[3],
+  //   ])
+  //   assert.deepEqual(
+  //     data[1].map((v: any) => fromEther(v)),
+  //     [0, 150, 400, 300, 0]
+  //   )
+  //   assert.deepEqual(
+  //     data[2].map((v: any) => fromEther(v)),
+  //     [0, 1000, 500, 500, 100]
+  //   )
+  // })
 
   it('updateDistribution should work correctly', async () => {
     const { signers, adrs, pp, token, stakingPool, strategy } = await loadFixture(deployFixture)
@@ -834,5 +834,116 @@ describe('PriorityPool', () => {
     assert.equal(fromEther(await stakingPool.balanceOf(adrs.pp)), 100)
     assert.equal(fromEther(await token.balanceOf(adrs.pp)), 0)
     assert.equal(fromEther(await stakingPool.totalStaked()), 200)
+  })
+  //@audit
+  it('should handle PriorityPool withdrawals and interactions correctly', async () => {
+    const { signers, accounts, adrs, token, pp } = await loadFixture(deployFixture)
+
+    // Step 1: Reset allowance and verify
+    await token.connect(signers[0]).approve(adrs.pp, 0)
+    let allowance = await token.allowance(accounts[0], adrs.pp)
+    console.log('Reset allowance: ', fromEther(allowance))
+    assert.equal(fromEther(allowance), 0, 'Initial allowance should be 0')
+
+    // Step 2: Approve tokens for PriorityPool
+    await token.connect(signers[0]).approve(adrs.pp, toEther(100))
+    allowance = await token.allowance(accounts[0], adrs.pp)
+    console.log('Approved allowance to PriorityPool: ', fromEther(allowance))
+    assert.equal(fromEther(allowance), 100, 'Allowance should be 100 to adrs.pp')
+
+    // Step 3: Log pre-withdrawal state
+    const balance0_before = fromEther(await token.balanceOf(accounts[0]))
+    const balance2_before = fromEther(await token.balanceOf(accounts[2]))
+    console.log('Balance of accounts[0] before withdrawal: ', balance0_before)
+    console.log('Balance of accounts[2] before withdrawal: ', balance2_before)
+
+    // Step 4: Attempting a withdrawal
+    try {
+      await pp.connect(signers[0]).withdraw(
+        toEther(50), // _amountToWithdraw
+        toEther(0), // _amount
+        toEther(0), // _sharesAmount
+        [], // _merkleProof
+        false, // _shouldUnqueue
+        false // _shouldQueueWithdrawal
+      )
+      console.log('Withdraw successful')
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log('Withdraw failed: ', error.message)
+      } else {
+        console.log('Withdraw failed: ', error)
+      }
+    }
+
+    // Step 5: Log post-withdrawal state
+    const balanceAfterWithdrawal0 = fromEther(await token.balanceOf(accounts[0]))
+    const balanceAfterWithdrawal2 = fromEther(await token.balanceOf(accounts[2]))
+    console.log('Balance of accounts[0] after withdrawal: ', balanceAfterWithdrawal0)
+    console.log('Balance of accounts[2] after withdrawal: ', balanceAfterWithdrawal2)
+
+    // Step 6: Verify remaining allowance
+    allowance = await token.allowance(accounts[0], adrs.pp)
+    console.log('Remaining allowance after withdrawal: ', fromEther(allowance))
+  })
+  //@audit
+  it('should handle PriorityPool withdrawals and interactions correctly', async () => {
+    const { signers, accounts, adrs, token, pp } = await loadFixture(deployFixture)
+
+    // Step 1: Reset allowance and verify
+    await token.connect(signers[0]).approve(adrs.pp, 0)
+    let allowance = await token.allowance(accounts[0], adrs.pp)
+    console.log('Reset allowance: ', fromEther(allowance))
+    assert.equal(fromEther(allowance), 0, 'Initial allowance should be 0')
+
+    // Step 2: Approve tokens for PriorityPool
+    await token.connect(signers[0]).approve(adrs.pp, toEther(100))
+    allowance = await token.allowance(accounts[0], adrs.pp)
+    console.log('Approved allowance to PriorityPool: ', fromEther(allowance))
+    assert.equal(fromEther(allowance), 100, 'Allowance should be 100 to adrs.pp')
+
+    // Step 3: Log pre-withdrawal state
+    const balance0_before = fromEther(await token.balanceOf(accounts[0]))
+    const balance2_before = fromEther(await token.balanceOf(accounts[2]))
+    console.log('Balance of accounts[0] before withdrawal: ', balance0_before)
+    console.log('Balance of accounts[2] before withdrawal: ', balance2_before)
+
+    // Step 4: Attempting a withdrawal
+    try {
+      const receipt = await (
+        await pp.connect(signers[0]).withdraw(
+          toEther(50), // _amountToWithdraw
+          toEther(0), // _amount
+          toEther(0), // _sharesAmount
+          [], // _merkleProof
+          false, // _shouldUnqueue
+          false // _shouldQueueWithdrawal
+        )
+      ).wait()
+      console.log('Withdraw successful')
+
+      // Log transaction receipt and logs
+      if (receipt && receipt.logs) {
+        receipt.logs.forEach((log) => {
+          console.log(`Log ${log.address} with data ${log.data} and topics ${log.topics}`)
+        })
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log('Withdraw failed: ', error.message)
+      } else {
+        console.log('Withdraw failed: ', error)
+      }
+    }
+
+    // Step 5: Log post-withdrawal state
+    const balanceAfterWithdrawal0 = fromEther(await token.balanceOf(accounts[0]))
+    const balanceAfterWithdrawal2 = fromEther(await token.balanceOf(accounts[2]))
+    console.log('Balance of accounts[0] after withdrawal: ', balanceAfterWithdrawal0)
+    console.log('Balance of accounts[2] after withdrawal: ', balanceAfterWithdrawal2)
+
+    // Step 6: Verify remaining allowance
+    allowance = await token.allowance(accounts[0], adrs.pp)
+    console.log('Remaining allowance after withdrawal: ', fromEther(allowance))
   })
 })

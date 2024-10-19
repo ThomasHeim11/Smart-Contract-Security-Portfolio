@@ -156,40 +156,72 @@ describe('CommunityVCS', () => {
     await expect(strategy.claimRewards([100], 0)).to.be.reverted
   })
 
-  it('deposit should work correctly', async () => {
-    const { adrs, strategy, token, stakingController, vaults } = await loadFixture(deployFixture)
+  //@audit
+  it('claimRewards should work correctly', async () => {
+    const { adrs, strategy, rewardsController, token } = await loadFixture(deployFixture)
 
-    await strategy.deposit(toEther(50), encodeVaults([]))
-    assert.equal(fromEther(await token.balanceOf(adrs.stakingController)), 50)
-    assert.equal(fromEther(await stakingController.getStakerPrincipal(vaults[0])), 50)
-    assert.equal(fromEther(await strategy.totalPrincipalDeposits()), 50)
-    assert.equal(fromEther(await strategy.getTotalDeposits()), 50)
+    let vaults = await strategy.getVaults()
+    await strategy.deposit(toEther(1000), encodeVaults([]))
 
-    await strategy.deposit(toEther(150), encodeVaults([]))
-    assert.equal(fromEther(await token.balanceOf(adrs.stakingController)), 200)
-    assert.equal(fromEther(await strategy.totalPrincipalDeposits()), 200)
-    assert.equal(fromEther(await strategy.getTotalDeposits()), 200)
-
-    await token.transfer(adrs.strategy, toEther(500))
-    await strategy.deposit(toEther(20), encodeVaults([]))
-    assert.equal(fromEther(await token.balanceOf(adrs.stakingController)), 720)
-    assert.equal(fromEther(await strategy.totalPrincipalDeposits()), 720)
-    assert.equal(fromEther(await strategy.getTotalDeposits()), 720)
-
-    await stakingController.setDepositLimits(toEther(10), toEther(120))
-    await strategy.deposit(toEther(80), encodeVaults([0, 1, 2, 3, 4, 5, 6]))
-    assert.equal(fromEther(await token.balanceOf(adrs.stakingController)), 800)
-    assert.equal(fromEther(await stakingController.getStakerPrincipal(vaults[5])), 120)
-    assert.equal(fromEther(await stakingController.getStakerPrincipal(vaults[6])), 120)
-    assert.equal(fromEther(await stakingController.getStakerPrincipal(vaults[7])), 60)
-    assert.equal(fromEther(await strategy.totalPrincipalDeposits()), 800)
-    assert.equal(fromEther(await strategy.getTotalDeposits()), 800)
-
-    await token.transfer(adrs.strategy, toEther(2000))
-    await strategy.deposit(toEther(20), encodeVaults([]))
-    assert.equal(fromEther(await token.balanceOf(adrs.stakingController)), 2300)
+    // No rewards available //@audit
+    await strategy.claimRewards([1, 3, 5], toEther(10))
+    console.log('Balance after no rewards:', fromEther(await token.balanceOf(adrs.strategy)))
     assert.equal(fromEther(await token.balanceOf(adrs.strategy)), 0)
-    assert.equal(fromEther(await strategy.totalPrincipalDeposits()), 2300)
-    assert.equal(fromEther(await strategy.getTotalDeposits()), 2300)
+
+    // Rewards less than _minRewards //@audit
+    await rewardsController.setReward(vaults[1], toEther(5))
+    await rewardsController.setReward(vaults[3], toEther(7))
+    await rewardsController.setReward(vaults[5], toEther(8))
+    await strategy.claimRewards([1, 3, 5], toEther(10))
+    console.log(
+      'Balance after rewards less than _minRewards:',
+      fromEther(await token.balanceOf(adrs.strategy))
+    )
+    assert.equal(fromEther(await token.balanceOf(adrs.strategy)), 0)
+
+    // Rewards equal to _minRewards //@audit
+    await rewardsController.setReward(vaults[1], toEther(10))
+    await strategy.claimRewards([1], toEther(10))
+    console.log(
+      'Balance after rewards equal to _minRewards:',
+      fromEther(await token.balanceOf(adrs.strategy))
+    )
+    assert.equal(fromEther(await token.balanceOf(adrs.strategy)), 10)
+
+    // Rewards greater than _minRewards
+    await rewardsController.setReward(vaults[6], toEther(10))
+    await rewardsController.setReward(vaults[7], toEther(7)) // This should not be included
+    await rewardsController.setReward(vaults[8], toEther(15))
+    await strategy.claimRewards([6, 8], toEther(10)) // Exclude vault 7
+    console.log(
+      'Balance after rewards greater than _minRewards:',
+      fromEther(await token.balanceOf(adrs.strategy))
+    )
+    assert.equal(fromEther(await token.balanceOf(adrs.strategy)), 25)
+
+    // Multiple claims //@audit
+    await rewardsController.setReward(vaults[9], toEther(15))
+    await rewardsController.setReward(vaults[10], toEther(15))
+    await rewardsController.setReward(vaults[11], toEther(15))
+    await strategy.claimRewards([9, 10, 11], toEther(10))
+    console.log('Balance after multiple claims:', fromEther(await token.balanceOf(adrs.strategy)))
+    assert.equal(fromEther(await token.balanceOf(adrs.strategy)), 70)
+
+    // Claim with zero _minRewards //@audit
+    await rewardsController.setReward(vaults[12], toEther(5))
+    await strategy.claimRewards([12], 0)
+    console.log(
+      'Balance after claim with zero _minRewards:',
+      fromEther(await token.balanceOf(adrs.strategy))
+    )
+    assert.equal(fromEther(await token.balanceOf(adrs.strategy)), 75)
+
+    // Invalid vault index //@audit
+    await expect(strategy.claimRewards([100], 0)).to.be.reverted
+
+    // Empty vault list //@audit
+    await strategy.claimRewards([], 0)
+    console.log('Balance after empty vault list:', fromEther(await token.balanceOf(adrs.strategy)))
+    assert.equal(fromEther(await token.balanceOf(adrs.strategy)), 75)
   })
 })

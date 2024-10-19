@@ -138,7 +138,7 @@ contract OperatorStakingPool is Initializable, UUPSUpgradeable, OwnableUpgradeab
      * @param _amount amount to withdraw
      *
      */
-    //@audit why not only owner???
+    //@audit why not only owner??? can this be exploited by attacker??
     function withdraw(uint256 _amount) external {
         if (!isOperator(msg.sender)) revert SenderNotAuthorized();
         _withdraw(msg.sender, _amount);

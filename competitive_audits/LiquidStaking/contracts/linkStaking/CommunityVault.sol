@@ -21,25 +21,23 @@ contract CommunityVault is Vault {
      * @param _vaultController address of the strategy that controls this vault
      * @param _stakeController address of Chainlink community staking contract
      * @param _rewardsController address of Chainlink staking rewards contract
-     **/
-    function initialize(
-        address _token,
-        address _vaultController,
-        address _stakeController,
-        address _rewardsController
-    ) public initializer {
+     *
+     */
+    function initialize(address _token, address _vaultController, address _stakeController, address _rewardsController)
+        public
+        initializer
+    {
         __Vault_init(_token, _vaultController, _stakeController, _rewardsController);
     }
-
+    //@audit can it be clamied by hacker ? can we bypass the onlyVaultController.
     /**
      * @notice Claims rewards from the Chainlink staking contract
      * @param _minRewards min amount of rewards required to claim
      * @param _rewardsReceiver address to receive rewards
-     **/
-    function claimRewards(
-        uint256 _minRewards,
-        address _rewardsReceiver
-    ) external onlyVaultController {
+     *
+     */
+
+    function claimRewards(uint256 _minRewards, address _rewardsReceiver) external onlyVaultController {
         uint256 rewards = getRewards();
         if (rewards != 0 && rewards >= _minRewards) {
             rewardsController.claimReward();

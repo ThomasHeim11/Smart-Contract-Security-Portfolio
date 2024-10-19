@@ -64,7 +64,7 @@ contract CommunityVCS is VaultControllerStrategy {
             vaultDeploymentThreshold = _vaultDeploymentThreshold;
             vaultDeploymentAmount = _vaultDeploymentAmount;
             _deployVaults(_vaultDeploymentAmount);
-            //@audit what does this mean???
+            //@audit what does this mean???✅
             globalVaultState = GlobalVaultState(5, 0, 0, 0);
         } else {
             globalVaultState = GlobalVaultState(5, 0, 0, uint64(maxDepositSizeBP + 1));
@@ -83,7 +83,7 @@ contract CommunityVCS is VaultControllerStrategy {
      * @param _amount amount to deposit
      * @param _data encoded vault deposit order
      */
-    //@audit is the math correct???
+    //@audit
     function deposit(uint256 _amount, bytes calldata _data) external override onlyStakingPool {
         (, uint256 maxDeposits) = getVaultDepositLimits();
 
@@ -121,12 +121,19 @@ contract CommunityVCS is VaultControllerStrategy {
      * @param _vaults list if vault indexes to claim from
      * @param _minRewards min amount of rewards per vault required to claim
      */
-    //@audit can hacker claim more than expected???
+    //@audit can hacker claim more than expected??? no onlyOwner???
     function claimRewards(uint256[] calldata _vaults, uint256 _minRewards) external returns (uint256) {
         address receiver = address(this);
         uint256 balanceBefore = token.balanceOf(address(this));
         for (uint256 i = 0; i < _vaults.length; ++i) {
+            uint256 vaultBalanceBefore = token.balanceOf(address(vaults[_vaults[i]]));
             ICommunityVault(address(vaults[_vaults[i]])).claimRewards(_minRewards, receiver);
+            uint256 vaultBalanceAfter = token.balanceOf(address(vaults[_vaults[i]]));
+            uint256 claimed = vaultBalanceBefore - vaultBalanceAfter;
+            if (claimed < _minRewards) {
+                // Revert the claim if the claimed amount is less than _minRewards
+                revert("Claimed rewards are less than the minimum required");
+            }
         }
         uint256 balanceAfter = token.balanceOf(address(this));
         return balanceAfter - balanceBefore;

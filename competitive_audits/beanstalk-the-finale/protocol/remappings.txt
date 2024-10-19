@@ -1,3 +1,0 @@
-forge-std/=lib/forge-std/src/
-@openzeppelin/=node_modules/@openzeppelin/
-@wells/=node_modules/@beanstalk/wells1.1/

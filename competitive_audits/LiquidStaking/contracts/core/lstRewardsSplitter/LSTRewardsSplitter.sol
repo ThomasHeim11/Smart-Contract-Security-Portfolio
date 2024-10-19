@@ -65,13 +65,13 @@ contract LSTRewardsSplitter is Ownable {
      * @notice Deposits tokens
      * @param _amount amount to deposit
      */
-    // @audit can controller be baypased ?
+    // @audit can controller be baypased ?✅
     function deposit(uint256 _amount) external onlyController {
         lst.safeTransferFrom(msg.sender, address(this), _amount);
         principalDeposits += _amount;
         emit Deposit(_amount);
     }
-    // @audit can controller be baypased ?
+    // @audit can controller be baypased ?✅
     /**
      * @notice Withdraws tokens
      * @param _amount amount to withdraw
@@ -88,7 +88,11 @@ contract LSTRewardsSplitter is Ownable {
      * @notice Returns whether a call should be made to performUpkeep to split new rewards
      * @return upkeepNeeded true if performUpkeep should be called, false otherwise
      */
-    //@audit correct math???
+    //@audit correct math???✅
+    /**
+     * @notice Returns whether a call should be made to performUpkeep to split new rewards
+     * @return upkeepNeeded true if performUpkeep should be called, false otherwise
+     */
     function checkUpkeep(bytes calldata) external view returns (bool, bytes memory) {
         int256 newRewards = int256(lst.balanceOf(address(this))) - int256(principalDeposits);
 
@@ -98,11 +102,11 @@ contract LSTRewardsSplitter is Ownable {
 
         return (false, bytes(""));
     }
-    //@audit correct math???
+
+    //@audit correct math???✅
     /**
      * @notice Splits new rewards between fee receivers
      */
-
     function performUpkeep(bytes calldata) external {
         int256 newRewards = int256(lst.balanceOf(address(this))) - int256(principalDeposits);
         if (newRewards < 0) {
@@ -119,6 +123,10 @@ contract LSTRewardsSplitter is Ownable {
      * @dev bypasses rewardThreshold
      */
 
+    /**
+     * @notice Splits new rewards between fee receivers
+     * @dev bypasses rewardThreshold
+     */
     function splitRewards() external {
         int256 newRewards = int256(lst.balanceOf(address(this))) - int256(principalDeposits);
         if (newRewards < 0) {
@@ -127,6 +135,8 @@ contract LSTRewardsSplitter is Ownable {
             revert InsufficientRewards();
         } else {
             _splitRewards(uint256(newRewards));
+            // Update principal deposits after splitting rewards
+            principalDeposits = lst.balanceOf(address(this));
         }
     }
 

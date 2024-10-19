@@ -438,4 +438,5 @@ describe('FundFlowController', () => {
     assert.equal(fromEther(await opStrategy.canWithdraw()), 100)
     assert.equal(Number((await opStrategy.globalVaultState())[1]), 3)
   })
+  //@audit
 })

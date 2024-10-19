@@ -47,15 +47,16 @@ error InsufficientTokensUnbonded();
  */
 contract VaultDepositController is Strategy {
     using SafeERC20Upgradeable for IERC20Upgradeable;
-
+    // @audit 2)slither Uninitialized state variables
     // address of Chainlink staking contract
+
     IStaking public stakeController;
     // list of fees that are paid on rewards
     Fee[] internal fees;
 
     // address of vault implementation contract to be used when adding new vaults
     address public vaultImplementation;
-
+    //@audit 3)slither: Uninitialized state variables
     // list of all vaults controlled by this strategy
     IVault[] internal vaults;
     // total number of tokens staked in this strategy
@@ -109,6 +110,7 @@ contract VaultDepositController is Strategy {
      * @param _amount amount to withdraw
      * @param _data encoded vault withdrawal order
      */
+    //@audit 3)slither: Uninitialized state variables
     //@audit is the varibles updated correctly
     function withdraw(uint256 _amount, bytes calldata _data) external {
         if (!fundFlowController.claimPeriodActive() || _amount > totalUnbonded) {
@@ -165,7 +167,7 @@ contract VaultDepositController is Strategy {
         group.totalDepositRoom += uint128(totalWithdrawn);
         vaultGroups[globalVaultState.curUnbondedVaultGroup] = group;
     }
-
+    //@audit 3)slither: Uninitialized state variables
     /**
      * @notice Deposits tokens into vaults
      * @param _toDeposit amount to deposit
@@ -173,6 +175,7 @@ contract VaultDepositController is Strategy {
      * @param _maxDeposits minimum amount of deposits that a vault can hold
      * @param _vaultIds list of vaults to deposit into
      */
+
     function _depositToVaults(uint256 _toDeposit, uint256 _minDeposits, uint256 _maxDeposits, uint64[] memory _vaultIds)
         private
         returns (uint256)
@@ -291,12 +294,14 @@ contract VaultDepositController is Strategy {
 
         return _toDeposit - toDeposit;
     }
-
+    //
     /**
      * @notice Returns the vault deposit limits for vaults controlled by this strategy
      * @return minimum amount of deposits that a vault can hold
      * @return maximum amount of deposits that a vault can hold
      */
+    // @audit 2)slither Uninitialized state variables
+
     function getVaultDepositLimits() public view returns (uint256, uint256) {
         return stakeController.getStakerLimits();
     }
@@ -336,6 +341,8 @@ abstract contract VaultControllerStrategy is Strategy {
     IVault[] internal vaults;
     // total number of tokens staked in this strategy
     uint256 internal totalDeposits;
+
+    //@audit 1)Slither Uninitialized state variables
     // total number of tokens staked through this strategy as principal in the Chainlink staking contract
     uint256 public totalPrincipalDeposits;
 
@@ -434,6 +441,7 @@ abstract contract VaultControllerStrategy is Strategy {
      * @param _amount amount to deposit
      * @param _data encoded vault deposit order
      */
+    //@audit Slither Arbitrary from in transferFrom
     function deposit(uint256 _amount, bytes calldata _data) external virtual onlyStakingPool {
         if (vaultDepositController == address(0)) revert VaultDepositControllerNotSet();
 
@@ -443,12 +451,13 @@ abstract contract VaultControllerStrategy is Strategy {
 
         if (!success) revert DepositFailed();
     }
-
+    //@audit Slither Arbitrary from in transferFrom
     /**
      * @notice Withdraws tokens from vaults and sends them to staking pool
      * @param _amount amount to withdraw
      * @param _data encoded vault withdrawal order
      */
+
     function withdraw(uint256 _amount, bytes calldata _data) external onlyStakingPool {
         if (vaultDepositController == address(0)) revert VaultDepositControllerNotSet();
 
@@ -568,6 +577,7 @@ abstract contract VaultControllerStrategy is Strategy {
      * @return maximum deposits
      */
     //@audit why is this view??? no exploit???
+    //@audit 1)slither: Uninitialized state variables
     function getMaxDeposits() public view virtual override returns (uint256) {
         (, uint256 maxDeposits) = getVaultDepositLimits();
         return totalDeposits

@@ -475,4 +475,5 @@ describe('OperatorVCS', () => {
     let vault = await ethers.getContractAt('OperatorVault', (await strategy.getVaults())[15])
     assert.equal(await vault.rewardsReceiver(), accounts[4])
   })
+  //@audit
 })

@@ -246,7 +246,7 @@ contract WithdrawalPool is UUPSUpgradeable, OwnableUpgradeable {
 
         return (retFinalizedWithdrawals, totalWithdrawable);
     }
-    //@audit reentrancy?
+    //@audit reentrancy? no no only owner????
     /**
      * @notice Executes a group of fully and/or partially finalized withdrawals owned by the sender
      * @param _withdrawalIds list of withdrawal ids to execute

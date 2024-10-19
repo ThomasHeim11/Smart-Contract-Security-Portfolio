@@ -802,4 +802,43 @@ describe('StakingPool', () => {
     assert.equal(fromEther(await stakingPool.balanceOf(accounts[2])), 3375)
     assert.equal(fromEther(await stakingPool.totalStaked()), 4500)
   })
+  //@audit
+  it('burn should work correctly', async () => {
+    const { signers, accounts, stakingPool, stake } = await loadFixture(deployFixture)
+
+    await stake(1, 1000)
+    await stake(2, 3000)
+
+    assert.equal(fromEther(await stakingPool.balanceOf(accounts[1])), 1000)
+    assert.equal(fromEther(await stakingPool.balanceOf(accounts[2])), 3000)
+    assert.equal(fromEther(await stakingPool.totalStaked()), 4000)
+
+    await stakingPool.connect(signers[2]).burn(toEther(500))
+
+    assert.equal(Number(fromEther(await stakingPool.balanceOf(accounts[1])).toFixed(3)), 1142.857)
+    assert.equal(Number(fromEther(await stakingPool.balanceOf(accounts[2])).toFixed(3)), 2857.143)
+    assert.equal(fromEther(await stakingPool.totalStaked()), 4000)
+
+    // @audit Edge case: Burning more than the balance
+    await expect(stakingPool.connect(signers[2]).burn(toEther(5000))).to.be.revertedWith(
+      'ERC20: burn amount exceeds balance'
+    )
+
+    // @audit Edge case: Burning zero amount
+    await expect(stakingPool.connect(signers[2]).burn(0)).to.be.revertedWith(
+      'ERC20: burn amount must be greater than zero'
+    )
+
+    // @audit Edge case: Burning from an account with zero balance
+    await expect(stakingPool.connect(signers[3]).burn(toEther(100))).to.be.revertedWith(
+      'ERC20: burn amount exceeds balance'
+    )
+
+    // @audit Edge case: Burning the entire balance
+    await stakingPool.connect(signers[2]).burn(toEther(2857.143))
+    assert.equal(fromEther(await stakingPool.balanceOf(accounts[2])), 0)
+    assert.equal(fromEther(await stakingPool.totalStaked()), 1142.857)
+  })
+
+  //@audit
 })

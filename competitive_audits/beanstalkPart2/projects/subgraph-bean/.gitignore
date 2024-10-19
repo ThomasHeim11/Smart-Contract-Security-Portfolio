@@ -1,5 +1,0 @@
-build/*
-generated/*
-yarn.lock
-.DS_Store
-node_modules/*

@@ -164,7 +164,7 @@ contract StakingPool is StakingRewardsPool {
         require(_index < strategies.length, "Strategy does not exist");
         IStrategy(strategies[_index]).deposit(_amount, _data);
     }
-    //@audit can only owner be exploited?
+    //@audit can only owner be exploited?✅
     /**
      * @notice Manually withdraws asset tokens from a strategy
      * @param _index index of strategy
@@ -424,7 +424,7 @@ contract StakingPool is StakingRewardsPool {
      * @param _amount amount to deposit
      *
      */
-    //@audit can this be exploited so everyone donate ???
+    //@audit can this be exploited so everyone donate ??? or can a floash loan exloit this and get donations.
     function donateTokens(uint256 _amount) external {
         token.safeTransferFrom(msg.sender, address(this), _amount);
         totalStaked += _amount;

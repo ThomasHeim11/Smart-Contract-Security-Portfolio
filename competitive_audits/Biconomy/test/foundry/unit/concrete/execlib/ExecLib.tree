@@ -1,4 +1,0 @@
-ExecLib
-└── given encoding and decoding of executions
-    ├── when encoding and decoding an execution
-        └── it should succeed

@@ -138,7 +138,7 @@ contract FundFlowController is UUPSUpgradeable, OwnableUpgradeable {
      * @dev an update is needed once per claim period right after the claim period expires for the
      * current vault group
      */
-    //@audit why 2*???Math correct???
+    //@audit Math correct???
     function updateVaultGroups() external {
         uint256 curUnbondedGroup = curUnbondedVaultGroup;
         uint256 nextUnbondedGroup = _getNextGroup(curUnbondedGroup, numVaultGroups);
@@ -447,6 +447,7 @@ contract FundFlowController is UUPSUpgradeable, OwnableUpgradeable {
      * @param _values list of values
      * @return sorted list of indexes
      */
+    //@audit is is it in decending order. how can this be exploited??
     function _sortIndexesDescending(uint256[] memory _values) internal pure returns (uint256[] memory) {
         uint256 n = _values.length;
 

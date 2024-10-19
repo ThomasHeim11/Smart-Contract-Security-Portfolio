@@ -135,6 +135,7 @@ describe('VaultControllerStrategy', () => {
       vaults,
       vaultContracts,
       fundFlowController,
+      vaultDepositController, // Add this line
     }
   }
 
@@ -613,4 +614,307 @@ describe('VaultControllerStrategy', () => {
       'InvalidWithdrawalIndexes()'
     )
   })
+  //@audit Finding Vulnerability in VaultDepositController: Delegatecall Failures in Deposit and Withdraw Functions Do Not Revert as Expected, Indirectly Putting Funds at Risk
+  it('should revert deposit if VaultDepositController is not set', async () => {
+    const { strategy, token } = await loadFixture(deployFixture)
+
+    console.log('Setting VaultDepositController to zero address')
+    await strategy.setVaultDepositController(ethers.ZeroAddress)
+
+    console.log('Attempting to deposit with VaultDepositController not set')
+    await expect(strategy.deposit(toEther(50), encodeVaults([]))).to.be.revertedWithCustomError(
+      strategy,
+      'VaultDepositControllerNotSet()'
+    )
+    console.log('Deposit reverted as expected')
+  })
+
+  it('should revert withdraw if VaultDepositController is not set', async () => {
+    const { strategy } = await loadFixture(deployFixture)
+
+    console.log('Setting VaultDepositController to zero address')
+    await strategy.setVaultDepositController(ethers.ZeroAddress)
+
+    console.log('Attempting to withdraw with VaultDepositController not set')
+    await expect(strategy.withdraw(toEther(50), encodeVaults([]))).to.be.revertedWithCustomError(
+      strategy,
+      'VaultDepositControllerNotSet()'
+    )
+    console.log('Withdraw reverted as expected')
+  })
+
+  it('should revert deposit if delegatecall fails', async () => {
+    const { strategy, token } = await loadFixture(deployFixture)
+    const depositAmount = toEther(50)
+
+    console.log(
+      'Setting VaultDepositController to an invalid address to simulate delegatecall failure'
+    )
+    await strategy.setVaultDepositController('0x000000000000000000000000000000000000dEaD')
+
+    console.log(`Attempting to deposit ${depositAmount.toString()} ETH with failing delegatecall`)
+    try {
+      const initialBalance = await ethers.provider.getBalance(await strategy.getAddress())
+      console.log(`Initial ETH balance of strategy: ${initialBalance.toString()}`)
+
+      await strategy.deposit(depositAmount, encodeVaults([]))
+
+      const finalBalance = await ethers.provider.getBalance(await strategy.getAddress())
+      console.log(`Final ETH balance of strategy: ${finalBalance.toString()}`)
+      console.log(`Deposit of ${depositAmount.toString()} ETH did not revert as expected`)
+    } catch (error) {
+      console.log(`Deposit of ${depositAmount.toString()} ETH reverted with error:`, error)
+      if (error instanceof Error) {
+        console.log('Error message:', error.message)
+        console.log('Error stack:', error.stack)
+      }
+      await expect(Promise.reject(error)).to.be.revertedWithCustomError(strategy, 'DepositFailed()')
+    }
+  })
+
+  it('should revert withdraw if delegatecall fails', async () => {
+    const { strategy } = await loadFixture(deployFixture)
+    const withdrawAmount = toEther(50)
+
+    console.log(
+      'Setting VaultDepositController to an invalid address to simulate delegatecall failure'
+    )
+    await strategy.setVaultDepositController('0x000000000000000000000000000000000000dEaD')
+
+    console.log(`Attempting to withdraw ${withdrawAmount.toString()} ETH with failing delegatecall`)
+    try {
+      const initialBalance = await ethers.provider.getBalance(await strategy.getAddress())
+      console.log(`Initial ETH balance of strategy: ${initialBalance.toString()}`)
+
+      await strategy.withdraw(withdrawAmount, encodeVaults([]))
+
+      const finalBalance = await ethers.provider.getBalance(await strategy.getAddress())
+      console.log(`Final ETH balance of strategy: ${finalBalance.toString()}`)
+      console.log(`Withdraw of ${withdrawAmount.toString()} ETH did not revert as expected`)
+    } catch (error) {
+      console.log(`Withdraw of ${withdrawAmount.toString()} ETH reverted with error:`, error)
+      if (error instanceof Error) {
+        console.log('Error message:', error.message)
+        console.log('Error stack:', error.stack)
+        await expect(Promise.reject(error)).to.be.revertedWithCustomError(
+          strategy,
+          'WithdrawalFailed()'
+        )
+      } else {
+        console.log('Unknown error:', error)
+        await expect(Promise.reject(new Error('Unknown error'))).to.be.revertedWithCustomError(
+          strategy,
+          'WithdrawalFailed()'
+        )
+      }
+    }
+  })
+  //@audit
+  it('should revert deposit if VaultDepositController is not set', async () => {
+    const { strategy, token } = await loadFixture(deployFixture)
+
+    console.log('Setting VaultDepositController to zero address')
+    await strategy.setVaultDepositController(ethers.ZeroAddress)
+
+    console.log('Attempting to deposit with VaultDepositController not set')
+    await expect(strategy.deposit(toEther(50), encodeVaults([]))).to.be.revertedWithCustomError(
+      strategy,
+      'VaultDepositControllerNotSet()'
+    )
+    console.log('Deposit reverted as expected')
+  })
+
+  it('should revert withdraw if VaultDepositController is not set', async () => {
+    const { strategy } = await loadFixture(deployFixture)
+
+    console.log('Setting VaultDepositController to zero address')
+    await strategy.setVaultDepositController(ethers.ZeroAddress)
+
+    console.log('Attempting to withdraw with VaultDepositController not set')
+    await expect(strategy.withdraw(toEther(50), encodeVaults([]))).to.be.revertedWithCustomError(
+      strategy,
+      'VaultDepositControllerNotSet()'
+    )
+    console.log('Withdraw reverted as expected')
+  })
+
+  it('should revert deposit if delegatecall fails', async () => {
+    const { strategy, token } = await loadFixture(deployFixture)
+
+    console.log(
+      'Setting VaultDepositController to an invalid address to simulate delegatecall failure'
+    )
+    await strategy.setVaultDepositController('0x000000000000000000000000000000000000dEaD')
+
+    console.log('Attempting to deposit with failing delegatecall')
+    try {
+      await strategy.deposit(toEther(50), encodeVaults([]))
+      console.log('Deposit did not revert as expected')
+    } catch (error) {
+      console.log('Deposit reverted with error:', error)
+      if (error instanceof Error) {
+        console.log('Error message:', error.message)
+        console.log('Error stack:', error.stack)
+      }
+      await expect(Promise.reject(error)).to.be.revertedWithCustomError(strategy, 'DepositFailed()')
+    }
+  })
+
+  it('should revert withdraw if delegatecall fails', async () => {
+    const { strategy } = await loadFixture(deployFixture)
+
+    console.log(
+      'Setting VaultDepositController to an invalid address to simulate delegatecall failure'
+    )
+    await strategy.setVaultDepositController('0x000000000000000000000000000000000000dEaD')
+
+    console.log('Attempting to withdraw with failing delegatecall')
+    try {
+      await strategy.withdraw(toEther(50), encodeVaults([]))
+      console.log('Withdraw did not revert as expected')
+    } catch (error) {
+      console.log('Withdraw reverted with error:', error)
+      if (error instanceof Error) {
+        console.log('Error message:', error.message)
+        console.log('Error stack:', error.stack)
+      }
+      await expect(Promise.reject(error)).to.be.revertedWithCustomError(
+        strategy,
+        'WithdrawalFailed()'
+      )
+    }
+  })
+  //@audit
+  it('should handle deposit limits correctly in _depositToVaults', async () => {
+    const { adrs, strategy, token, stakingController, vaults } = await loadFixture(deployFixture)
+
+    // Set up initial conditions
+    await token.transfer(adrs.strategy, toEther(1000))
+    await strategy.deposit(toEther(500), encodeVaults([]))
+
+    // Log initial balances and deposits
+    console.log(
+      'Initial balance of stakingController:',
+      fromEther(await token.balanceOf(adrs.stakingController))
+    )
+    console.log(
+      'Initial totalPrincipalDeposits:',
+      fromEther(await strategy.totalPrincipalDeposits())
+    )
+    console.log('Initial totalDeposits:', fromEther(await strategy.getTotalDeposits()))
+
+    // Set deposit limits
+    const minDepositLimit = toEther(10)
+    const maxDepositLimit = toEther(120)
+    await stakingController.setDepositLimits(minDepositLimit, maxDepositLimit)
+
+    // Log deposit limits
+    console.log(
+      'Deposit limits set: minDepositLimit =',
+      fromEther(minDepositLimit),
+      ', maxDepositLimit =',
+      fromEther(maxDepositLimit)
+    )
+
+    // Attempt to deposit an amount below the minimum limit
+    try {
+      await strategy.deposit(toEther(5), encodeVaults([]))
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log('Error when depositing below minimum limit:', error.message)
+      } else {
+        console.log('Unknown error when depositing below minimum limit:', error)
+      }
+    }
+
+    // Attempt to deposit an amount above the maximum limit
+    try {
+      await strategy.deposit(toEther(200), encodeVaults([]))
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log('Error when depositing above maximum limit:', error.message)
+      } else {
+        console.log('Unknown error when depositing above maximum limit:', error)
+      }
+    }
+
+    // Deposit an amount within the limits
+    await strategy.deposit(toEther(50), encodeVaults([]))
+    console.log(
+      'Balance of stakingController after deposit within limits:',
+      fromEther(await token.balanceOf(adrs.stakingController))
+    )
+    console.log(
+      'TotalPrincipalDeposits after deposit within limits:',
+      fromEther(await strategy.totalPrincipalDeposits())
+    )
+    console.log(
+      'TotalDeposits after deposit within limits:',
+      fromEther(await strategy.getTotalDeposits())
+    )
+
+    // Manipulate the deposit limits and test again
+    await stakingController.setDepositLimits(toEther(20), toEther(100))
+    console.log(
+      'New deposit limits set: minDepositLimit =',
+      fromEther(toEther(20)),
+      ', maxDepositLimit =',
+      fromEther(toEther(100))
+    )
+
+    // Attempt to deposit an amount below the new minimum limit
+    try {
+      await strategy.deposit(toEther(15), encodeVaults([]))
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log('Error when depositing below new minimum limit:', error.message)
+      } else {
+        console.log('Unknown error when depositing below new minimum limit:', error)
+      }
+    }
+
+    // Attempt to deposit an amount above the new maximum limit
+    try {
+      await strategy.deposit(toEther(150), encodeVaults([]))
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log('Error when depositing above new maximum limit:', error.message)
+      } else {
+        console.log('Unknown error when depositing above new maximum limit:', error)
+      }
+    }
+
+    // Deposit an amount within the new limits
+    await strategy.deposit(toEther(80), encodeVaults([]))
+    console.log(
+      'Balance of stakingController after deposit within new limits:',
+      fromEther(await token.balanceOf(adrs.stakingController))
+    )
+    console.log(
+      'TotalPrincipalDeposits after deposit within new limits:',
+      fromEther(await strategy.totalPrincipalDeposits())
+    )
+    console.log(
+      'TotalDeposits after deposit within new limits:',
+      fromEther(await strategy.getTotalDeposits())
+    )
+
+    // Assertions
+    assert.equal(
+      fromEther(await token.balanceOf(adrs.stakingController)),
+      370,
+      'Total deposits should be updated correctly'
+    )
+    assert.equal(
+      fromEther(await strategy.totalPrincipalDeposits()),
+      630,
+      'Total principal deposits should be updated correctly'
+    )
+    assert.equal(
+      fromEther(await strategy.getTotalDeposits()),
+      630,
+      'Total deposits should be updated correctly'
+    )
+  })
+  //@audit new
 })

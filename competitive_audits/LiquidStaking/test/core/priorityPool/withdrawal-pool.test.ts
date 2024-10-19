@@ -1,4 +1,5 @@
 import { assert, expect } from 'chai'
+
 import {
   toEther,
   deploy,
@@ -423,4 +424,5 @@ describe('WithdrawalPool', () => {
     assert.equal(fromEther(await stakingPool.balanceOf(withdrawalPool.target)), 0)
     assert.equal(fromEther(await withdrawalPool.getTotalQueuedWithdrawals()), 0)
   })
+  //@audit
 })

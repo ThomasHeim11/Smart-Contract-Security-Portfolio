@@ -1,2 +1,0 @@
-# hide .forge-snapshots from GitHub diff view; they're just clutter
-/.forge-snapshots/** linguist-generated=true
