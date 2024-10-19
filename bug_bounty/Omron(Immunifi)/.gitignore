@@ -1,0 +1,30 @@
+node_modules
+.env
+coverage
+coverage.json
+typechain
+typechain-types
+
+# Hardhat files
+cache
+artifacts
+
+node_modules
+.env
+coverage
+coverage.json
+typechain
+typechain-types
+
+# Hardhat files
+cache
+artifacts
+
+deployments/localhost
+yarn-error.log
+ethereum-abi-types
+deploy.log
+.scribble*
+venv/
+report.md
+.DS_Store

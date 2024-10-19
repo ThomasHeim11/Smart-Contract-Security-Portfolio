@@ -1,0 +1,13 @@
+{
+  "contract_inspector": {
+    "enabled": true,
+    "scan_directories": [
+      "contracts/OmronDeposit.sol",
+      "contracts/interfaces/IERC20Min.sol",
+      "contracts/interfaces/IOmronDeposit.sol"
+    ]
+  },
+  "dependency_checker": {
+    "enabled": true
+  }
+}

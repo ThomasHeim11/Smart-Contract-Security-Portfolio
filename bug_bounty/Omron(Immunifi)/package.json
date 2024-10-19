@@ -1,0 +1,46 @@
+{
+  "name": "omron-contracts",
+  "version": "1.0.0",
+  "description": "EVM Contracts for the Omron network",
+  "main": "index.js",
+  "scripts": {
+    "build": "hardhat compile",
+    "test": "REPORT_GAS=true hardhat test",
+    "test:debug": "REPORT_GAS=true hardhat test --show-stack-traces --fulltrace --vv --opcodes MUL,DIV,ADD,SUB,REVERT",
+    "dev": "REPORT_GAS=true hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "REPORT_GAS=true hardhat run scripts/deploy.js --network sepolia",
+    "deploy:mainnet": "REPORT_GAS=true hardhat run scripts/deploy.js --network mainnet",
+    "analyze": "./analyze.sh",
+    "types": "abi-types-generator hardhat"
+  },
+  "keywords": [
+    "Liquid Staking",
+    "AI"
+  ],
+  "author": "Inference Labs Inc",
+  "type": "module",
+  "license": "ISC",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0",
+    "hardhat": "^2.17.3",
+    "hardhat-tracer": "^2.6.0",
+    "lodash-es": "^4.17.21",
+    "not-a-log": "^1.0.1",
+    "signale-logger": "^1.5.1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@nomicfoundation/hardhat-verify": "^1.0.0",
+    "@typechain/ethers-v6": "^0.4.0",
+    "@typechain/hardhat": "^8.0.0",
+    "chai": "^4.2.0",
+    "ethereum-abi-types-generator": "^1.3.4",
+    "ethers": "^6.4.0",
+    "hardhat-gas-reporter": "^1.0.8",
+    "solidity-coverage": "^0.8.0",
+    "typechain": "^8.1.0"
+  }
+}

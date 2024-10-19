@@ -1,0 +1,37 @@
+
+[Deployment] › ▶  Deployment Time Initialized timer...
+[Deployment] › ▶  start     Deploying contracts...
+[Deployment] [tstETH] › …  awaiting  Deploying...
+[Deployment] [tstETH] › ℹ  info      Transaction Hash: 0xdeadd170f1dba8bc2cf1e06a28f2104b252b5b6da7e370e2c74e9333b43aa17a
+[Deployment] [tstETH] › ☒  complete  Deployed to 0x8b78223e2FD9FEa8D30F1A6E36D7A1dEfab28c5e
+[Deployment] [tstETH] › …  awaiting  Deploying...
+[Deployment] [tstETH] › ℹ  info      Transaction Hash: 0x025bb5587917f65d201a300ee25736816663504762de4d4aa2ec358d967eac46
+[Deployment] [tstETH] › ☒  complete  Deployed to 0x316E35C4cf00fbb52022434942A1FE396C787500
+[Deployment] [tstETH] › …  awaiting  Deploying...
+[Deployment] [tstETH] › ℹ  info      Transaction Hash: 0xfd099733263099a2696cfb1b313026be193054c000df77d520bfa421267940df
+[Deployment] [tstETH] › ☒  complete  Deployed to 0x4a0853d9e0d34Be4fE7BD8d7D8088aD2caA3AFEf
+[Deployment] [tstETH] › …  awaiting  Deploying...
+[Deployment] [tstETH] › ℹ  info      Transaction Hash: 0x7e65c6fa0bfcf24dbfdc22c538d3ff9b2dbf3b003489e3a68925efd548adb587
+[Deployment] [tstETH] › ☒  complete  Deployed to 0x54Ef507CE3bB70a2FD615D40572D356345444220
+[Deployment] [tstETH] › …  awaiting  Deploying...
+[Deployment] [tstETH] › ℹ  info      Transaction Hash: 0xfc76e4530e339f9f472f2452a1f3ab32c251464dbdaa910c36449205135c50af
+[Deployment] [tstETH] › ☒  complete  Deployed to 0x69d2399FE44Cf3579BF48C57521029b32A0a811B
+[Deployment] [OmronDeposit] › …  awaiting  Deploying...
+[Deployment] [OmronDeposit] › ℹ  info      Transaction Hash: 0xfa12ae7796cd702218554f3efa97f07ecf5b3f99b8a46550c4cb777623558de3
+[Deployment] [OmronDeposit] › ☒  complete  Deployed to 0xC28EAB308a32e15b35739adFe82e8C4553C9b953
+[Deployment] › ◼  Deployment Time Timer run for: 67.42s
+[Deployment] › ▶  start     All contracts deployed.
+[Deployment] › ℹ  info      Deployed Contracts:
+┌──────────────┬──────────────────────────────────────────────┬──────────────────────────────────────────────────────────────────────┐
+│   (index)    │               contractAddress                │                           transactionHash                            │
+├──────────────┼──────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│    tstETH    │ '0x8b78223e2FD9FEa8D30F1A6E36D7A1dEfab28c5e' │ '0xdeadd170f1dba8bc2cf1e06a28f2104b252b5b6da7e370e2c74e9333b43aa17a' │
+│   tstETH 1   │ '0x316E35C4cf00fbb52022434942A1FE396C787500' │ '0x025bb5587917f65d201a300ee25736816663504762de4d4aa2ec358d967eac46' │
+│   tstETH 2   │ '0x4a0853d9e0d34Be4fE7BD8d7D8088aD2caA3AFEf' │ '0xfd099733263099a2696cfb1b313026be193054c000df77d520bfa421267940df' │
+│   tstETH 3   │ '0x54Ef507CE3bB70a2FD615D40572D356345444220' │ '0x7e65c6fa0bfcf24dbfdc22c538d3ff9b2dbf3b003489e3a68925efd548adb587' │
+│   tstETH 4   │ '0x69d2399FE44Cf3579BF48C57521029b32A0a811B' │ '0xfc76e4530e339f9f472f2452a1f3ab32c251464dbdaa910c36449205135c50af' │
+│ OmronDeposit │ '0xC28EAB308a32e15b35739adFe82e8C4553C9b953' │ '0xfa12ae7796cd702218554f3efa97f07ecf5b3f99b8a46550c4cb777623558de3' │
+│ OmronDeposit │ '0x65E20AdEf1fAe007A70E5BaF60060a9bD2C7f389' │ '0x90d0089d50dfde5779d86ce103631cd10898f2f73c9bc41b4ce869cb154fb452' │ <--- Updated
+│ OmronDeposit │ '0xd26aB1054Bc24b3E9dc74aBF8A35Ab39a7e9A515' | '0xcb0757705712803f746674b549c1851076b1b82cc66e76064e7494b854430441' | <--- Updated (again)
+| OmronDeposit | '0x70f6F7210f30e25385Ab26DeB11B882d31E4d53E' | '0x4611c15c85980aeaeae223ac7d0255c645425deb24c3cfffa3a92d5c4d2088de' | <--- Updated with zero deposit / withdraw checks
+└──────────────┴──────────────────────────────────────────────┴──────────────────────────────────────────────────────────────────────┘
