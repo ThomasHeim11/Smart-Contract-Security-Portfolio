@@ -1,3 +1,0 @@
-eth-ape>=0.5.4
-black
-jsbeautifier

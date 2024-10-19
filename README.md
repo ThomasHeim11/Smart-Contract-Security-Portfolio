@@ -4,24 +4,36 @@
 
 ## Overview 🌐
 
-Greetings!  For each protocol my audit report is inside the audit-report folder. I extend a warm welcome to my **Smart Contract Security Portfolio** – a manifestation of my unwavering commitment to enhancing the security standards of decentralized applications. As a seasoned blockchain developer, I've made this repository to highlight my proficiency in smart contract audits and proactive vulnerability management, coupled with engaging bounty programs.
+Hello and welcome! I'm excited to share my **Smart Contract Security Portfolio** with you. This portfolio highlights my dedication to improving security standards in decentralized applications. As a **Smart Contract Security Researcher**, I created this repository to showcase my expertise in audits, vulnerability management, and the research projects I’ve been involved in.
 
 ## Key Highlights 🚀
 
-### 1. **Smart Contract Audits 🕵️‍♂️**
+### 1. **Smart Contract Audits (Private) 🕵️‍♂️**
 
-Delve into this repository to discover detailed smart contract audits, showcasing my skills in conducting thorough security assessments. These audits are designed to ensure that smart contracts have the highest security standards, effectively mitigating risks and potential vulnerabilities.
+In this section, you’ll find detailed audits of smart contracts that I’ve conducted. Each audit report is stored in the `audit-report` folder within each protocol. My goal is to ensure these contracts meet the highest security standards while effectively mitigating risks and vulnerabilities.
 
 ### 2. **Bug Bounty Program 🐛💰**
 
-I actively engage in bug bounties to gain practical experience, fostering responsible disclosure and showcasing a commitment to continuously improving security practices. Explore the tangible results within this portfolio – where security isn't just a priority but an ongoing and collaborative journey.
+I actively participate in bug bounty programs to gain practical experience and promote responsible disclosure. This section showcases my findings from these bounties, with audit reports conveniently located in the `audit-report` folder. For me, security is an ongoing journey, and I enjoy sharing my discoveries along the way!
+
+### 3. **Competitive Audits 🏆**
+
+This section highlights my participation in competitive auditing challenges, where I’ve had the chance to win rewards for my work. You can find the audit reports detailing my findings and achievements in the `audit-report` folder here. These experiences help me refine my skills and contribute valuable insights to the community.
+
+### 4. **First Flights 🛩️**
+
+Check out my findings from the First Flights program, featuring unique auditing challenges with smaller codebases. This section includes audit reports in the `audit-report` folder, demonstrating my commitment to continuous learning and research in smart contract security.
 
 ## Contributions Welcome 🤝
 
-If you're interested in potential collaboration or have any inquiries, feel free to connect with me on [LinkedIn](https://www.linkedin.com/in/thomas-heim11/).
+If you’re interested in collaboration or have any questions, feel free to connect with me on [LinkedIn](https://www.linkedin.com/in/thomas-heim11/). I’m always eager to engage with fellow researchers and professionals in the field!
 
 ## Stay Connected 🌐
 
-Stay in the loop with the latest developments and connect with me on LinkedIn:
+Let’s keep in touch! Follow me on LinkedIn to stay updated on my latest research and projects:
 
 - [Thomas Heim](https://www.linkedin.com/in/thomas-heim11/)
+
+---
+
+Thank you for exploring my portfolio! I’m looking forward to sharing insights and growing together in the smart contract security community. 😊
