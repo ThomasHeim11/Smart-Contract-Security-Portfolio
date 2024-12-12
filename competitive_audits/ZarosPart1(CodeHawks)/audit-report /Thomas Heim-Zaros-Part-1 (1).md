@@ -31,7 +31,8 @@
 
 ## Proof of Finiding
 https://codehawks.cyfrin.io/c/2024-07-zaros/s/458
-<img width="1015" alt="image" src="https://github.com/user-attachments/assets/526be8c1-ee31-4170-9363-a4755d0976ca" />
+<img width="1017" alt="image" src="https://github.com/user-attachments/assets/336ad3eb-f3a8-4fe4-be14-e44699c6992c" />
+
 
 ## Summary
 
