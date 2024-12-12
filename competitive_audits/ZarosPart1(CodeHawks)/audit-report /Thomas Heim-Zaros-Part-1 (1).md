@@ -29,7 +29,7 @@
 
 ## <a id='L-01'></a>L-01. Storage Collision Due to Lack of Validation for CustomReferralConfiguration::Load function          
 
-## Proof of Finiding
+## Proof of Finidings
 https://codehawks.cyfrin.io/c/2024-07-zaros/s/458
 <img width="1017" alt="image" src="https://github.com/user-attachments/assets/336ad3eb-f3a8-4fe4-be14-e44699c6992c" />
 
