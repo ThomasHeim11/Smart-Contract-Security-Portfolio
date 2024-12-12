@@ -840,4 +840,243 @@ describe("OmronDeposit", () => {
       expect(userInfo.pointBalance).to.equal(parseEther("2"));
     });
   });
+  ///////////////////////////
+  ///////////////////////////
+  ///////////////////////////
+  ///////////////////////////
+  ///////////////////////////
+  ///////////////////////////
+  ///////////////////////////
+  describe("Audit Tests", () => {
+    let token1, omronDeposit, owner, user1, user2;
+
+    beforeEach(async () => {
+      [owner, user1, user2] = await ethers.getSigners();
+
+      const Token = await ethers.getContractFactory("ERCMock");
+      token1 = await Token.deploy(
+        "Token1",
+        "TK1",
+        owner.address,
+        ethers.utils.parseEther("1000")
+      );
+      await token1.deployed();
+
+      const OmronDeposit = await ethers.getContractFactory("OmronDeposit");
+      omronDeposit = await OmronDeposit.deploy(owner.address, [token1.address]);
+      await omronDeposit.deployed();
+    });
+
+    //@audit Manipulation of governance voting result deviating from voted outcome and resulting in a direct change from intended effect of original results
+    it("Should prevent manipulation of governance voting results", async function () {
+      // This test is not applicable to OmronDeposit as it does not involve governance voting
+      // Instead, we will test for manipulation of deposit and withdrawal results
+
+      await token1
+        .connect(owner)
+        .approve(omronDeposit.address, ethers.utils.parseEther("10"));
+      await omronDeposit
+        .connect(owner)
+        .deposit(token1.address, ethers.utils.parseEther("10"));
+
+      // Attempt to manipulate withdrawal
+      await expect(
+        omronDeposit.connect(user1).withdrawTokens(owner.address)
+      ).to.be.revertedWith("NotClaimManager");
+
+      // Ensure the correct balance remains
+      const balance = await token1.balanceOf(omronDeposit.address);
+      expect(balance).to.equal(ethers.utils.parseEther("10"));
+    });
+
+    //   //@audit Direct theft of any user funds, whether at-rest or in-motion, other than unclaimed yield
+    //   it("Should prevent direct theft of user funds", async () => {
+    //     // Implement test logic to ensure user funds cannot be stolen
+    //     // Example: Ensure that only the owner can withdraw their funds
+    //     await addAllowance(token1, owner, deposit, parseEther("1"));
+    //     await depositTokens(deposit, token1, parseEther("1"), owner);
+    //     await expect(
+    //       deposit.contract.connect(user1).withdrawTokens(owner.address)
+    //     ).to.be.revertedWithCustomError(deposit.contract, "NotClaimManager");
+    //   });
+
+    //   //@audit Permanent freezing of funds
+    //   it("Should prevent permanent freezing of funds", async () => {
+    //     // Implement test logic to ensure funds cannot be permanently frozen
+    //     // Example: Ensure that funds can always be withdrawn unless explicitly paused by the owner
+    //     await addAllowance(token1, owner, deposit, parseEther("1"));
+    //     await depositTokens(deposit, token1, parseEther("1"), owner);
+    //     await deposit.contract.connect(owner).pause();
+    //     await expect(
+    //       deposit.contract.connect(owner).withdrawTokens(owner.address)
+    //     ).to.be.revertedWithCustomError(deposit.contract, "EnforcedPause");
+    //     await deposit.contract.connect(owner).unpause();
+    //     await expect(
+    //       deposit.contract.connect(owner).withdrawTokens(owner.address)
+    //     )
+    //       .to.emit(deposit.contract, "WithdrawTokens")
+    //       .withArgs(owner.address, [parseEther("1")]);
+    //   });
+
+    //   //@audit Protocol insolvency
+    //   it("Should prevent protocol insolvency", async () => {
+    //     // Implement test logic to ensure protocol cannot become insolvent
+    //     // Example: Ensure that the protocol maintains a minimum balance to cover all user deposits
+    //     await addAllowance(token1, owner, deposit, parseEther("100"));
+    //     await depositTokens(deposit, token1, parseEther("100"), owner);
+    //     const protocolBalance = await token1.contract.balanceOf(deposit.address);
+    //     expect(protocolBalance).to.be.at.least(parseEther("100"));
+    //   });
+
+    //   //@audit Theft of funds via Generating a false ZK proof that the verify algorithm deems as correct (breaking protocol soundness)
+    //   it("Should prevent theft of funds via false ZK proof", async () => {
+    //     // Implement test logic to ensure false ZK proofs cannot be generated
+    //     // Example: Ensure that the verify algorithm correctly identifies and rejects false proofs
+    //     const zkVerifier = await deployContract("ZKVerifier", [owner.address]);
+    //     const falseProof = "0x1234"; // Example false proof
+    //     await expect(zkVerifier.verify(falseProof)).to.be.revertedWithCustomError(
+    //       zkVerifier,
+    //       "InvalidProof"
+    //     );
+    //   });
+
+    //   //@audit Malicious interactions with an already-connected wallet, such as: Modifying transaction arguments or parameters Substituting contract addresses Submitting malicious transactions
+    //   it("Should prevent malicious interactions with connected wallets", async () => {
+    //     // Implement test logic to ensure malicious interactions with connected wallets are prevented
+    //     // Example: Ensure that transaction arguments and parameters cannot be modified by unauthorized parties
+    //     await addAllowance(token1, owner, deposit, parseEther("1"));
+    //     await depositTokens(deposit, token1, parseEther("1"), owner);
+    //     await expect(
+    //       deposit.contract.connect(user1).deposit(token1.address, parseEther("1"))
+    //     ).to.be.revertedWithCustomError(deposit.contract, "NotAuthorized");
+    //   });
+
+    //   //@audit Theft of unclaimed yield
+    //   it("Should prevent theft of unclaimed yield", async () => {
+    //     // Implement test logic to ensure unclaimed yield cannot be stolen
+    //     // Example: Ensure that only the rightful owner can claim their yield
+    //     await deposit.contract.setClaimManager(owner.address);
+    //     await expect(
+    //       deposit.contract.connect(user1).claimYield(owner.address)
+    //     ).to.be.revertedWithCustomError(deposit.contract, "NotClaimManager");
+    //   });
+
+    //   //@audit Theft of unclaimed royalties
+    //   it("Should prevent theft of unclaimed royalties", async () => {
+    //     // Implement test logic to ensure unclaimed royalties cannot be stolen
+    //     // Example: Ensure that only the rightful owner can claim their royalties
+    //     await deposit.contract.setClaimManager(owner.address);
+    //     await expect(
+    //       deposit.contract.connect(user1).claimRoyalties(owner.address)
+    //     ).to.be.revertedWithCustomError(deposit.contract, "NotClaimManager");
+    //   });
+
+    //   //@audit Permanent freezing of unclaimed yield
+    //   it("Should prevent permanent freezing of unclaimed yield", async () => {
+    //     // Implement test logic to ensure unclaimed yield cannot be permanently frozen
+    //     // Example: Ensure that unclaimed yield can always be claimed unless explicitly paused by the owner
+    //     await deposit.contract.setClaimManager(owner.address);
+    //     await deposit.contract.pause();
+    //     await expect(
+    //       deposit.contract.connect(owner).claimYield(owner.address)
+    //     ).to.be.revertedWithCustomError(deposit.contract, "EnforcedPause");
+    //     await deposit.contract.unpause();
+    //     await expect(deposit.contract.connect(owner).claimYield(owner.address))
+    //       .to.emit(deposit.contract, "YieldClaimed")
+    //       .withArgs(owner.address, parseEther("1"));
+    //   });
+
+    //   //@audit Permanent freezing of unclaimed royalties
+    //   it("Should prevent permanent freezing of unclaimed royalties", async () => {
+    //     // Implement test logic to ensure unclaimed royalties cannot be permanently frozen
+    //     // Example: Ensure that unclaimed royalties can always be claimed unless explicitly paused by the owner
+    //     await deposit.contract.setClaimManager(owner.address);
+    //     await deposit.contract.pause();
+    //     await expect(
+    //       deposit.contract.connect(owner).claimRoyalties(owner.address)
+    //     ).to.be.revertedWithCustomError(deposit.contract, "EnforcedPause");
+    //     await deposit.contract.unpause();
+    //     await expect(
+    //       deposit.contract.connect(owner).claimRoyalties(owner.address)
+    //     )
+    //       .to.emit(deposit.contract, "RoyaltiesClaimed")
+    //       .withArgs(owner.address, parseEther("1"));
+    //   });
+
+    //   //@audit Temporary freezing of funds for at least 24 hours
+    //   it("Should prevent temporary freezing of funds for at least 24 hours", async () => {
+    //     // Implement test logic to ensure funds cannot be temporarily frozen for at least 24 hours
+    //     // Example: Ensure that funds can be withdrawn within a reasonable time frame
+    //     await addAllowance(token1, owner, deposit, parseEther("1"));
+    //     await depositTokens(deposit, token1, parseEther("1"), owner);
+    //     await deposit.contract.pause();
+    //     await time.increase(86400); // Increase time by 24 hours
+    //     await deposit.contract.unpause();
+    //     await expect(
+    //       deposit.contract.connect(owner).withdrawTokens(owner.address)
+    //     )
+    //       .to.emit(deposit.contract, "WithdrawTokens")
+    //       .withArgs(owner.address, [parseEther("1")]);
+    //   });
+
+    //   //@audit Smart contract unable to operate due to lack of token funds Block stuffing
+    //   it("Should prevent smart contract from being unable to operate due to lack of token funds", async () => {
+    //     // Implement test logic to ensure smart contract can operate even with low token funds
+    //     // Example: Ensure that the contract has a mechanism to handle low token balances
+    //     await addAllowance(token1, owner, deposit, parseEther("1"));
+    //     await depositTokens(deposit, token1, parseEther("1"), owner);
+    //     await deposit.contract.withdrawTokens(owner.address);
+    //     const contractBalance = await token1.contract.balanceOf(deposit.address);
+    //     expect(contractBalance).to.be.at.least(parseEther("0"));
+    //   });
+
+    //   //@audit Griefing (e.g. no profit motive for an attacker, but damage to the users or the protocol)
+    //   it("Should prevent griefing attacks", async () => {
+    //     // Implement test logic to ensure griefing attacks are prevented
+    //     // Example: Ensure that the contract has mechanisms to detect and mitigate griefing attempts
+    //     await addAllowance(token1, owner, deposit, parseEther("1"));
+    //     await depositTokens(deposit, token1, parseEther("1"), owner);
+    //     await expect(
+    //       deposit.contract.connect(user1).grief(owner.address)
+    //     ).to.be.revertedWithCustomError(deposit.contract, "NotAuthorized");
+    //   });
+
+    //   //@audit Theft of gas
+    //   it("Should prevent theft of gas", async () => {
+    //     // Implement test logic to ensure gas cannot be stolen
+    //     // Example: Ensure that gas costs are correctly accounted for and cannot be manipulated
+    //     await addAllowance(token1, owner, deposit, parseEther("1"));
+    //     await depositTokens(deposit, token1, parseEther("1"), owner);
+    //     const gasUsed = await deposit.contract.estimateGas.withdrawTokens(
+    //       owner.address
+    //     );
+    //     expect(gasUsed).to.be.below(parseEther("0.01")); // Example gas limit
+    //   });
+
+    //   //@audit Unbounded gas consumption
+    //   it("Should prevent unbounded gas consumption", async () => {
+    //     // Implement test logic to ensure gas consumption is bounded
+    //     // Example: Ensure that functions have gas limits and cannot consume excessive gas
+    //     await addAllowance(token1, owner, deposit, parseEther("1"));
+    //     await depositTokens(deposit, token1, parseEther("1"), owner);
+    //     const gasUsed = await deposit.contract.estimateGas.deposit(
+    //       token1.address,
+    //       parseEther("1")
+    //     );
+    //     expect(gasUsed).to.be.below(parseEther("0.01")); // Example gas limit
+    //   });
+
+    //   //@audit Contract fails to deliver promised returns, but doesn't lose value
+    //   it("Should ensure contract delivers promised returns", async () => {
+    //     // Implement test logic to ensure contract delivers promised returns
+    //     // Example: Ensure that the contract correctly calculates and distributes returns to users
+    //     await addAllowance(token1, owner, deposit, parseEther("1"));
+    //     await depositTokens(deposit, token1, parseEther("1"), owner);
+    //     await deposit.contract.setClaimManager(owner.address);
+    //     await deposit.contract.stopDeposits();
+    //     await expect(deposit.contract.connect(owner).claim(owner.address))
+    //       .to.emit(deposit.contract, "ClaimPoints")
+    //       .withArgs(owner.address, parseEther("1"));
+    //   });
+  });
 });

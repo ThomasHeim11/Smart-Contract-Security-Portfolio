@@ -1,0 +1,5 @@
+{
+  "security.olympix.project.includePath": "TrickOrTreat/src",
+  "security.olympix.project.testsPath": "",
+  "security.olympix.project.analyzeWholeProject": true
+}

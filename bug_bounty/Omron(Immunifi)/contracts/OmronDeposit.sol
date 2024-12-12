@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
+
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -22,8 +23,7 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
     /**
      * @notice A mapping of whitelisted tokens to a boolean indicating if the token is whitelisted
      */
-    mapping(address tokenAddress => bool isWhitelisted)
-        public whitelistedTokens;
+    mapping(address tokenAddress => bool isWhitelisted) public whitelistedTokens;
 
     /**
      * @notice A mapping of user addresses to information about the user including points and token balances
@@ -62,11 +62,9 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
      * @param _initialOwner The address of the initial owner of the contract.
      * @param _whitelistedTokens An array of addresses of tokens that are accepted by the contract.
      */
-    constructor(
-        address _initialOwner,
-        address[] memory _whitelistedTokens
-    ) Ownable(_initialOwner) {
-        for (uint256 i; i < _whitelistedTokens.length; ) {
+    //@audit can oweneble be exploited???
+    constructor(address _initialOwner, address[] memory _whitelistedTokens) Ownable(_initialOwner) {
+        for (uint256 i; i < _whitelistedTokens.length;) {
             address token = _whitelistedTokens[i];
             if (token == address(0)) {
                 revert ZeroAddress();
@@ -106,15 +104,14 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
         }
         whitelistedTokens[_tokenAddress] = false;
         bool found = false;
-        for (uint256 i; i < allWhitelistedTokens.length; ) {
+        //@audit can this for-loop be DOS-attacked.
+        for (uint256 i; i < allWhitelistedTokens.length;) {
             // Check if the current token address is the token to be removed
             if (allWhitelistedTokens[i] == _tokenAddress) {
                 found = true;
                 // If the token is not already at the end of the array, then copy the token address from the last position into the i position
                 if (i != allWhitelistedTokens.length - 1) {
-                    allWhitelistedTokens[i] = allWhitelistedTokens[
-                        allWhitelistedTokens.length - 1
-                    ];
+                    allWhitelistedTokens[i] = allWhitelistedTokens[allWhitelistedTokens.length - 1];
                 }
                 // Remove the last element from the array. This will either:
                 // - Remove a duplicated address if the last address was copied into the spot of the target token's address
@@ -157,6 +154,7 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
      * Withdrawals will be enabled
      * Points accrual will no longer take place
      */
+    //@audit only owner can be exploited???
     function stopDeposits() external onlyOwner {
         if (depositStopTime != 0) {
             revert DepositsAlreadyStopped();
@@ -164,10 +162,11 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
         depositStopTime = block.timestamp;
         emit DepositStopTimeSet(block.timestamp);
     }
-
+    //@audit can this be exploited???
     /**
      * @dev Pause the contract
      */
+
     function pause() external onlyOwner {
         _pause();
     }
@@ -225,16 +224,10 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
      * @return lastUpdated The timestamp of the last time the user's points were updated.
      * @return pointBalance The total number of points earned by the user.
      */
-    function getUserInfo(
-        address _userAddress
-    )
+    function getUserInfo(address _userAddress)
         external
         view
-        returns (
-            uint256 pointsPerHour,
-            uint256 lastUpdated,
-            uint256 pointBalance
-        )
+        returns (uint256 pointsPerHour, uint256 lastUpdated, uint256 pointBalance)
     {
         UserInfo storage user = userInfo[_userAddress];
         pointsPerHour = user.pointsPerHour;
@@ -246,11 +239,7 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
      * @notice A view method that returns the list of all whitelisted tokens.
      * @return _allWhitelistedTokens An array of addresses of all whitelisted tokens.
      */
-    function getAllWhitelistedTokens()
-        external
-        view
-        returns (address[] memory _allWhitelistedTokens)
-    {
+    function getAllWhitelistedTokens() external view returns (address[] memory _allWhitelistedTokens) {
         _allWhitelistedTokens = allWhitelistedTokens;
     }
 
@@ -259,9 +248,8 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
      * @param _userAddress The address of the user to calculate the points for.
      * @return currentPointsBalance The total points earned by the user, including points earned from time elapsed since the last update.
      */
-    function calculatePoints(
-        address _userAddress
-    ) external view returns (uint256 currentPointsBalance) {
+    //@audit is the caluclation correct??
+    function calculatePoints(address _userAddress) external view returns (uint256 currentPointsBalance) {
         UserInfo storage user = userInfo[_userAddress];
         currentPointsBalance = user.pointBalance + _calculatePointsDiff(user);
     }
@@ -272,10 +260,7 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
      * @param _tokenAddress The address of the token to check the balance for.
      * @return balance The token balance of the user for the specified token.
      */
-    function tokenBalance(
-        address _userAddress,
-        address _tokenAddress
-    ) external view returns (uint256 balance) {
+    function tokenBalance(address _userAddress, address _tokenAddress) external view returns (uint256 balance) {
         UserInfo storage user = userInfo[_userAddress];
         balance = user.tokenBalances[_tokenAddress];
     }
@@ -287,10 +272,13 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
      * @param _tokenAddress The address of the token to be deposited
      * @param _amount The amount of the token to be deposited
      */
-    function deposit(
-        address _tokenAddress,
-        uint256 _amount
-    ) external nonReentrant whenNotPaused onlyBeforeDepositStop {
+    //@audit can this be explited???
+    function deposit(address _tokenAddress, uint256 _amount)
+        external
+        nonReentrant
+        whenNotPaused
+        onlyBeforeDepositStop
+    {
         if (_amount == 0) {
             revert ZeroAmount();
         }
@@ -319,9 +307,8 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
      * @param _userAddress The address of the user to withdraw the tokens from
      * @return withdrawnAmounts An array of the amounts of the tokens that were withdrawn
      */
-    function withdrawTokens(
-        address _userAddress
-    )
+    //@audit can hacker drain the protocol????
+    function withdrawTokens(address _userAddress)
         external
         nonReentrant
         whenNotPaused
@@ -338,7 +325,7 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
 
         withdrawnAmounts = new uint256[](allWhitelistedTokens.length);
 
-        for (uint256 i; i < allWhitelistedTokens.length; ) {
+        for (uint256 i; i < allWhitelistedTokens.length;) {
             uint256 userBalance = user.tokenBalances[allWhitelistedTokens[i]];
 
             if (userBalance == 0) {
@@ -369,9 +356,7 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
      * @param _userAddress The address of the user to claim for
      * @return pointsClaimed The number of points claimed by the user
      */
-    function claim(
-        address _userAddress
-    )
+    function claim(address _userAddress)
         external
         nonReentrant
         whenNotPaused
@@ -401,6 +386,7 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
      * @dev Update points information for a user
      * @param _user The user to update the points for
      */
+    //@audit correct math???
     function _updatePoints(UserInfo storage _user) private {
         if (_user.lastUpdated != 0) {
             _user.pointBalance += _calculatePointsDiff(_user);
@@ -416,16 +402,14 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
      * @param _user The user to calculate the points for
      * @return calculatedPoints The number of points earned by the user, since lastUpdated
      */
-    function _calculatePointsDiff(
-        UserInfo storage _user
-    ) private view returns (uint256 calculatedPoints) {
+    //@audit is math correct???
+    function _calculatePointsDiff(UserInfo storage _user) private view returns (uint256 calculatedPoints) {
         // If the user doesn't have this timestamp, then they haven't deposited any tokens, and thus their points are zero.
         // Otherwise, if their points per hour are zero, then there are no rewards between their last updated time and the deposit stop or the current time.
         // Finally, if the deposit stop time is non-zero and the last updated time is after the deposit stop time, then the user is not earning points.
         if (
-            _user.lastUpdated == 0 ||
-            _user.pointsPerHour == 0 ||
-            (_user.lastUpdated >= depositStopTime && depositStopTime != 0)
+            _user.lastUpdated == 0 || _user.pointsPerHour == 0
+                || (_user.lastUpdated >= depositStopTime && depositStopTime != 0)
         ) {
             return 0;
         }
@@ -436,8 +420,6 @@ contract OmronDeposit is Ownable, ReentrancyGuard, Pausable, IOmronDeposit {
         if (depositStopTime != 0) {
             timeElapsed = depositStopTime - _user.lastUpdated;
         }
-        calculatedPoints =
-            (timeElapsed * _user.pointsPerHour * POINTS_SCALE) /
-            ONE_HOUR_IN_POINTS;
+        calculatedPoints = (timeElapsed * _user.pointsPerHour * POINTS_SCALE) / ONE_HOUR_IN_POINTS;
     }
 }
