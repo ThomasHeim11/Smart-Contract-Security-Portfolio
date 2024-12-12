@@ -117,6 +117,9 @@ Implement a more robust storage slot computation or add additional unique identi
 
 ## <a id='L-02'></a>L-02. Locked ETH in TradingAccountBranch.sol            
 
+## Proof of Finding
+https://codehawks.cyfrin.io/c/2024-07-zaros/s/164
+<img width="1027" alt="image" src="https://github.com/user-attachments/assets/6cb1de7a-9b8d-446a-8b9b-4585869853d1" />
 
 
 ## Summary
