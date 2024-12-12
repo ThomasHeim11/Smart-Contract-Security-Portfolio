@@ -25,16 +25,13 @@
 - Medium: 0
 - Low: 2
 
-
-
-    
-
-
 # Low Risk Findings
 
-## <a id='L-01'></a>L-01. Storage Collision Due to Lack of Validation for CustomReferralConfiguration::Load function            
+## <a id='L-01'></a>L-01. Storage Collision Due to Lack of Validation for CustomReferralConfiguration::Load function          
 
-
+## Proof of Finiding
+https://codehawks.cyfrin.io/c/2024-07-zaros/s/458
+<img width="1015" alt="image" src="https://github.com/user-attachments/assets/526be8c1-ee31-4170-9363-a4755d0976ca" />
 
 ## Summary
 
