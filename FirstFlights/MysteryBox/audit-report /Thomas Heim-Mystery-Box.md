@@ -32,6 +32,9 @@
 
 ## <a id='H-01'></a>H-01. Critical Reentrancy Vulnerability in MysteryBox::claimAllRewards            
 
+## Proof of Finding
+https://codehawks.cyfrin.io/c/2024-09-mystery-box/s/341
+<img width="989" alt="image" src="https://github.com/user-attachments/assets/d24db3d2-9b90-4c8b-933d-54c7b2330fa1" />
 
 
 ## Summary
@@ -175,6 +178,9 @@ Rewards Information:
 
 ## <a id='H-02'></a>H-02. Critical Reentrancy Vulnerability in MysteryBox::claimSingleReward            
 
+## Proof of Finding
+https://codehawks.cyfrin.io/c/2024-09-mystery-box/s/341
+<img width="1036" alt="image" src="https://github.com/user-attachments/assets/334fcf33-dfa0-4954-85f9-57699418b063" />
 
 
 ## Summary
@@ -307,6 +313,9 @@ Explanation of the Logs:
 
 ## <a id='H-03'></a>H-03. Unauthorized Ownership Change and Fund Withdrawal Exploit in MysteryBox.sol             
 
+## Proof of Finding
+https://codehawks.cyfrin.io/c/2024-09-mystery-box/s/345
+<img width="1036" alt="image" src="https://github.com/user-attachments/assets/33e6dcd8-222b-47a3-ab30-0cc7172cf196" />
 
 
 ## Summary
@@ -411,6 +420,9 @@ Logs:
 
 ## <a id='M-01'></a>M-01. Predictable RNG Vulnerability in MysteryBox Contract Enables Exploitative Reward Manipulation            
 
+## Proof of Finding
+https://codehawks.cyfrin.io/c/2024-09-mystery-box/s/264
+<img width="1022" alt="image" src="https://github.com/user-attachments/assets/7fc686f3-0938-4b91-b81c-bb6392328ed1" />
 
 
 ## Summary
@@ -431,7 +443,6 @@ uint256 randomValue = uint256(keccak256(abi.encodePacked(fuzzedTimestamp, attack
 This methodology relies on predictable and manipulable parameters (timestamp and address).
 
 ## POC
-
 ```javascript
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
