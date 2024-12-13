@@ -29,7 +29,9 @@
 
 ## <a id='H-01'></a>H-01. Precision Errors and Array Inconsistencies in closePot Function Lead to Misallocation of Rewards in Pot.sol            
 
-
+## Proof of Finding
+https://codehawks.cyfrin.io/c/2024-08-MyCut/s/75
+<img width="1012" alt="image" src="https://github.com/user-attachments/assets/fedd8a2c-c9b2-43c3-aa04-c62e625a630b" />
 
 ## Summary
 
