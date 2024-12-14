@@ -35,6 +35,11 @@
 
 ## <a id='H-01'></a>H-01.  Incorrect fee calculation in `TSwapPool::getInputAmountBasedOnOutput` causes protocll to take too many tokens from users, resulting in lost fees            
 
+## Proof of Finding
+https://codehawks.cyfrin.io/c/2024-06-t-swap/s/126
+<img width="1020" alt="image" src="https://github.com/user-attachments/assets/4c116073-c940-438f-89ec-e8a79eed3609" />
+
+
 ### Relevant GitHub Links
 
 https://github.com/Cyfrin/2024-06-t-swap/blob/d1783a0ae66f4f43f47cb045e51eca822cd059be/src/TSwapPool.sol#L279C1-L294C6
