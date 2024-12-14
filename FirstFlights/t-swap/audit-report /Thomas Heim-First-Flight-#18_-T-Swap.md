@@ -68,7 +68,12 @@ Protocol takes more fees than expected from users.
 +        return ((inputReserves * outputAmount) * 1_000) / ((outputReserves - outputAmount) * 997);
     }
 ```
-## <a id='H-02'></a>H-02.  Lack of slippage protection in `TSwapPool::swapExactOutput` causes users to potentially receive way fewer tokens            
+## <a id='H-02'></a>H-02.  Lack of slippage protection in `TSwapPool::swapExactOutput` causes users to potentially receive way fewer tokens  
+
+## Proof of Finding 
+https://codehawks.cyfrin.io/c/2024-06-t-swap/s/127
+<img width="1005" alt="image" src="https://github.com/user-attachments/assets/69335755-a19d-413e-ac6a-bfa495ce06b2" />
+
 
 ### Relevant GitHub Links
 
@@ -111,7 +116,12 @@ We should include a `maxInputAmount` so the user only has to spend up to a speci
 +       }
         _swap(inputToken, inputAmount, outputToken, outputAmount);
 ```
-## <a id='H-03'></a>H-03. TSwapPool::sellPoolTokens` mismatches input and output tokens causing users to receive the incorrect amount of tokens            
+## <a id='H-03'></a>H-03. TSwapPool::sellPoolTokens` mismatches input and output tokens causing users to receive the incorrect amount of tokens  
+
+## Proof of Finding
+https://codehawks.cyfrin.io/c/2024-06-t-swap/s/128
+<img width="1013" alt="image" src="https://github.com/user-attachments/assets/a906bce0-50f8-424b-abad-b07c92da3c9b" />
+
 
 ### Relevant GitHub Links
 
@@ -160,7 +170,12 @@ Consider changing the implementation to use `swapExactInput` instead of `swapExa
 +        return swapExactInput(i_poolToken, poolTokenAmount, i_wethToken, minWethToReceive, uint64(block.timestamp));
     }
 ```
-## <a id='H-04'></a>H-04. In `TSwapPool::_swap` the extra tokens given to users after every `swapCount` breaks the protocol invariant of `x * y = k`            
+## <a id='H-04'></a>H-04. In `TSwapPool::_swap` the extra tokens given to users after every `swapCount` breaks the protocol invariant of `x * y = k`   
+
+## Proof of Finding
+https://codehawks.cyfrin.io/c/2024-06-t-swap/s/129
+<img width="1034" alt="image" src="https://github.com/user-attachments/assets/44859785-8c9e-4366-8538-3bcc1e1a6d2c" />
+
 
 ### Relevant GitHub Links
 
@@ -253,7 +268,10 @@ Remove the extra incentive mechanism. If you want to keep this in, we should acc
     
 # Medium Risk Findings
 
-## <a id='M-01'></a>M-01.  `TSwapPool::deposit` is missing deadline check causing transactions to complete even after the deadline            
+## <a id='M-01'></a>M-01.  `TSwapPool::deposit` is missing deadline check causing transactions to complete even after the deadline
+https://codehawks.cyfrin.io/c/2024-06-t-swap/s/125
+<img width="1020" alt="image" src="https://github.com/user-attachments/assets/d39d3da9-588b-4502-a764-d4ebd376d2c2" />
+
 
 ### Relevant GitHub Links
 
@@ -289,7 +307,12 @@ function deposit(
 
 # Low Risk Findings
 
-## <a id='L-01'></a>L-01. `TSwapPool::LiquidityAdded` event has parameters out of order            
+## <a id='L-01'></a>L-01. `TSwapPool::LiquidityAdded` event has parameters out of order
+
+## Proof of Finding
+https://codehawks.cyfrin.io/c/2024-06-t-swap/s/130
+<img width="1009" alt="image" src="https://github.com/user-attachments/assets/2a109dbf-ad82-45ce-8851-08c391dbf494" />
+
 
 ### Relevant GitHub Links
 
@@ -307,7 +330,12 @@ Event emission is incorrect, leading to off-chain functions potentially malfunct
 - emit LiquidityAdded(msg.sender, poolTokensToDeposit, wethToDeposit);
 + emit LiquidityAdded(msg.sender, wethToDeposit, poolTokensToDeposit);
 ```
-## <a id='L-02'></a>L-02. Default value returned by `TSwapPool::swapExactInput` results in incorrect return value given            
+## <a id='L-02'></a>L-02. Default value returned by `TSwapPool::swapExactInput` results in incorrect return value given
+
+## Proof of Finding
+https://codehawks.cyfrin.io/c/2024-06-t-swap/s/131
+<img width="1011" alt="image" src="https://github.com/user-attachments/assets/7bc99f7d-9889-41b2-9495-3e22a46c0033" />
+
 
 ### Relevant GitHub Links
 
