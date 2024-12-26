@@ -73,3 +73,6 @@
 [submodule "competitive_audits/Flow(CodeHawks)/lib/forge-std"]
 	path = competitive_audits/Flow(CodeHawks)/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "FirstFlights/ChristmasDinner/lib/openzeppelin-contracts"]
+	path = FirstFlights/ChristmasDinner/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
