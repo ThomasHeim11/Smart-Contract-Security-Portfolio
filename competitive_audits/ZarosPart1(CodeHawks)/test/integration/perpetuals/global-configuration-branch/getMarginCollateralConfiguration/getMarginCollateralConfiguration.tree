@@ -1,3 +1,0 @@
-GetMarginCollateralConfiguration_Integration_Test
-└── given a valid collateral address
-    └── it should return the margin collateral configuration

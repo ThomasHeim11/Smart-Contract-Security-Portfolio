@@ -38,20 +38,19 @@ abstract contract QuantAMMGradientBasedRule is ScalarRuleQuantAMMStorage {
 
     /// @param _newData p(t)
     /// @param _poolParameters pool parameters
-    function _calculateQuantAMMGradient(
-        int256[]  memory _newData,
-        QuantAMMPoolParameters memory _poolParameters
-    ) internal returns (int256[] memory) {
+    function _calculateQuantAMMGradient(int256[] memory _newData, QuantAMMPoolParameters memory _poolParameters)
+        internal
+        returns (int256[] memory)
+    {
         QuantAMMGradientLocals memory locals;
         locals.finalValues = new int256[](_poolParameters.numberOfAssets);
-        locals.intermediateGradientState = _quantAMMUnpack128Array(
-            intermediateGradientStates[_poolParameters.pool],
-            _poolParameters.numberOfAssets
-        );
+        locals.intermediateGradientState =
+        //@audit olympix: External call potenial out of gas
+         _quantAMMUnpack128Array(intermediateGradientStates[_poolParameters.pool], _poolParameters.numberOfAssets);
 
         // lots initialised before looping to save gas
         bool notDivisibleByTwo = _poolParameters.numberOfAssets % 2 != 0;
-        uint numberOfAssetsMinusOne = _poolParameters.numberOfAssets - 1;
+        uint256 numberOfAssetsMinusOne = _poolParameters.numberOfAssets - 1;
         int256 convertedLambda = int256(_poolParameters.lambda[0]);
         int256 oneMinusLambda = ONE - convertedLambda;
 
@@ -68,11 +67,10 @@ abstract contract QuantAMMGradientBasedRule is ScalarRuleQuantAMMStorage {
             //the reason for this loop complexity is to save gas as the packing and SSTORE can be done
             //individually saving on the SSTORE from the length update if you were to replace the array
             // condition is number of assets minus one because we are doing two at a time and the last one is done outside the loop
-            for (uint i; i < numberOfAssetsMinusOne; ) {
+            for (uint256 i; i < numberOfAssetsMinusOne;) {
                 // a(t) = λa(t - 1) + (p(t) - p̅(t)) / (1 - λ)
-                locals.intermediateValue =
-                    convertedLambda.mul(locals.intermediateGradientState[i]) +
-                    (_newData[i] - _poolParameters.movingAverage[i]).div(oneMinusLambda);
+                locals.intermediateValue = convertedLambda.mul(locals.intermediateGradientState[i])
+                    + (_newData[i] - _poolParameters.movingAverage[i]).div(oneMinusLambda);
 
                 locals.intermediateGradientState[i] = locals.intermediateValue;
                 locals.finalValues[i] = locals.mulFactor.mul(locals.intermediateValue);
@@ -81,18 +79,15 @@ abstract contract QuantAMMGradientBasedRule is ScalarRuleQuantAMMStorage {
                     locals.secondIndex = i + 1;
                 }
 
-                locals.secondIntermediateValue =
-                    convertedLambda.mul(locals.intermediateGradientState[locals.secondIndex]) +
-                    (_newData[locals.secondIndex] - _poolParameters.movingAverage[locals.secondIndex]).div(
-                        oneMinusLambda
-                    );
+                locals.secondIntermediateValue = convertedLambda.mul(
+                    locals.intermediateGradientState[locals.secondIndex]
+                )
+                    + (_newData[locals.secondIndex] - _poolParameters.movingAverage[locals.secondIndex]).div(oneMinusLambda);
 
                 locals.finalValues[locals.secondIndex] = locals.mulFactor.mul(locals.secondIntermediateValue);
 
-                intermediateGradientStates[_poolParameters.pool][locals.storageArrayIndex] = _quantAMMPackTwo128(
-                    locals.intermediateGradientState[i],
-                    locals.secondIntermediateValue
-                );
+                intermediateGradientStates[_poolParameters.pool][locals.storageArrayIndex] =
+                    _quantAMMPackTwo128(locals.intermediateGradientState[i], locals.secondIntermediateValue);
                 // the storage array is tracked separately
                 unchecked {
                     i += 2;
@@ -106,9 +101,8 @@ abstract contract QuantAMMGradientBasedRule is ScalarRuleQuantAMMStorage {
                     ++numberOfAssetsMinusOne;
                 }
 
-                locals.intermediateValue =
-                    convertedLambda.mul(locals.intermediateGradientState[numberOfAssetsMinusOne]) +
-                    (_newData[numberOfAssetsMinusOne] - _poolParameters.movingAverage[numberOfAssetsMinusOne]).div(
+                locals.intermediateValue = convertedLambda.mul(locals.intermediateGradientState[numberOfAssetsMinusOne])
+                    + (_newData[numberOfAssetsMinusOne] - _poolParameters.movingAverage[numberOfAssetsMinusOne]).div(
                         oneMinusLambda
                     );
 
@@ -123,17 +117,17 @@ abstract contract QuantAMMGradientBasedRule is ScalarRuleQuantAMMStorage {
                 --numberOfAssetsMinusOne;
             }
 
-            for (uint i; i < numberOfAssetsMinusOne; ) {
+            for (uint256 i; i < numberOfAssetsMinusOne;) {
                 unchecked {
                     convertedLambda = int256(_poolParameters.lambda[i]);
+                    //@audit Unchecked Block with Subtraction
                     oneMinusLambda = ONE - convertedLambda;
                     locals.mulFactor = oneMinusLambda.pow(THREE).div(convertedLambda);
                 }
 
                 // a(t) = λa(t - 1) + (p(t) - p̅(t)) / (1 - λ)
-                locals.intermediateValue =
-                    convertedLambda.mul(locals.intermediateGradientState[i]) +
-                    (_newData[i] - _poolParameters.movingAverage[i]).div(oneMinusLambda);
+                locals.intermediateValue = convertedLambda.mul(locals.intermediateGradientState[i])
+                    + (_newData[i] - _poolParameters.movingAverage[i]).div(oneMinusLambda);
 
                 locals.intermediateGradientState[i] = locals.intermediateValue;
                 locals.finalValues[i] = locals.mulFactor.mul(locals.intermediateValue);
@@ -145,18 +139,16 @@ abstract contract QuantAMMGradientBasedRule is ScalarRuleQuantAMMStorage {
                     locals.mulFactor = oneMinusLambda.pow(THREE).div(convertedLambda);
                 }
 
-                locals.secondIntermediateValue =
-                    convertedLambda.mul(locals.intermediateGradientState[locals.secondIndex]) +
-                    (_newData[locals.secondIndex] - _poolParameters.movingAverage[locals.secondIndex]).div(
-                        oneMinusLambda
-                    );
+                locals.secondIntermediateValue = convertedLambda.mul(
+                    locals.intermediateGradientState[locals.secondIndex]
+                )
+                //@audit Unchecked Block with Subtraction
+                + (_newData[locals.secondIndex] - _poolParameters.movingAverage[locals.secondIndex]).div(oneMinusLambda);
 
                 locals.finalValues[locals.secondIndex] = locals.mulFactor.mul(locals.secondIntermediateValue);
 
-                intermediateGradientStates[_poolParameters.pool][i] = _quantAMMPackTwo128(
-                    locals.intermediateGradientState[i],
-                    locals.secondIntermediateValue
-                );
+                intermediateGradientStates[_poolParameters.pool][i] =
+                    _quantAMMPackTwo128(locals.intermediateGradientState[i], locals.secondIntermediateValue);
                 unchecked {
                     i += 2;
                     ++locals.storageArrayIndex;
@@ -167,14 +159,14 @@ abstract contract QuantAMMGradientBasedRule is ScalarRuleQuantAMMStorage {
             if (notDivisibleByTwo) {
                 unchecked {
                     ++numberOfAssetsMinusOne;
+                    //@audit Unchecked Block with Subtraction
                     convertedLambda = int256(_poolParameters.lambda[numberOfAssetsMinusOne]);
                     oneMinusLambda = ONE - convertedLambda;
                     locals.mulFactor = oneMinusLambda.pow(THREE).div(convertedLambda);
                 }
 
-                locals.intermediateValue =
-                    convertedLambda.mul(locals.intermediateGradientState[numberOfAssetsMinusOne]) +
-                    (_newData[numberOfAssetsMinusOne] - _poolParameters.movingAverage[numberOfAssetsMinusOne]).div(
+                locals.intermediateValue = convertedLambda.mul(locals.intermediateGradientState[numberOfAssetsMinusOne])
+                    + (_newData[numberOfAssetsMinusOne] - _poolParameters.movingAverage[numberOfAssetsMinusOne]).div(
                         oneMinusLambda
                     );
 
@@ -190,10 +182,11 @@ abstract contract QuantAMMGradientBasedRule is ScalarRuleQuantAMMStorage {
     /// @param poolAddress the pool address being initialised
     /// @param _initialValues the values passed in during the creation of the pool
     /// @param _numberOfAssets the number of assets in the pool being initialised
-    function _setGradient(address poolAddress, int256[] memory _initialValues, uint _numberOfAssets) internal {
-        uint storeLength = intermediateGradientStates[poolAddress].length;
+    function _setGradient(address poolAddress, int256[] memory _initialValues, uint256 _numberOfAssets) internal {
+        uint256 storeLength = intermediateGradientStates[poolAddress].length;
         if ((storeLength == 0 && _initialValues.length == _numberOfAssets) || _initialValues.length == storeLength) {
             //should be during create pool
+            //@audit olympix: External call potenial out of gas
             intermediateGradientStates[poolAddress] = _quantAMMPack128Array(_initialValues);
         } else {
             revert("Invalid set gradient");

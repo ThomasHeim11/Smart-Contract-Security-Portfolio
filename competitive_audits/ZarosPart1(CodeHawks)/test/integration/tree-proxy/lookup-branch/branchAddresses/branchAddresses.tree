@@ -1,3 +1,0 @@
-BranchAddresses_Integration_Test
-└── when branchAddresses is called
-    └── it should return all addresses of branches

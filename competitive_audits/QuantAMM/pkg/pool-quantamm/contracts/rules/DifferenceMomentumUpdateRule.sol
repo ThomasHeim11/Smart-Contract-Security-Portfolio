@@ -12,15 +12,12 @@ contract DifferenceMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
         name = "DifferenceMomentum";
 
         parameterDescriptions = new string[](3);
-        parameterDescriptions[
-            0
-        ] = "Kappa: Kappa dictates the aggressiveness of the rule's response to a signal change (here, price gradient)";
-        parameterDescriptions[
-            1
-        ] = "Lambda Short: This Lambda dictates price smoothing for the short-memory moving average";
-        parameterDescriptions[
-            2
-        ] = "Lambda Long: This Lambda dictates price smoothing for the long-memory moving average";
+        parameterDescriptions[0] =
+            "Kappa: Kappa dictates the aggressiveness of the rule's response to a signal change (here, price gradient)";
+        parameterDescriptions[1] =
+            "Lambda Short: This Lambda dictates price smoothing for the short-memory moving average";
+        parameterDescriptions[2] =
+            "Lambda Long: This Lambda dictates price smoothing for the long-memory moving average";
     }
 
     using PRBMathSD59x18 for int256;
@@ -45,7 +42,7 @@ contract DifferenceMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
         int256[] newWeights;
         int256 normalizationFactor;
         uint256 prevWeightLength;
-        uint i;
+        uint256 i;
         int256 denominator;
         int256 sumKappa;
         int256 res;
@@ -67,27 +64,23 @@ contract DifferenceMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
         locals.kappaStore = _parameters[0];
         _poolParameters.numberOfAssets = _prevWeights.length;
         int128[] memory lambdaShort = new int128[](_parameters[1].length);
-        for (locals.i; locals.i < lambdaShort.length; ) {
+        for (locals.i; locals.i < lambdaShort.length;) {
             lambdaShort[locals.i] = int128(_parameters[1][locals.i]);
             unchecked {
                 ++locals.i;
             }
         }
 
-        int256[] memory currentShortMovingAverages = _quantAMMUnpack128Array(
-            shortMovingAverages[_poolParameters.pool],
-            _poolParameters.numberOfAssets
-        );
+        int256[] memory currentShortMovingAverages =
+        //@audit olympix: External call potenial out of gas
+         _quantAMMUnpack128Array(shortMovingAverages[_poolParameters.pool], _poolParameters.numberOfAssets);
 
         int256[] memory newShortMovingAverages = _calculateQuantAMMMovingAverage(
-            currentShortMovingAverages,
-            _data,
-            lambdaShort,
-            _poolParameters.numberOfAssets
+            currentShortMovingAverages, _data, lambdaShort, _poolParameters.numberOfAssets
         );
         shortMovingAverages[_poolParameters.pool] = _quantAMMPack128Array(newShortMovingAverages);
 
-        for (uint i; i < newShortMovingAverages.length; ) {
+        for (uint256 i; i < newShortMovingAverages.length;) {
             unchecked {
                 ++i;
             }
@@ -97,7 +90,7 @@ contract DifferenceMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
 
         // newWeights is reused multiple times to save gas of multiple array initialisation
         locals.newWeights = new int256[](locals.prevWeightLength);
-        for (locals.i = 0; locals.i < locals.prevWeightLength; ) {
+        for (locals.i = 0; locals.i < locals.prevWeightLength;) {
             locals.newWeights[locals.i] = newShortMovingAverages[locals.i] - _poolParameters.movingAverage[locals.i];
 
             locals.denominator = _poolParameters.movingAverage[locals.i];
@@ -120,9 +113,9 @@ contract DifferenceMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
             locals.normalizationFactor /= int256(locals.prevWeightLength);
             // To avoid intermediate overflows (because of normalization), we only downcast in the end to an uint6
             // κ · ( (EWMA_short - EWMA_long) / EWMA_long − ℓp(t))
-            for (locals.i = 0; locals.i < locals.prevWeightLength; ) {
-                int256 res = int256(_prevWeights[locals.i]) +
-                    locals.kappaStore[0].mul(locals.newWeights[locals.i] - locals.normalizationFactor);
+            for (locals.i = 0; locals.i < locals.prevWeightLength;) {
+                int256 res = int256(_prevWeights[locals.i])
+                    + locals.kappaStore[0].mul(locals.newWeights[locals.i] - locals.normalizationFactor);
                 newWeightsConverted[locals.i] = res;
 
                 unchecked {
@@ -132,7 +125,7 @@ contract DifferenceMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
         } else {
             //vector logic separate to vector for efficiency
             int256 sumKappa;
-            for (locals.i = 0; locals.i < locals.kappaStore.length; ) {
+            for (locals.i = 0; locals.i < locals.kappaStore.length;) {
                 sumKappa += locals.kappaStore[locals.i];
                 unchecked {
                     ++locals.i;
@@ -141,10 +134,9 @@ contract DifferenceMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
 
             locals.normalizationFactor = locals.normalizationFactor.div(sumKappa);
             // To avoid intermediate overflows (because of normalization), we only downcast in the end to an uint6
-            for (locals.i = 0; locals.i < _prevWeights.length; ) {
-                locals.res =
-                    int256(_prevWeights[locals.i]) +
-                    locals.kappaStore[locals.i].mul(locals.newWeights[locals.i] - locals.normalizationFactor);
+            for (locals.i = 0; locals.i < _prevWeights.length;) {
+                locals.res = int256(_prevWeights[locals.i])
+                    + locals.kappaStore[locals.i].mul(locals.newWeights[locals.i] - locals.normalizationFactor);
                 require(locals.res >= 0, "Invalid weight");
                 newWeightsConverted[locals.i] = locals.res;
                 unchecked {
@@ -162,15 +154,16 @@ contract DifferenceMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
     function _setInitialIntermediateValues(
         address _poolAddress,
         int256[] memory _initialValues,
-        uint _numberOfAssets
+        uint256 _numberOfAssets
     ) internal override {
         require(_initialValues.length == _numberOfAssets, "Invalid initial values");
 
         //to avoid incorrect access to base MathMovingAverage, we need to set the moving average here
-        uint movingAverageLength = shortMovingAverages[_poolAddress].length;
+        uint256 movingAverageLength = shortMovingAverages[_poolAddress].length;
 
         if (movingAverageLength == 0 || _initialValues.length == _numberOfAssets) {
             //should be during create pool
+            //@audit olympix: External call potenial out of gas
             shortMovingAverages[_poolAddress] = _quantAMMPack128Array(_initialValues);
         } else {
             revert("Invalid set moving avg");
@@ -192,7 +185,7 @@ contract DifferenceMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
 
         // lambda has to be less that int128 max value
         int256[] memory shortLambda = _parameters[1];
-        for (uint i; i < shortLambda.length; ) {
+        for (uint256 i; i < shortLambda.length;) {
             if (shortLambda[i] > int256(type(int128).max)) {
                 return false;
             }
@@ -207,8 +200,9 @@ contract DifferenceMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
             }
         }
         int256[] memory kappa = _parameters[0];
+        //@audit olympix: Unsafe Downcast
         uint16 valid = uint16(kappa.length) > 0 ? 1 : 0;
-        for (uint i; i < kappa.length; ) {
+        for (uint256 i; i < kappa.length;) {
             if (kappa[i] == 0) {
                 unchecked {
                     valid = 0;

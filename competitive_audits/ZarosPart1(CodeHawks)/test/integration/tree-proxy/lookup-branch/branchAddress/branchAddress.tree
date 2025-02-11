@@ -1,3 +1,0 @@
-BranchAddress_Integration_Test
-└── when branchAddress is called
-    └── it should return the branch address

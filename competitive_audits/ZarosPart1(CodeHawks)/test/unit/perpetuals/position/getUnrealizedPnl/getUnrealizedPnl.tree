@@ -1,3 +1,0 @@
-Position_GetUnrealizedPnl_Unit_Test
-└── when getUnrealizedPnl is called
-    └── it should return the unrealized pnl usd

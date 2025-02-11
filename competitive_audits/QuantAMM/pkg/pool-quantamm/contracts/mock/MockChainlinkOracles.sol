@@ -5,10 +5,10 @@ import "@balancer-labs/v3-interfaces/contracts/pool-quantamm/OracleWrapper.sol";
 
 contract MockChainlinkOracle is OracleWrapper {
     int216 private fixedReply;
-    uint private  immutable delay;
+    uint256 private immutable delay;
     uint40 public oracleTimestamp;
 
-    constructor(int216 _fixedReply, uint _delay) {
+    constructor(int216 _fixedReply, uint256 _delay) {
         fixedReply = _fixedReply;
         delay = _delay;
         oracleTimestamp = uint40(block.timestamp);

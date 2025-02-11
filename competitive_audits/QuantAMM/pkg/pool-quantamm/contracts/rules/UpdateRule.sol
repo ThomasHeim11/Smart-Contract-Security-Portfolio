@@ -28,7 +28,7 @@ An inherited base contract approach created a good domain driven design where bo
 abstract contract UpdateRule is QuantAMMMathGuard, QuantAMMMathMovingAverage, IUpdateRule {
     uint16 private constant REQ_PREV_MAVG_VAL = 1;
     address private immutable updateWeightRunner;
-    
+
     string public name;
     string[] public parameterDescriptions;
 
@@ -49,23 +49,23 @@ abstract contract UpdateRule is QuantAMMMathGuard, QuantAMMMathMovingAverage, IU
     /// @param storageIndex storage index for moving averages
     /// @param lastAssetIndex last asset index
     struct QuantAMMUpdateRuleLocals {
-        uint i;
-        uint nMinusOne;
-        uint numberOfAssets;
+        uint256 i;
+        uint256 nMinusOne;
+        uint256 numberOfAssets;
         bool requiresPrevAverage;
-        uint intermediateMovingAverageStateLength;
+        uint256 intermediateMovingAverageStateLength;
         int256[] currMovingAverage;
         int256[] updatedMovingAverage;
         int256[] calculationMovingAverage;
         int256[] intermediateGradientState;
         int256[] unGuardedUpdatedWeights;
         int128[] lambda;
-        uint secondIndex;
-        uint storageIndex;
-        uint lastAssetIndex;
+        uint256 secondIndex;
+        uint256 storageIndex;
+        uint256 lastAssetIndex;
     }
 
-    constructor(address _updateWeightRunner){
+    constructor(address _updateWeightRunner) {
         updateWeightRunner = _updateWeightRunner;
     }
 
@@ -93,7 +93,7 @@ abstract contract UpdateRule is QuantAMMMathGuard, QuantAMMMathMovingAverage, IU
         locals.nMinusOne = locals.numberOfAssets - 1;
         locals.lambda = new int128[](_lambdaStore.length);
 
-        for (locals.i; locals.i < locals.lambda.length; ) {
+        for (locals.i; locals.i < locals.lambda.length;) {
             locals.lambda[locals.i] = int128(uint128(_lambdaStore[locals.i]));
             unchecked {
                 ++locals.i;
@@ -112,16 +112,13 @@ abstract contract UpdateRule is QuantAMMMathGuard, QuantAMMMathMovingAverage, IU
         locals.currMovingAverage = new int256[](locals.numberOfAssets);
         locals.updatedMovingAverage = new int256[](locals.numberOfAssets);
         locals.calculationMovingAverage = new int256[](locals.intermediateMovingAverageStateLength);
-
+        //@audit olympix: External call potenial out of gas
         locals.currMovingAverage = _quantAMMUnpack128Array(movingAverages[_pool], locals.numberOfAssets);
 
+        //@audit olympix: External call potenial out of gas
         //All rules require the use of moving averages so the logic is executed in the base
-        locals.updatedMovingAverage = _calculateQuantAMMMovingAverage(
-            locals.currMovingAverage,
-            _data,
-            locals.lambda,
-            locals.numberOfAssets
-        );
+        locals.updatedMovingAverage =
+            _calculateQuantAMMMovingAverage(locals.currMovingAverage, _data, locals.lambda, locals.numberOfAssets);
 
         if (locals.numberOfAssets % 2 != 0) {
             unchecked {
@@ -136,7 +133,7 @@ abstract contract UpdateRule is QuantAMMMathGuard, QuantAMMMathMovingAverage, IU
         // The potential sticky end if there is an odd number if constituents is dealt at the end
         // The saving of one SSTORE is more than the extra logic gas
         locals.i = 0;
-        for (; locals.i < locals.nMinusOne; ) {
+        for (; locals.i < locals.nMinusOne;) {
             if (locals.requiresPrevAverage) {
                 locals.calculationMovingAverage[locals.i + locals.numberOfAssets] = locals.currMovingAverage[locals.i];
             }
@@ -146,16 +143,14 @@ abstract contract UpdateRule is QuantAMMMathGuard, QuantAMMMathMovingAverage, IU
                 locals.secondIndex = locals.i + 1;
             }
             if (locals.requiresPrevAverage) {
-                locals.calculationMovingAverage[locals.secondIndex + locals.numberOfAssets] = locals.currMovingAverage[
-                    locals.secondIndex
-                ];
+                locals.calculationMovingAverage[locals.secondIndex + locals.numberOfAssets] =
+                    locals.currMovingAverage[locals.secondIndex];
             }
             locals.calculationMovingAverage[locals.secondIndex] = locals.updatedMovingAverage[locals.secondIndex];
 
             if (!locals.requiresPrevAverage) {
                 movingAverages[_pool][locals.storageIndex] = _quantAMMPackTwo128(
-                    locals.updatedMovingAverage[locals.i],
-                    locals.updatedMovingAverage[locals.secondIndex]
+                    locals.updatedMovingAverage[locals.i], locals.updatedMovingAverage[locals.secondIndex]
                 );
             }
 
@@ -171,8 +166,8 @@ abstract contract UpdateRule is QuantAMMMathGuard, QuantAMMMathMovingAverage, IU
                 locals.nMinusOne = ((locals.lastAssetIndex) / 2);
             }
             if (locals.requiresPrevAverage) {
-                locals.calculationMovingAverage[locals.lastAssetIndex + locals.numberOfAssets] = locals
-                    .currMovingAverage[locals.lastAssetIndex];
+                locals.calculationMovingAverage[locals.lastAssetIndex + locals.numberOfAssets] =
+                    locals.currMovingAverage[locals.lastAssetIndex];
             }
             locals.calculationMovingAverage[locals.lastAssetIndex] = locals.updatedMovingAverage[locals.lastAssetIndex];
             if (!locals.requiresPrevAverage) {
@@ -188,12 +183,14 @@ abstract contract UpdateRule is QuantAMMMathGuard, QuantAMMMathMovingAverage, IU
 
         QuantAMMPoolParameters memory poolParameters;
         poolParameters.lambda = locals.lambda;
+        //@audit olympix: External call potenial out of gas
         poolParameters.movingAverage = locals.calculationMovingAverage;
         poolParameters.pool = _pool;
 
         //calling the function in the derived contract specific to the specific rule
         locals.unGuardedUpdatedWeights = _getWeights(_prevWeights, _data, _parameters, poolParameters);
 
+        //@audit olympix: External call potenial out of gas
         //Guard weights is done in the base contract so regardless of the rule the logic will always be executed
         updatedWeights = _guardQuantAMMWeights(
             locals.unGuardedUpdatedWeights,
@@ -211,7 +208,7 @@ abstract contract UpdateRule is QuantAMMMathGuard, QuantAMMMathMovingAverage, IU
     /// @return newWeights w(t), the updated weights
     function _getWeights(
         int256[] calldata _prevWeights,
-        int256[]  memory _data,
+        int256[] memory _data,
         int256[][] calldata _parameters,
         QuantAMMPoolParameters memory _poolParameters
     ) internal virtual returns (int256[] memory newWeights);
@@ -224,7 +221,7 @@ abstract contract UpdateRule is QuantAMMMathGuard, QuantAMMMathMovingAverage, IU
     function _setInitialIntermediateValues(
         address _poolAddress,
         int256[] memory _initialValues,
-        uint _numberOfAssets
+        uint256 _numberOfAssets
     ) internal virtual;
 
     /// @param _poolAddress address of pool being initialised
@@ -236,7 +233,7 @@ abstract contract UpdateRule is QuantAMMMathGuard, QuantAMMMathMovingAverage, IU
         address _poolAddress,
         int256[] memory _newMovingAverages,
         int256[] memory _newInitialValues,
-        uint _numberOfAssets
+        uint256 _numberOfAssets
     ) external {
         //initialisation is controlled during the registration process
         //this is to make sure no external actor can call this function

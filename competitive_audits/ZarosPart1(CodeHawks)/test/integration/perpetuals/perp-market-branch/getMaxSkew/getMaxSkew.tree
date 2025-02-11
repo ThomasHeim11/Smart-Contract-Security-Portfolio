@@ -1,3 +1,0 @@
-GetMaxSkew_Integration_Test
-└── given there's a market created
-    └── it should return the max skew of the market

@@ -454,6 +454,7 @@ library LogExpMath {
 
         // Recall that 20 digit fixed point division requires multiplying by ONE_20, and multiplication requires
         // division by ONE_20.
+        //@audit Unchecked Block with Subtraction
         unchecked {
             int256 z = ((a - ONE_20) * ONE_20) / (a + ONE_20);
             int256 z_squared = (z * z) / ONE_20;
@@ -515,6 +516,7 @@ library LogExpMath {
 
             // Recall that 36 digit fixed point division requires multiplying by ONE_36, and multiplication requires
             // division by ONE_36.
+            //@audit Unchecked Block with Subtraction
             int256 z = ((x - ONE_36) * ONE_36) / (x + ONE_36);
             int256 z_squared = (z * z) / ONE_36;
 

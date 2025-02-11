@@ -10,11 +10,13 @@ import "./base/QuantammGradientBasedRule.sol";
 contract MomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
     constructor(address _updateWeightRunner) UpdateRule(_updateWeightRunner) {
         name = "Momentum";
-        
+
         parameterDescriptions = new string[](3);
-        parameterDescriptions[0] = "Kappa: Kappa dictates the aggressiveness of the rule's response to a signal change (here, price gradient)";
+        parameterDescriptions[0] =
+            "Kappa: Kappa dictates the aggressiveness of the rule's response to a signal change (here, price gradient)";
         parameterDescriptions[1] = "Use raw price: 0 = use moving average, 1 = use raw price";
-        parameterDescriptions[2] = "Lambda: Lambda dictates the estimator weighting and price smoothing for a given period of time";
+        parameterDescriptions[2] =
+            "Lambda: Lambda dictates the estimator weighting and price smoothing for a given period of time";
     }
 
     using PRBMathSD59x18 for int256;
@@ -39,7 +41,7 @@ contract MomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
         int256 normalizationFactor;
         uint256 prevWeightLength;
         bool useRawPrice;
-        uint i;
+        uint256 i;
         int256 denominator;
         int256 sumKappa;
         int256 res;
@@ -52,7 +54,7 @@ contract MomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
     function _getWeights(
         int256[] calldata _prevWeights,
         int256[] memory _data,
-        int256[][] calldata _parameters, 
+        int256[][] calldata _parameters,
         QuantAMMPoolParameters memory _poolParameters
     ) internal override returns (int256[] memory newWeightsConverted) {
         QuantAMMMomentumLocals memory locals;
@@ -68,11 +70,11 @@ contract MomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
         _poolParameters.numberOfAssets = _prevWeights.length;
 
         locals.prevWeightLength = _prevWeights.length;
-
+        //@audit olympix: External call potenial out of gas
         // newWeights is reused multiple times to save gas of multiple array initialisation
         locals.newWeights = _calculateQuantAMMGradient(_data, _poolParameters);
 
-        for (locals.i = 0; locals.i < locals.prevWeightLength; ) {
+        for (locals.i = 0; locals.i < locals.prevWeightLength;) {
             locals.denominator = _poolParameters.movingAverage[locals.i];
             if (locals.useRawPrice) {
                 locals.denominator = _data[locals.i];
@@ -99,9 +101,9 @@ contract MomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
             locals.normalizationFactor /= int256(locals.prevWeightLength);
             // To avoid intermediate overflows (because of normalization), we only downcast in the end to an uint6
             // κ · ( 1/p(t) * ∂p(t)/∂t − ℓp(t))
-            for (locals.i = 0; locals.i < locals.prevWeightLength; ) {
-                int256 res = int256(_prevWeights[locals.i]) +
-                    locals.kappaStore[0].mul(locals.newWeights[locals.i] - locals.normalizationFactor);
+            for (locals.i = 0; locals.i < locals.prevWeightLength;) {
+                int256 res = int256(_prevWeights[locals.i])
+                    + locals.kappaStore[0].mul(locals.newWeights[locals.i] - locals.normalizationFactor);
                 newWeightsConverted[locals.i] = res;
 
                 unchecked {
@@ -111,7 +113,7 @@ contract MomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
         } else {
             //vector logic separate to vector for efficiency
             int256 sumKappa;
-            for (locals.i = 0; locals.i < locals.kappaStore.length; ) {
+            for (locals.i = 0; locals.i < locals.kappaStore.length;) {
                 sumKappa += locals.kappaStore[locals.i];
                 unchecked {
                     ++locals.i;
@@ -121,10 +123,9 @@ contract MomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
             locals.normalizationFactor = locals.normalizationFactor.div(sumKappa);
 
             // To avoid intermediate overflows (because of normalization), we only downcast in the end to an uint6
-            for (locals.i = 0; locals.i < _prevWeights.length; ) {
-                locals.res =
-                    int256(_prevWeights[locals.i]) +
-                    locals.kappaStore[locals.i].mul(locals.newWeights[locals.i] - locals.normalizationFactor);
+            for (locals.i = 0; locals.i < _prevWeights.length;) {
+                locals.res = int256(_prevWeights[locals.i])
+                    + locals.kappaStore[locals.i].mul(locals.newWeights[locals.i] - locals.normalizationFactor);
                 require(locals.res >= 0, "Invalid weight");
                 newWeightsConverted[locals.i] = locals.res;
                 unchecked {
@@ -142,7 +143,7 @@ contract MomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
     function _setInitialIntermediateValues(
         address _poolAddress,
         int256[] memory _initialValues,
-        uint _numberOfAssets
+        uint256 _numberOfAssets
     ) internal override {
         _setGradient(_poolAddress, _initialValues, _numberOfAssets);
     }
@@ -159,7 +160,7 @@ contract MomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
         if (_parameters.length == 1 || (_parameters.length == 2 && _parameters[1].length == 1)) {
             int256[] memory kappa = _parameters[0];
             uint16 valid = uint16(kappa.length) > 0 ? 1 : 0;
-            for (uint i; i < kappa.length; ) {
+            for (uint256 i; i < kappa.length;) {
                 if (!(kappa[i] > 0)) {
                     unchecked {
                         valid = 0;

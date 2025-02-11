@@ -22,15 +22,15 @@ abstract contract QuantAMMMathMovingAverage is ScalarRuleQuantAMMStorage {
     /// @return p̅(t) avertage price of the pool
     function _calculateQuantAMMMovingAverage(
         int256[] memory _prevMovingAverage,
-        int256[]  memory _newData,
+        int256[] memory _newData,
         int128[] memory _lambda,
-        uint _numberOfAssets
+        uint256 _numberOfAssets
     ) internal pure returns (int256[] memory) {
         int256[] memory newMovingAverage = new int256[](_numberOfAssets);
         int256 convertedLambda = int256(_lambda[0]);
         int256 oneMinusLambda = ONE - convertedLambda;
         if (_lambda.length == 1) {
-            for (uint i; i < _numberOfAssets; ) {
+            for (uint256 i; i < _numberOfAssets;) {
                 // p̅(t) = p̅(t - 1) + (1 - λ)(p(t) - p̅(t - 1)) - see whitepaper
                 int256 movingAverageI = _prevMovingAverage[i];
                 newMovingAverage[i] = movingAverageI + oneMinusLambda.mul(_newData[i] - movingAverageI);
@@ -39,9 +39,10 @@ abstract contract QuantAMMMathMovingAverage is ScalarRuleQuantAMMStorage {
                 }
             }
         } else {
-            for (uint i; i < _numberOfAssets; ) {
+            for (uint256 i; i < _numberOfAssets;) {
                 unchecked {
                     convertedLambda = int256(_lambda[i]);
+                    //@audit Unchecked Block with Subtraction
                     oneMinusLambda = ONE - convertedLambda;
                 }
                 int256 movingAverageI = _prevMovingAverage[i];
@@ -62,12 +63,13 @@ abstract contract QuantAMMMathMovingAverage is ScalarRuleQuantAMMStorage {
     function _setInitialMovingAverages(
         address _poolAddress,
         int256[] memory _initialMovingAverages,
-        uint _numberOfAssets
+        uint256 _numberOfAssets
     ) internal {
-        uint movingAverageLength = movingAverages[_poolAddress].length;
+        uint256 movingAverageLength = movingAverages[_poolAddress].length;
 
         if (movingAverageLength == 0 || _initialMovingAverages.length == _numberOfAssets) {
             //should be during create pool
+            //@audit olympix: External call potenial out of gas
             movingAverages[_poolAddress] = _quantAMMPack128Array(_initialMovingAverages);
         } else {
             revert("Invalid set moving avg");

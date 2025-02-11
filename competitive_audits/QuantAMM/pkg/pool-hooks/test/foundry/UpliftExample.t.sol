@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {
     LiquidityManagement,
@@ -14,31 +14,31 @@ import {
     SwapKind,
     AddLiquidityKind
 } from "@balancer-labs/v3-interfaces/contracts/vault/VaultTypes.sol";
-import { IVaultExtension } from "@balancer-labs/v3-interfaces/contracts/vault/IVaultExtension.sol";
-import { IVaultAdmin } from "@balancer-labs/v3-interfaces/contracts/vault/IVaultAdmin.sol";
-import { IVaultMock } from "@balancer-labs/v3-interfaces/contracts/test/IVaultMock.sol";
-import { IVault } from "@balancer-labs/v3-interfaces/contracts/vault/IVault.sol";
-import { IHooks } from "@balancer-labs/v3-interfaces/contracts/vault/IHooks.sol";
+import {IVaultExtension} from "@balancer-labs/v3-interfaces/contracts/vault/IVaultExtension.sol";
+import {IVaultAdmin} from "@balancer-labs/v3-interfaces/contracts/vault/IVaultAdmin.sol";
+import {IVaultMock} from "@balancer-labs/v3-interfaces/contracts/test/IVaultMock.sol";
+import {IVault} from "@balancer-labs/v3-interfaces/contracts/vault/IVault.sol";
+import {IHooks} from "@balancer-labs/v3-interfaces/contracts/vault/IHooks.sol";
 
-import { CastingHelpers } from "@balancer-labs/v3-solidity-utils/contracts/helpers/CastingHelpers.sol";
-import { BasicAuthorizerMock } from "@balancer-labs/v3-vault/contracts/test/BasicAuthorizerMock.sol";
-import { ArrayHelpers } from "@balancer-labs/v3-solidity-utils/contracts/test/ArrayHelpers.sol";
-import { FixedPoint } from "@balancer-labs/v3-solidity-utils/contracts/math/FixedPoint.sol";
-import { BaseTest } from "@balancer-labs/v3-solidity-utils/test/foundry/utils/BaseTest.sol";
-import { BaseVaultTest } from "@balancer-labs/v3-vault/test/foundry/utils/BaseVaultTest.sol";
+import {CastingHelpers} from "@balancer-labs/v3-solidity-utils/contracts/helpers/CastingHelpers.sol";
+import {BasicAuthorizerMock} from "@balancer-labs/v3-vault/contracts/test/BasicAuthorizerMock.sol";
+import {ArrayHelpers} from "@balancer-labs/v3-solidity-utils/contracts/test/ArrayHelpers.sol";
+import {FixedPoint} from "@balancer-labs/v3-solidity-utils/contracts/math/FixedPoint.sol";
+import {BaseTest} from "@balancer-labs/v3-solidity-utils/test/foundry/utils/BaseTest.sol";
+import {BaseVaultTest} from "@balancer-labs/v3-vault/test/foundry/utils/BaseVaultTest.sol";
 
-import { BatchRouterMock } from "@balancer-labs/v3-vault/contracts/test/BatchRouterMock.sol";
-import { PoolFactoryMock } from "@balancer-labs/v3-vault/contracts/test/PoolFactoryMock.sol";
-import { BalancerPoolToken } from "@balancer-labs/v3-vault/contracts/BalancerPoolToken.sol";
-import { RouterMock } from "@balancer-labs/v3-vault/contracts/test/RouterMock.sol";
-import { PoolMock } from "@balancer-labs/v3-vault/contracts/test/PoolMock.sol";
+import {BatchRouterMock} from "@balancer-labs/v3-vault/contracts/test/BatchRouterMock.sol";
+import {PoolFactoryMock} from "@balancer-labs/v3-vault/contracts/test/PoolFactoryMock.sol";
+import {BalancerPoolToken} from "@balancer-labs/v3-vault/contracts/BalancerPoolToken.sol";
+import {RouterMock} from "@balancer-labs/v3-vault/contracts/test/RouterMock.sol";
+import {PoolMock} from "@balancer-labs/v3-vault/contracts/test/PoolMock.sol";
 
-import { MockUpdateWeightRunner } from "pool-quantamm/contracts/mock/MockUpdateWeightRunner.sol";
+import {MockUpdateWeightRunner} from "pool-quantamm/contracts/mock/MockUpdateWeightRunner.sol";
 
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import { UpliftOnlyExample } from "../../contracts/hooks-quantamm/UpliftOnlyExample.sol";
-import { LPNFT } from "../../contracts/hooks-quantamm/LPNFT.sol";
+import {UpliftOnlyExample} from "../../contracts/hooks-quantamm/UpliftOnlyExample.sol";
+import {LPNFT} from "../../contracts/hooks-quantamm/LPNFT.sol";
 
 contract UpliftOnlyExampleTest is BaseVaultTest {
     using CastingHelpers for address[];
@@ -112,7 +112,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
 
         // Here the Router is also the hook.
         poolHooksContract = address(upliftOnlyRouter);
-        (pool, ) = createPool();
+        (pool,) = createPool();
 
         // Approve vault allowances.
         for (uint256 i = 0; i < users.length; ++i) {
@@ -159,10 +159,11 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
     }
 
     // Overrides pool creation to set liquidityManagement (disables unbalanced liquidity).
-    function _createPool(
-        address[] memory tokens,
-        string memory label
-    ) internal override returns (address newPool, bytes memory poolArgs) {
+    function _createPool(address[] memory tokens, string memory label)
+        internal
+        override
+        returns (address newPool, bytes memory poolArgs)
+    {
         string memory name = "Uplift Pool";
         string memory symbol = "Uplift Pool";
 
@@ -182,11 +183,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         liquidityManagement.enableDonation = true;
 
         factoryMock.registerPool(
-            newPool,
-            vault.buildTokenConfig(tokens.asIERC20()),
-            roleAccounts,
-            poolHooksContract,
-            liquidityManagement
+            newPool, vault.buildTokenConfig(tokens.asIERC20()), roleAccounts, poolHooksContract, liquidityManagement
         );
 
         poolArgs = abi.encode(vault, name, symbol);
@@ -196,13 +193,8 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         BaseVaultTest.Balances memory balancesBefore = getBalances(bob);
         uint256[] memory maxAmountsIn = [dai.balanceOf(bob), usdc.balanceOf(bob)].toMemoryArray();
         vm.prank(bob);
-        uint256[] memory amountsIn = upliftOnlyRouter.addLiquidityProportional(
-            pool,
-            maxAmountsIn,
-            bptAmount,
-            false,
-            bytes("")
-        );
+        uint256[] memory amountsIn =
+            upliftOnlyRouter.addLiquidityProportional(pool, maxAmountsIn, bptAmount, false, bytes(""));
         vm.stopPrank();
 
         BaseVaultTest.Balances memory balancesAfter = getBalances(bob);
@@ -239,9 +231,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
 
         // Router should receive BPT instead of bob, he gets the NFT
         assertEq(
-            BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)),
-            bptAmount,
-            "UpliftOnlyRouter should hold BPT"
+            BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)), bptAmount, "UpliftOnlyRouter should hold BPT"
         );
         assertEq(balancesAfter.bobBpt, 0, "bob should not hold any BPT");
     }
@@ -250,13 +240,8 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         BaseVaultTest.Balances memory balancesBefore = getBalances(bob);
         uint256[] memory maxAmountsIn = [dai.balanceOf(bob), usdc.balanceOf(bob)].toMemoryArray();
         vm.prank(bob);
-        uint256[] memory amountsInFirst = upliftOnlyRouter.addLiquidityProportional(
-            pool,
-            maxAmountsIn,
-            bptAmount / 2,
-            false,
-            bytes("")
-        );
+        uint256[] memory amountsInFirst =
+            upliftOnlyRouter.addLiquidityProportional(pool, maxAmountsIn, bptAmount / 2, false, bytes(""));
         vm.stopPrank();
 
         int256[] memory prices = new int256[](2);
@@ -268,13 +253,8 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         skip(5 days);
 
         vm.prank(bob);
-        uint256[] memory amountsInSecond = upliftOnlyRouter.addLiquidityProportional(
-            pool,
-            maxAmountsIn,
-            bptAmount / 2,
-            false,
-            bytes("")
-        );
+        uint256[] memory amountsInSecond =
+            upliftOnlyRouter.addLiquidityProportional(pool, maxAmountsIn, bptAmount / 2, false, bytes(""));
         vm.stopPrank();
 
         uint256[] memory amountsIn = new uint256[](2);
@@ -327,9 +307,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         assertEq(upliftOnlyRouter.nftPool(2), pool, "pool mapping is wrong");
         // Router should receive BPT instead of bob, he gets the NFT
         assertEq(
-            BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)),
-            bptAmount,
-            "UpliftOnlyRouter should hold BPT"
+            BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)), bptAmount, "UpliftOnlyRouter should hold BPT"
         );
         assertEq(balancesAfter.bobBpt, 0, "bob should not hold any BPT");
     }
@@ -358,10 +336,10 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
          * This can be changed to the max 98 however it takes some time!
          * uint256 depositBound = bound(depositLength, 1, 98);
          * [PASS] testTransferDepositsAtRandom(uint256,uint256) (runs: 10002, μ: 119097137, ~: 78857000)
-            Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 1233.99s (1233.98s CPU time)
-
-            Ran 1 test suite in 1234.00s (1233.99s CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)
-         * 
+         *         Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 1233.99s (1233.98s CPU time)
+         *
+         *         Ran 1 test suite in 1234.00s (1233.99s CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)
+         *
          */
         uint256[] memory maxAmountsIn = [dai.balanceOf(bob), usdc.balanceOf(bob)].toMemoryArray();
         vm.startPrank(bob);
@@ -375,7 +353,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         vm.stopPrank();
 
         // Shuffle the array using the seed
-        uint[] memory shuffledArray = shuffle(tokenIndexArray, seed);
+        uint256[] memory shuffledArray = shuffle(tokenIndexArray, seed);
 
         LPNFT lpNft = upliftOnlyRouter.lpNFT();
 
@@ -387,16 +365,12 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
             UpliftOnlyExample.FeeData[] memory bobFees = upliftOnlyRouter.getUserPoolFeeData(pool, bob);
 
             assertEq(aliceFees.length, i + 1, "alice should have all transfers");
-            assertEq(
-                aliceFees[aliceFees.length - 1].tokenID,
-                shuffledArray[i],
-                "last transferred tokenId should match"
-            );
+            assertEq(aliceFees[aliceFees.length - 1].tokenID, shuffledArray[i], "last transferred tokenId should match");
 
             assertEq(bobFees.length, depositBound - (i + 1), "bob should have all transferred last");
 
-            uint[] memory orderedArrayWithoutShuffled = new uint[](depositBound - (i + 1));
-            uint lastPopulatedIndex = 0;
+            uint256[] memory orderedArrayWithoutShuffled = new uint256[](depositBound - (i + 1));
+            uint256 lastPopulatedIndex = 0;
             for (uint256 j = 1; j <= depositBound; j++) {
                 bool inPreviousShuffled = false;
                 for (uint256 k = 0; k < i + 1; k++) {
@@ -420,10 +394,10 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
     }
 
     //Function to generate a shuffled array of unique uints between 0 and 10
-    function shuffle(uint[] memory array, uint seed) internal pure returns (uint[] memory) {
-        uint length = array.length;
-        for (uint i = length - 1; i > 0; i--) {
-            uint j = seed % (i + 1); // Pseudo-random index based on the seed
+    function shuffle(uint256[] memory array, uint256 seed) internal pure returns (uint256[] memory) {
+        uint256 length = array.length;
+        for (uint256 i = length - 1; i > 0; i--) {
+            uint256 j = seed % (i + 1); // Pseudo-random index based on the seed
             (array[i], array[j]) = (array[j], array[i]); // Swap elements
             seed /= (i + 1); // Adjust seed to vary indices in next iteration
         }
@@ -462,15 +436,13 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         vm.stopPrank();
         BaseVaultTest.Balances memory balancesAfter = getBalances(bob);
 
-        uint256 feeAmountAmountPercent = ((bptAmount / 2) *
-            ((uint256(upliftOnlyRouter.minWithdrawalFeeBps()) * 1e18) / 10000)) / ((bptAmount / 2));
+        uint256 feeAmountAmountPercent =
+            ((bptAmount / 2) * ((uint256(upliftOnlyRouter.minWithdrawalFeeBps()) * 1e18) / 10000)) / ((bptAmount / 2));
         uint256 amountOut = (bptAmount / 2).mulDown((1e18 - feeAmountAmountPercent));
 
         // Bob gets original liquidity with no fee applied because of full decay.
         assertEq(
-            balancesAfter.bobTokens[daiIdx] - balancesBefore.bobTokens[daiIdx],
-            amountOut,
-            "bob's DAI amount is wrong"
+            balancesAfter.bobTokens[daiIdx] - balancesBefore.bobTokens[daiIdx], amountOut, "bob's DAI amount is wrong"
         );
         assertEq(
             balancesAfter.bobTokens[usdcIdx] - balancesBefore.bobTokens[usdcIdx],
@@ -517,11 +489,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
 
         assertEq(upliftOnlyRouter.nftPool(nftTokenId), address(0), "pool mapping should be 0");
 
-        assertEq(
-            BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)),
-            0,
-            "upliftOnlyRouter should hold no BPT"
-        );
+        assertEq(BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)), 0, "upliftOnlyRouter should hold no BPT");
         assertEq(balancesAfter.bobBpt, 0, "bob should not hold any BPT");
     }
 
@@ -562,15 +530,13 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         vm.stopPrank();
         BaseVaultTest.Balances memory balancesAfter = getBalances(bob);
 
-        uint256 feeAmountAmountPercent = ((bptAmount / 2) *
-            ((uint256(upliftOnlyRouter.minWithdrawalFeeBps()) * 1e18) / 10000)) / ((bptAmount / 2));
+        uint256 feeAmountAmountPercent =
+            ((bptAmount / 2) * ((uint256(upliftOnlyRouter.minWithdrawalFeeBps()) * 1e18) / 10000)) / ((bptAmount / 2));
         uint256 amountOut = (bptAmount / 2).mulDown((1e18 - feeAmountAmountPercent));
 
         // Bob gets original liquidity with no fee applied because of full decay.
         assertEq(
-            balancesAfter.bobTokens[daiIdx] - balancesBefore.bobTokens[daiIdx],
-            amountOut,
-            "bob's DAI amount is wrong"
+            balancesAfter.bobTokens[daiIdx] - balancesBefore.bobTokens[daiIdx], amountOut, "bob's DAI amount is wrong"
         );
         assertEq(
             balancesAfter.bobTokens[usdcIdx] - balancesBefore.bobTokens[usdcIdx],
@@ -617,11 +583,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
 
         assertEq(upliftOnlyRouter.nftPool(nftTokenId), address(0), "pool mapping should be 0");
 
-        assertEq(
-            BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)),
-            0,
-            "upliftOnlyRouter should hold no BPT"
-        );
+        assertEq(BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)), 0, "upliftOnlyRouter should hold no BPT");
         assertEq(balancesAfter.bobBpt, 0, "bob should not hold any BPT");
     }
 
@@ -662,8 +624,8 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         vm.stopPrank();
         BaseVaultTest.Balances memory balancesAfter = getBalances(bob);
 
-        uint256 feeAmountAmountPercent = ((bptAmount / 2) *
-            ((uint256(upliftOnlyRouter.upliftFeeBps()) * 1e18) / 10000)) / ((bptAmount / 2));
+        uint256 feeAmountAmountPercent =
+            ((bptAmount / 2) * ((uint256(upliftOnlyRouter.upliftFeeBps()) * 1e18) / 10000)) / ((bptAmount / 2));
 
         /* 
             Bob has doubled his value. 
@@ -677,9 +639,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
 
         // Bob gets original liquidity with no fee applied because of full decay.
         assertEq(
-            balancesAfter.bobTokens[daiIdx] - balancesBefore.bobTokens[daiIdx],
-            amountOut,
-            "bob's DAI amount is wrong"
+            balancesAfter.bobTokens[daiIdx] - balancesBefore.bobTokens[daiIdx], amountOut, "bob's DAI amount is wrong"
         );
         assertEq(
             balancesAfter.bobTokens[usdcIdx] - balancesBefore.bobTokens[usdcIdx],
@@ -726,11 +686,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
 
         assertEq(upliftOnlyRouter.nftPool(nftTokenId), address(0), "pool mapping should be 0");
 
-        assertEq(
-            BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)),
-            0,
-            "upliftOnlyRouter should hold no BPT"
-        );
+        assertEq(BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)), 0, "upliftOnlyRouter should hold no BPT");
         assertEq(balancesAfter.bobBpt, 0, "bob should not hold any BPT");
     }
 
@@ -826,13 +782,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         vm.expectRevert(abi.encodeWithSelector(UpliftOnlyExample.CannotUseExternalRouter.selector, router));
         vm.startPrank(bob);
         upliftOnlyRouter.onBeforeAddLiquidity(
-            address(router),
-            pool,
-            AddLiquidityKind.PROPORTIONAL,
-            minAmountsOut,
-            bptAmount,
-            minAmountsOut,
-            bytes("")
+            address(router), pool, AddLiquidityKind.PROPORTIONAL, minAmountsOut, bptAmount, minAmountsOut, bytes("")
         );
         vm.stopPrank();
     }
@@ -848,13 +798,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         vm.expectRevert(abi.encodeWithSelector(UpliftOnlyExample.CannotUseExternalRouter.selector, router));
         vm.startPrank(lp);
         upliftOnlyRouter.onBeforeAddLiquidity(
-            address(router),
-            pool,
-            AddLiquidityKind.PROPORTIONAL,
-            minAmountsOut,
-            bptAmount,
-            minAmountsOut,
-            bytes("")
+            address(router), pool, AddLiquidityKind.PROPORTIONAL, minAmountsOut, bptAmount, minAmountsOut, bytes("")
         );
         vm.stopPrank();
     }
@@ -935,7 +879,8 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
     }
 
     function testSetHookPassGreaterThanMaxFail(uint64 poolHookAmount) public {
-        uint64 boundFeeAmount = uint64(bound(poolHookAmount, uint64(_MAX_SWAP_FEE_PERCENTAGE) + 1, uint64(type(uint64).max)));
+        uint64 boundFeeAmount =
+            uint64(bound(poolHookAmount, uint64(_MAX_SWAP_FEE_PERCENTAGE) + 1, uint64(type(uint64).max)));
 
         vm.startPrank(owner);
         vm.expectRevert("Above _MAX_SWAP_FEE_PERCENTAGE");
@@ -991,9 +936,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         BaseVaultTest.Balances memory balancesAfter = getBalances(bob);
 
         assertEq(
-            balancesBefore.userTokens[daiIdx] - balancesAfter.userTokens[daiIdx],
-            swapAmount,
-            "Bob DAI balance is wrong"
+            balancesBefore.userTokens[daiIdx] - balancesAfter.userTokens[daiIdx], swapAmount, "Bob DAI balance is wrong"
         );
         assertEq(balancesBefore.hookTokens[daiIdx], balancesAfter.hookTokens[daiIdx], "Hook DAI balance is wrong");
         assertEq(
@@ -1053,16 +996,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
             emit UpliftOnlyExample.SwapHookFeeCharged(poolHooksContract, IERC20(dai), hookFee);
         }
 
-        router.swapSingleTokenExactOut(
-            address(pool),
-            dai,
-            usdc,
-            swapAmount,
-            MAX_UINT256,
-            MAX_UINT256,
-            false,
-            bytes("")
-        );
+        router.swapSingleTokenExactOut(address(pool), dai, usdc, swapAmount, MAX_UINT256, MAX_UINT256, false, bytes(""));
 
         BaseVaultTest.Balances memory balancesAfter = getBalances(bob);
 
@@ -1078,9 +1012,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
             "Bob DAI balance is wrong"
         );
         assertEq(
-            balancesAfter.hookTokens[daiIdx] - balancesBefore.hookTokens[daiIdx],
-            hookFee,
-            "Hook DAI balance is wrong"
+            balancesAfter.hookTokens[daiIdx] - balancesBefore.hookTokens[daiIdx], hookFee, "Hook DAI balance is wrong"
         );
 
         _checkPoolAndVaultBalancesAfterSwap(balancesBefore, balancesAfter, swapAmount);
@@ -1150,15 +1082,13 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         vm.stopPrank();
         BaseVaultTest.Balances memory balancesAfter = getBalances(updateWeightRunner.getQuantAMMAdmin());
 
-        uint256 feeAmountAmountPercent = (((bptAmount / 2) *
-            ((uint256(upliftOnlyRouter.minWithdrawalFeeBps()) * 1e18) / 10000)) / ((bptAmount / 2)));
+        uint256 feeAmountAmountPercent =
+            (((bptAmount / 2) * ((uint256(upliftOnlyRouter.minWithdrawalFeeBps()) * 1e18) / 10000)) / ((bptAmount / 2)));
         uint256 amountOut = (bptAmount / 2).mulDown((1e18 - feeAmountAmountPercent));
 
         // Bob gets original liquidity with no fee applied because of full decay.
         assertEq(
-            balancesAfter.bobTokens[daiIdx] - balancesBefore.bobTokens[daiIdx],
-            amountOut,
-            "bob's DAI amount is wrong"
+            balancesAfter.bobTokens[daiIdx] - balancesBefore.bobTokens[daiIdx], amountOut, "bob's DAI amount is wrong"
         );
         assertEq(
             balancesAfter.bobTokens[usdcIdx] - balancesBefore.bobTokens[usdcIdx],
@@ -1209,11 +1139,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
 
         assertEq(upliftOnlyRouter.nftPool(nftTokenId), address(0), "pool mapping should be 0");
 
-        assertEq(
-            BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)),
-            0,
-            "upliftOnlyRouter should hold no BPT"
-        );
+        assertEq(BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)), 0, "upliftOnlyRouter should hold no BPT");
         assertEq(balancesAfter.bobBpt, 0, "bob should not hold any BPT");
 
         // was originall 1000000000000000000, doubled in value to 2000000000000000000,
@@ -1262,15 +1188,13 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         vm.stopPrank();
         BaseVaultTest.Balances memory balancesAfter = getBalances(updateWeightRunner.getQuantAMMAdmin());
 
-        uint256 feeAmountAmountPercent = ((bptAmount / 2) *
-            ((uint256(upliftOnlyRouter.minWithdrawalFeeBps()) * 1e18) / 10000)) / ((bptAmount / 2));
+        uint256 feeAmountAmountPercent =
+            ((bptAmount / 2) * ((uint256(upliftOnlyRouter.minWithdrawalFeeBps()) * 1e18) / 10000)) / ((bptAmount / 2));
         uint256 amountOut = (bptAmount / 2).mulDown((1e18 - feeAmountAmountPercent));
 
         // Bob gets original liquidity with no fee applied because of full decay.
         assertEq(
-            balancesAfter.bobTokens[daiIdx] - balancesBefore.bobTokens[daiIdx],
-            amountOut,
-            "bob's DAI amount is wrong"
+            balancesAfter.bobTokens[daiIdx] - balancesBefore.bobTokens[daiIdx], amountOut, "bob's DAI amount is wrong"
         );
         assertEq(
             balancesAfter.bobTokens[usdcIdx] - balancesBefore.bobTokens[usdcIdx],
@@ -1321,11 +1245,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
 
         assertEq(upliftOnlyRouter.nftPool(nftTokenId), address(0), "pool mapping should be 0");
 
-        assertEq(
-            BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)),
-            0,
-            "upliftOnlyRouter should hold no BPT"
-        );
+        assertEq(BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)), 0, "upliftOnlyRouter should hold no BPT");
         assertEq(balancesAfter.bobBpt, 0, "bob should not hold any BPT");
     }
 
@@ -1369,8 +1289,8 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
         vm.stopPrank();
         BaseVaultTest.Balances memory balancesAfter = getBalances(updateWeightRunner.getQuantAMMAdmin());
 
-        uint256 feeAmountAmountPercent = ((bptAmount / 2) *
-            ((uint256(upliftOnlyRouter.upliftFeeBps()) * 1e18) / 10000)) / ((bptAmount / 2));
+        uint256 feeAmountAmountPercent =
+            ((bptAmount / 2) * ((uint256(upliftOnlyRouter.upliftFeeBps()) * 1e18) / 10000)) / ((bptAmount / 2));
 
         /* 
             Bob has doubled his value. 
@@ -1384,9 +1304,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
 
         // Bob gets original liquidity with no fee applied because of full decay.
         assertEq(
-            balancesAfter.bobTokens[daiIdx] - balancesBefore.bobTokens[daiIdx],
-            amountOut,
-            "bob's DAI amount is wrong"
+            balancesAfter.bobTokens[daiIdx] - balancesBefore.bobTokens[daiIdx], amountOut, "bob's DAI amount is wrong"
         );
         assertEq(
             balancesAfter.bobTokens[usdcIdx] - balancesBefore.bobTokens[usdcIdx],
@@ -1437,11 +1355,7 @@ contract UpliftOnlyExampleTest is BaseVaultTest {
 
         assertEq(upliftOnlyRouter.nftPool(nftTokenId), address(0), "pool mapping should be 0");
 
-        assertEq(
-            BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)),
-            0,
-            "upliftOnlyRouter should hold no BPT"
-        );
+        assertEq(BalancerPoolToken(pool).balanceOf(address(upliftOnlyRouter)), 0, "upliftOnlyRouter should hold no BPT");
         assertEq(balancesAfter.bobBpt, 0, "bob should not hold any BPT");
     }
 }

@@ -2,13 +2,13 @@
 
 pragma solidity >=0.8.24;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IPermit2 } from "permit2/src/interfaces/IPermit2.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IPermit2} from "permit2/src/interfaces/IPermit2.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import { IRouterCommon } from "@balancer-labs/v3-interfaces/contracts/vault/IRouterCommon.sol";
-import { IVault } from "@balancer-labs/v3-interfaces/contracts/vault/IVault.sol";
-import { IWETH } from "@balancer-labs/v3-interfaces/contracts/solidity-utils/misc/IWETH.sol";
+import {IRouterCommon} from "@balancer-labs/v3-interfaces/contracts/vault/IRouterCommon.sol";
+import {IVault} from "@balancer-labs/v3-interfaces/contracts/vault/IVault.sol";
+import {IWETH} from "@balancer-labs/v3-interfaces/contracts/solidity-utils/misc/IWETH.sol";
 import {
     TokenConfig,
     LiquidityManagement,
@@ -21,16 +21,16 @@ import {
     PoolData
 } from "@balancer-labs/v3-interfaces/contracts/vault/VaultTypes.sol";
 
-import { IUpdateWeightRunner } from "@balancer-labs/v3-interfaces/contracts/pool-quantamm/IUpdateWeightRunner.sol";
+import {IUpdateWeightRunner} from "@balancer-labs/v3-interfaces/contracts/pool-quantamm/IUpdateWeightRunner.sol";
 
-import { BaseHooks } from "@balancer-labs/v3-vault/contracts/BaseHooks.sol";
-import { FixedPoint } from "@balancer-labs/v3-solidity-utils/contracts/math/FixedPoint.sol";
+import {BaseHooks} from "@balancer-labs/v3-vault/contracts/BaseHooks.sol";
+import {FixedPoint} from "@balancer-labs/v3-solidity-utils/contracts/math/FixedPoint.sol";
 
-import { MinimalRouter } from "../MinimalRouter.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IVaultExplorer } from "@balancer-labs/v3-interfaces/contracts/vault/IVaultExplorer.sol";
+import {MinimalRouter} from "../MinimalRouter.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IVaultExplorer} from "@balancer-labs/v3-interfaces/contracts/vault/IVaultExplorer.sol";
 
-import { LPNFT } from "./LPNFT.sol";
+import {LPNFT} from "./LPNFT.sol";
 
 struct PoolCreationSettings {
     string name;
@@ -38,7 +38,7 @@ struct PoolCreationSettings {
     int256[] initialWeights;
     int256[] initialMovingAverages;
     int256[] initialIntermediateValues;
-    uint oracleStalenessThreshold;
+    uint256 oracleStalenessThreshold;
 }
 
 /**
@@ -212,10 +212,11 @@ contract UpliftOnlyExample is MinimalRouter, BaseHooks, Ownable {
         _updateWeightRunner = _updateWeightRunnerParam;
     }
 
-    /***************************************************************************
-                                  Router Functions
-    ***************************************************************************/
-
+    /**
+     *
+     *                               Router Functions
+     *
+     */
     function addLiquidityProportional(
         address pool,
         uint256[] memory maxAmountsIn,
@@ -226,26 +227,18 @@ contract UpliftOnlyExample is MinimalRouter, BaseHooks, Ownable {
         if (poolsFeeData[pool][msg.sender].length > 100) {
             revert TooManyDeposits(pool, msg.sender);
         }
+        //@audit olympix External Call Potential Out of Gas
         // Do addLiquidity operation - BPT is minted to this contract.
         amountsIn = _addLiquidityProportional(
-            pool,
-            msg.sender,
-            address(this),
-            maxAmountsIn,
-            exactBptAmountOut,
-            wethIsEth,
-            userData
+            pool, msg.sender, address(this), maxAmountsIn, exactBptAmountOut, wethIsEth, userData
         );
 
         uint256 tokenID = lpNFT.mint(msg.sender);
 
         //this requires the pool to be registered with the QuantAMM update weight runner
         //as well as approved with oracles that provide the prices
-        uint256 depositValue = getPoolLPTokenValue(
-            IUpdateWeightRunner(_updateWeightRunner).getData(pool),
-            pool,
-            MULDIRECTION.MULDOWN
-        );
+        uint256 depositValue =
+            getPoolLPTokenValue(IUpdateWeightRunner(_updateWeightRunner).getData(pool), pool, MULDIRECTION.MULDOWN);
 
         poolsFeeData[pool][msg.sender].push(
             FeeData({
@@ -268,31 +261,31 @@ contract UpliftOnlyExample is MinimalRouter, BaseHooks, Ownable {
         bool wethIsEth,
         address pool
     ) external payable saveSender(msg.sender) returns (uint256[] memory amountsOut) {
-        uint depositLength = poolsFeeData[pool][msg.sender].length;
+        uint256 depositLength = poolsFeeData[pool][msg.sender].length;
 
         if (depositLength == 0) {
             revert WithdrawalByNonOwner(msg.sender, pool, bptAmountIn);
         }
+        //@audit olympix External Call Potential Out of Gas
         // Do removeLiquidity operation - tokens sent to msg.sender.
         amountsOut = _removeLiquidityProportional(
-            pool,
-            address(this),
-            msg.sender,
-            bptAmountIn,
-            minAmountsOut,
-            wethIsEth,
-            abi.encodePacked(msg.sender)
+            pool, address(this), msg.sender, bptAmountIn, minAmountsOut, wethIsEth, abi.encodePacked(msg.sender)
         );
     }
 
-    /***************************************************************************
-                                  Hook Functions
-    ***************************************************************************/
+    /**
+     *
+     *                               Hook Functions
+     *
+     */
 
     /// @inheritdoc BaseHooks
-    function onAfterSwap(
-        AfterSwapParams calldata params
-    ) public override onlyVault returns (bool success, uint256 hookAdjustedAmountCalculatedRaw) {
+    function onAfterSwap(AfterSwapParams calldata params)
+        public
+        override
+        onlyVault
+        returns (bool success, uint256 hookAdjustedAmountCalculatedRaw)
+    {
         hookAdjustedAmountCalculatedRaw = params.amountCalculatedRaw;
         if (hookSwapFeePercentage > 0) {
             uint256 hookFee = params.amountCalculatedRaw.mulUp(hookSwapFeePercentage);
@@ -350,12 +343,12 @@ contract UpliftOnlyExample is MinimalRouter, BaseHooks, Ownable {
     }
 
     /// @inheritdoc BaseHooks
-    function onRegister(
-        address,
-        address pool,
-        TokenConfig[] memory,
-        LiquidityManagement calldata liquidityManagement
-    ) public override onlyVault returns (bool) {
+    function onRegister(address, address pool, TokenConfig[] memory, LiquidityManagement calldata liquidityManagement)
+        public
+        override
+        onlyVault
+        returns (bool)
+    {
         // This hook requires donation support to work (see above).
         if (liquidityManagement.enableDonation == false) {
             revert PoolDoesNotSupportDonation();
@@ -471,16 +464,16 @@ contract UpliftOnlyExample is MinimalRouter, BaseHooks, Ownable {
         for (uint256 i = localData.feeDataArrayLength - 1; i >= 0; --i) {
             localData.lpTokenDepositValue = feeDataArray[i].lpTokenDepositValue;
 
-            localData.lpTokenDepositValueChange =
-                (int256(localData.lpTokenDepositValueNow) - int256(localData.lpTokenDepositValue)) /
-                int256(localData.lpTokenDepositValue);
+            localData.lpTokenDepositValueChange = (
+                int256(localData.lpTokenDepositValueNow) - int256(localData.lpTokenDepositValue)
+            ) / int256(localData.lpTokenDepositValue);
 
             uint256 feePerLP;
             // if the pool has increased in value since the deposit, the fee is calculated based on the deposit value
             if (localData.lpTokenDepositValueChange > 0) {
-                feePerLP =
-                    (uint256(localData.lpTokenDepositValueChange) * (uint256(feeDataArray[i].upliftFeeBps) * 1e18)) /
-                    10000;
+                feePerLP = (
+                    uint256(localData.lpTokenDepositValueChange) * (uint256(feeDataArray[i].upliftFeeBps) * 1e18)
+                ) / 10000;
             }
             // if the pool has decreased in value since the deposit, the fee is calculated based on the base value - see wp
             else {
@@ -615,7 +608,7 @@ contract UpliftOnlyExample is MinimalRouter, BaseHooks, Ownable {
 
                 if (tokenIdIndex != feeDataArrayLength - 1) {
                     //Reordering the entire array could be expensive but it is the only way to keep true FILO
-                    for (uint i = tokenIdIndex + 1; i < feeDataArrayLength; i++) {
+                    for (uint256 i = tokenIdIndex + 1; i < feeDataArrayLength; i++) {
                         delete feeDataArray[i - 1];
                         feeDataArray[i - 1] = feeDataArray[i];
                     }
@@ -654,17 +647,17 @@ contract UpliftOnlyExample is MinimalRouter, BaseHooks, Ownable {
 
     /// @notice gets the notional value of the lp token in USD
     /// @param _prices the prices of the assets in the pool
-    function getPoolLPTokenValue(
-        int256[] memory _prices,
-        address pool,
-        MULDIRECTION _direction
-    ) internal view returns (uint256) {
+    function getPoolLPTokenValue(int256[] memory _prices, address pool, MULDIRECTION _direction)
+        internal
+        view
+        returns (uint256)
+    {
         uint256 poolValueInUSD;
 
         PoolData memory poolData = IVaultExplorer(address(_vault)).getPoolData(pool);
         uint256 poolTotalSupply = _vault.totalSupply(pool);
 
-        for (uint i; i < poolData.tokens.length; ) {
+        for (uint256 i; i < poolData.tokens.length;) {
             int256 priceScaled18 = _prices[i] * 1e18;
             if (_direction == MULDIRECTION.MULUP) {
                 poolValueInUSD += FixedPoint.mulUp(uint256(priceScaled18), poolData.balancesLiveScaled18[i]);

@@ -1,6 +1,0 @@
-GetMarginRequirementForTrade_Integration_Test
-└── given there's a market created
-    ├── it should return the initial margin usd
-    ├── it should return the maintenance margin usd
-    ├── it should return the order fee usd
-    └── it should return the settlement fee usd

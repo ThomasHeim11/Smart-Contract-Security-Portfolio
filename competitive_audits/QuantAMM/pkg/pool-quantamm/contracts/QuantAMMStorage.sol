@@ -65,22 +65,10 @@ abstract contract ScalarQuantAMMBaseStorage {
         int256 _eighthInt
     ) internal pure returns (int256 packed) {
         require(
-            _firstInt <= MAX32 &&
-                _firstInt >= MIN32 &&
-                _secondInt <= MAX32 &&
-                _secondInt >= MIN32 &&
-                _thirdInt <= MAX32 &&
-                _thirdInt >= MIN32 &&
-                _fourthInt <= MAX32 &&
-                _fourthInt >= MIN32 &&
-                _fifthInt <= MAX32 &&
-                _fifthInt >= MIN32 &&
-                _sixthInt <= MAX32 &&
-                _sixthInt >= MIN32 &&
-                _seventhInt <= MAX32 &&
-                _seventhInt >= MIN32 &&
-                _eighthInt <= MAX32 &&
-                _eighthInt >= MIN32,
+            _firstInt <= MAX32 && _firstInt >= MIN32 && _secondInt <= MAX32 && _secondInt >= MIN32 && _thirdInt <= MAX32
+                && _thirdInt >= MIN32 && _fourthInt <= MAX32 && _fourthInt >= MIN32 && _fifthInt <= MAX32
+                && _fifthInt >= MIN32 && _sixthInt <= MAX32 && _sixthInt >= MIN32 && _seventhInt <= MAX32
+                && _seventhInt >= MIN32 && _eighthInt <= MAX32 && _eighthInt >= MIN32,
             "Overflow"
         );
 
@@ -93,15 +81,8 @@ abstract contract ScalarQuantAMMBaseStorage {
         int256 seventhPacked = int256(uint256(_seventhInt << 224) >> 224) << 32;
         int256 eighthPacked = int256(uint256(_eighthInt << 224) >> 224);
 
-        packed =
-            firstPacked |
-            secondPacked |
-            thirdPacked |
-            fourthPacked |
-            fifthPacked |
-            sixthPacked |
-            seventhPacked |
-            eighthPacked;
+        packed = firstPacked | secondPacked | thirdPacked | fourthPacked | fifthPacked | sixthPacked | seventhPacked
+            | eighthPacked;
     }
 
     /// @notice Unpacks a 256 bit integer into 8 32 bit integers
@@ -109,6 +90,7 @@ abstract contract ScalarQuantAMMBaseStorage {
     function quantAMMUnpack32(int256 sourceElem) internal pure returns (int256[] memory targetArray) {
         targetArray = new int256[](8);
         targetArray[0] = (sourceElem >> 224) * 1e9;
+        //@audit olympix: Unsafe Downcast
         targetArray[1] = int256(int32(sourceElem >> 192)) * 1e9;
         targetArray[2] = int256(int32(sourceElem >> 160)) * 1e9;
         targetArray[3] = int256(int32(sourceElem >> 128)) * 1e9;
@@ -123,20 +105,21 @@ abstract contract ScalarQuantAMMBaseStorage {
     /// @notice Unpacks a 256 bit integer into n 32 bit integers
     /// @param _sourceArray the array to unpack
     /// @param _targetArrayLength the number of 32 bit integers to unpack
-    function quantAMMUnpack32Array(
-        int256[] memory _sourceArray,
-        uint _targetArrayLength
-    ) internal pure returns (int256[] memory targetArray) {
+    function quantAMMUnpack32Array(int256[] memory _sourceArray, uint256 _targetArrayLength)
+        internal
+        pure
+        returns (int256[] memory targetArray)
+    {
         require(_sourceArray.length * 8 >= _targetArrayLength, "SRC!=TGT");
         targetArray = new int256[](_targetArrayLength);
-        uint targetIndex;
-        uint sourceArrayLengthMinusOne = _sourceArray.length - 1;
+        uint256 targetIndex;
+        uint256 sourceArrayLengthMinusOne = _sourceArray.length - 1;
         bool divisibleByEight = _targetArrayLength % 8 == 0;
-        uint stickyEndSourceElem;
+        uint256 stickyEndSourceElem;
 
         //more than the first slot so need to loop
         if (_targetArrayLength > 8) {
-            for (uint i; i < _sourceArray.length; ) {
+            for (uint256 i; i < _sourceArray.length;) {
                 if (divisibleByEight || i < sourceArrayLengthMinusOne) {
                     unchecked {
                         int256 sourceElem = _sourceArray[i];
@@ -192,8 +175,8 @@ abstract contract ScalarQuantAMMBaseStorage {
         // deal with up to 7 sticky end elements
         if (!divisibleByEight) {
             unchecked {
-                uint offset = 224;
-                for (uint i = targetIndex; i < targetArray.length; ) {
+                uint256 offset = 224;
+                for (uint256 i = targetIndex; i < targetArray.length;) {
                     targetArray[i] = int256(int32(_sourceArray[stickyEndSourceElem] >> offset)) * 1e9;
                     offset -= 32;
                     ++i;
@@ -205,13 +188,13 @@ abstract contract ScalarQuantAMMBaseStorage {
     /// @notice Packs an array of 32 bit integers into an array of 256 bit integers
     /// @param _sourceArray the array to pack
     function quantAMMPack32Array(int256[] memory _sourceArray) internal pure returns (int256[] memory targetArray) {
-        uint targetArrayLength;
-        uint storageIndex;
-        uint nonStickySourceLength;
+        uint256 targetArrayLength;
+        uint256 storageIndex;
+        uint256 nonStickySourceLength;
 
         //logic if more than 1 slot is required to store the array
         if (_sourceArray.length >= 8) {
-            for (uint i = _sourceArray.length; i >= 8; ) {
+            for (uint256 i = _sourceArray.length; i >= 8;) {
                 unchecked {
                     if (i % 8 == 0) {
                         nonStickySourceLength = i;
@@ -234,7 +217,7 @@ abstract contract ScalarQuantAMMBaseStorage {
 
             targetArray = new int256[](targetArrayLength);
 
-            for (uint i; i < nonStickySourceLength; ) {
+            for (uint256 i; i < nonStickySourceLength;) {
                 unchecked {
                     targetArray[storageIndex] = quantAMMPackEight32(
                         int256(_sourceArray[i] / 1e9),
@@ -265,11 +248,11 @@ abstract contract ScalarQuantAMMBaseStorage {
             }
         }
         //pack up to 7 sticky ends
-        uint stickyEndElems = _sourceArray.length - nonStickySourceLength;
+        uint256 stickyEndElems = _sourceArray.length - nonStickySourceLength;
         if (stickyEndElems > 0) {
-            uint offset = 224;
+            uint256 offset = 224;
             int256 packed;
-            for (uint i = nonStickySourceLength; i < _sourceArray.length; ) {
+            for (uint256 i = nonStickySourceLength; i < _sourceArray.length;) {
                 unchecked {
                     int256 elem = _sourceArray[i] / 1e9;
                     require(elem <= MAX32 && elem >= MIN32, "Overflow");
@@ -289,9 +272,9 @@ abstract contract ScalarRuleQuantAMMStorage is QuantAMMStorage {
     /// @notice Packs n 128 bit integers into n/2 256 bit integers
     /// @param _sourceArray the array to pack
     function _quantAMMPack128Array(int256[] memory _sourceArray) internal pure returns (int256[] memory targetArray) {
-        uint sourceArrayLength = _sourceArray.length;
-        uint targetArrayLength = sourceArrayLength;
-        uint storageIndex;
+        uint256 sourceArrayLength = _sourceArray.length;
+        uint256 targetArrayLength = sourceArrayLength;
+        uint256 storageIndex;
 
         require(_sourceArray.length != 0, "LEN0");
 
@@ -300,7 +283,7 @@ abstract contract ScalarRuleQuantAMMStorage is QuantAMMStorage {
                 targetArrayLength = (targetArrayLength) / 2;
             }
             targetArray = new int256[](targetArrayLength);
-            for (uint i; i < sourceArrayLength - 1; ) {
+            for (uint256 i; i < sourceArrayLength - 1;) {
                 targetArray[storageIndex] = _quantAMMPackTwo128(_sourceArray[i], _sourceArray[i + 1]);
                 unchecked {
                     i += 2;
@@ -317,8 +300,8 @@ abstract contract ScalarRuleQuantAMMStorage is QuantAMMStorage {
                 targetArrayLength = ((targetArrayLength - 1) / 2) + 1;
             }
             targetArray = new int256[](targetArrayLength);
-            uint sourceArrayLengthMinusTwo = sourceArrayLength - 2;
-            for (uint i; i < sourceArrayLengthMinusTwo; ) {
+            uint256 sourceArrayLengthMinusTwo = sourceArrayLength - 2;
+            for (uint256 i; i < sourceArrayLengthMinusTwo;) {
                 targetArray[storageIndex] = _quantAMMPackTwo128(_sourceArray[i], _sourceArray[i + 1]);
                 unchecked {
                     i += 2;
@@ -332,16 +315,17 @@ abstract contract ScalarRuleQuantAMMStorage is QuantAMMStorage {
     /// @notice Unpacks n/2 256 bit integers into n 128 bit integers
     /// @param _sourceArray the array to unpack
     /// @param _targetArrayLength the number of 128 bit integers to unpack
-    function _quantAMMUnpack128Array(
-        int256[] memory _sourceArray,
-        uint _targetArrayLength
-    ) internal pure returns (int256[] memory targetArray) {
+    function _quantAMMUnpack128Array(int256[] memory _sourceArray, uint256 _targetArrayLength)
+        internal
+        pure
+        returns (int256[] memory targetArray)
+    {
         require(_sourceArray.length * 2 >= _targetArrayLength, "SRC!=TGT");
         targetArray = new int256[](_targetArrayLength);
-        uint targetIndex;
-        uint sourceArrayLengthMinusOne = _sourceArray.length - 1;
+        uint256 targetIndex;
+        uint256 sourceArrayLengthMinusOne = _sourceArray.length - 1;
         bool divisibleByTwo = _targetArrayLength % 2 == 0;
-        for (uint i; i < _sourceArray.length; ) {
+        for (uint256 i; i < _sourceArray.length;) {
             targetArray[targetIndex] = _sourceArray[i] >> 128;
             unchecked {
                 ++targetIndex;
@@ -383,25 +367,24 @@ abstract contract VectorRuleQuantAMMStorage is QuantAMMStorage {
 
         // this saves 3 length SSTORES and SLOADS, as well as reducing the slots by 3
 
-        uint targetArrayLength = _targetArray.length;
+        uint256 targetArrayLength = _targetArray.length;
         require(targetArrayLength * 2 >= _sourceMatrix.length * _sourceMatrix.length, "Matrix doesnt fit storage");
-        uint targetArrayIndex;
+        uint256 targetArrayIndex;
         int256 leftInt;
-        uint right;
+        uint256 right;
         unchecked {
-            for (uint i; i < _sourceMatrix.length; ) {
-                for (uint j; j < _sourceMatrix[i].length; ) {
+            for (uint256 i; i < _sourceMatrix.length;) {
+                for (uint256 j; j < _sourceMatrix[i].length;) {
                     require(
-                        (_sourceMatrix[i][j] <= int256(type(int128).max)) &&
-                            (_sourceMatrix[i][j] >= int256(type(int128).min)),
+                        (_sourceMatrix[i][j] <= int256(type(int128).max))
+                            && (_sourceMatrix[i][j] >= int256(type(int128).min)),
                         "Over/Under-flow"
                     );
                     if (right == 1) {
                         right = 0;
                         //SSTORE done inline to avoid length SSTORE as length doesnt ever change
                         _targetArray[targetArrayIndex] =
-                            (leftInt << 128) |
-                            int256(uint256(_sourceMatrix[i][j] << 128) >> 128);
+                            (leftInt << 128) | int256(uint256(_sourceMatrix[i][j] << 128) >> 128);
                         ++targetArrayIndex;
                     } else {
                         leftInt = _sourceMatrix[i][j];
@@ -411,10 +394,10 @@ abstract contract VectorRuleQuantAMMStorage is QuantAMMStorage {
                 }
                 ++i;
             }
+            //@audit Unchecked Block with Subtraction
             if (((_sourceMatrix.length * _sourceMatrix.length) % 2) != 0) {
-                _targetArray[targetArrayLength - 1] = int256(
-                    int128(_sourceMatrix[_sourceMatrix.length - 1][_sourceMatrix.length - 1])
-                );
+                _targetArray[targetArrayLength - 1] =
+                    int256(int128(_sourceMatrix[_sourceMatrix.length - 1][_sourceMatrix.length - 1]));
             }
         }
     }
@@ -422,10 +405,11 @@ abstract contract VectorRuleQuantAMMStorage is QuantAMMStorage {
     /// @notice Unpacks packed array into a 2d array of 128 bit integers
     /// @param _sourceArray the array to unpack
     /// @param _numberOfAssets the number of 128 bit integers to unpack
-    function _quantAMMUnpack128Matrix(
-        int256[] memory _sourceArray,
-        uint _numberOfAssets
-    ) internal pure returns (int256[][] memory targetArray) {
+    function _quantAMMUnpack128Matrix(int256[] memory _sourceArray, uint256 _numberOfAssets)
+        internal
+        pure
+        returns (int256[][] memory targetArray)
+    {
         // | 1 2 | 3 4 | 5 6 | 7 8 | 9 _ |
 
         // becomes 2d array of 3 elements each with 3 elements
@@ -435,16 +419,16 @@ abstract contract VectorRuleQuantAMMStorage is QuantAMMStorage {
         // | |7|, |8|, |9|  |
         require(_sourceArray.length * 2 >= _numberOfAssets * _numberOfAssets, "Source cannot provide target");
         targetArray = new int256[][](_numberOfAssets);
-        for (uint i; i < _numberOfAssets; ) {
+        for (uint256 i; i < _numberOfAssets;) {
             targetArray[i] = new int256[](_numberOfAssets);
             unchecked {
                 ++i;
             }
         }
 
-        uint targetIndex;
-        uint targetRow;
-        for (uint i; i < _sourceArray.length; ) {
+        uint256 targetIndex;
+        uint256 targetRow;
+        for (uint256 i; i < _sourceArray.length;) {
             if (targetIndex < _numberOfAssets) {
                 targetArray[targetRow][targetIndex] = int256(int128(_sourceArray[i] >> 128));
                 unchecked {
@@ -506,9 +490,8 @@ abstract contract VectorRuleQuantAMMStorage is QuantAMMStorage {
         }
 
         if ((_numberOfAssets * _numberOfAssets) % 2 != 0) {
-            targetArray[_numberOfAssets - 1][_numberOfAssets - 1] = int256(
-                int128(_sourceArray[_sourceArray.length - 1])
-            );
+            targetArray[_numberOfAssets - 1][_numberOfAssets - 1] =
+                int256(int128(_sourceArray[_sourceArray.length - 1]));
         }
     }
 }

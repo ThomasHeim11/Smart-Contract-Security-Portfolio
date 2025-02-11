@@ -1,0 +1,9 @@
+{
+  "security.olympix.project.analyzeWholeProject": true,
+  "security.olympix.detectors.defaultVisibility": true,
+  "security.olympix.detectors.noParameterValidationInConstructor": true,
+  "security.olympix.detectors.unfuzzedVariables": false,
+  "security.olympix.detectors.unfuzzedLocalVariables": false,
+  "security.olympix.project.includePath": "",
+  "security.olympix.project.testsPath": ""
+}

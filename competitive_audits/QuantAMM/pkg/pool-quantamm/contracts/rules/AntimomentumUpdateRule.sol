@@ -12,11 +12,14 @@ import "./UpdateRule.sol";
 contract AntiMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
     constructor(address _updateWeightRunner) UpdateRule(_updateWeightRunner) {
         name = "AntiMomentum";
-        
+
         parameterDescriptions = new string[](3);
-        parameterDescriptions[0] = "Kappa: Kappa dictates the aggressiveness of the rule's response to a signal change (here, -(price gradient))";
-        parameterDescriptions[1] = "Use raw price: 0 = use moving average, 1 = use raw price to be used as the denominator";
-        parameterDescriptions[2] = "Lambda: Lambda dictates the estimator weighting and price smoothing for a given period of time";
+        parameterDescriptions[0] =
+            "Kappa: Kappa dictates the aggressiveness of the rule's response to a signal change (here, -(price gradient))";
+        parameterDescriptions[1] =
+            "Use raw price: 0 = use moving average, 1 = use raw price to be used as the denominator";
+        parameterDescriptions[2] =
+            "Lambda: Lambda dictates the estimator weighting and price smoothing for a given period of time";
     }
 
     using PRBMathSD59x18 for int256;
@@ -39,7 +42,7 @@ contract AntiMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
         int256[] newWeights;
         int256 normalizationFactor;
         bool useRawPrice;
-        uint i;
+        uint256 i;
         int256 denominator;
         int256 sumKappa;
         int256 res;
@@ -52,7 +55,7 @@ contract AntiMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
     /// @notice w(t) = w(t − 1) + κ ·(ℓp(t) − 1/p(t) · ∂p(t)/∂t) where ℓp(t) = 1/N * ∑(1/p(t)i * (∂p(t)/∂t)i)
     function _getWeights(
         int256[] calldata _prevWeights,
-        int256[]  memory _data,
+        int256[] memory _data,
         int256[][] calldata _parameters,
         QuantAMMPoolParameters memory _poolParameters
     ) internal override returns (int256[] memory newWeightsConverted) {
@@ -67,10 +70,10 @@ contract AntiMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
         }
 
         _poolParameters.numberOfAssets = _prevWeights.length;
-
+        //@audit olympix: External call potenial out of gas
         locals.newWeights = _calculateQuantAMMGradient(_data, _poolParameters);
 
-        for (locals.i = 0; locals.i < _prevWeights.length; ) {
+        for (locals.i = 0; locals.i < _prevWeights.length;) {
             locals.denominator = _poolParameters.movingAverage[locals.i];
             if (locals.useRawPrice) {
                 locals.denominator = _data[locals.i];
@@ -95,16 +98,16 @@ contract AntiMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
             locals.normalizationFactor /= int256(_prevWeights.length);
             // w(t − 1) + κ ·(ℓp(t) − 1/p(t) · ∂p(t)/∂t)
 
-            for (locals.i = 0; locals.i < _prevWeights.length; ) {
-                int256 res = int256(_prevWeights[locals.i]) +
-                    int256(locals.kappa[0]).mul(locals.normalizationFactor - locals.newWeights[locals.i]);
+            for (locals.i = 0; locals.i < _prevWeights.length;) {
+                int256 res = int256(_prevWeights[locals.i])
+                    + int256(locals.kappa[0]).mul(locals.normalizationFactor - locals.newWeights[locals.i]);
                 newWeightsConverted[locals.i] = res;
                 unchecked {
                     ++locals.i;
                 }
             }
         } else {
-            for (locals.i = 0; locals.i < locals.kappa.length; ) {
+            for (locals.i = 0; locals.i < locals.kappa.length;) {
                 locals.sumKappa += locals.kappa[locals.i];
                 unchecked {
                     ++locals.i;
@@ -112,11 +115,11 @@ contract AntiMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
             }
 
             locals.normalizationFactor = locals.normalizationFactor.div(locals.sumKappa);
-            
-            for (locals.i = 0; locals.i < _prevWeights.length; ) {
+
+            for (locals.i = 0; locals.i < _prevWeights.length;) {
                 // w(t − 1) + κ ·(ℓp(t) − 1/p(t) · ∂p(t)/∂t)
-                int256 res = int256(_prevWeights[locals.i]) +
-                    int256(locals.kappa[locals.i]).mul(locals.normalizationFactor - locals.newWeights[locals.i]);
+                int256 res = int256(_prevWeights[locals.i])
+                    + int256(locals.kappa[locals.i]).mul(locals.normalizationFactor - locals.newWeights[locals.i]);
                 require(res >= 0, "Invalid weight");
                 newWeightsConverted[locals.i] = res;
                 unchecked {
@@ -138,7 +141,7 @@ contract AntiMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
     function _setInitialIntermediateValues(
         address _poolAddress,
         int256[] memory _initialValues,
-        uint _numberOfAssets
+        uint256 _numberOfAssets
     ) internal override {
         _setGradient(_poolAddress, _initialValues, _numberOfAssets);
     }
@@ -149,7 +152,7 @@ contract AntiMomentumUpdateRule is QuantAMMGradientBasedRule, UpdateRule {
         if (_parameters.length == 1 || (_parameters.length == 2 && _parameters[1].length == 1)) {
             int256[] memory kappa = _parameters[0];
             uint16 valid = uint16(kappa.length) > 0 ? 1 : 0;
-            for (uint i; i < kappa.length; ) {
+            for (uint256 i; i < kappa.length;) {
                 if (!(kappa[i] > 0)) {
                     valid = 0;
                     break;

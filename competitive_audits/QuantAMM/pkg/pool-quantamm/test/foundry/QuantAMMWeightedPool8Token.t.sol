@@ -7,25 +7,25 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { IVault } from "@balancer-labs/v3-interfaces/contracts/vault/IVault.sol";
-import { IVaultErrors } from "@balancer-labs/v3-interfaces/contracts/vault/IVaultErrors.sol";
-import { PoolRoleAccounts } from "@balancer-labs/v3-interfaces/contracts/vault/VaultTypes.sol";
+import {IVault} from "@balancer-labs/v3-interfaces/contracts/vault/IVault.sol";
+import {IVaultErrors} from "@balancer-labs/v3-interfaces/contracts/vault/IVaultErrors.sol";
+import {PoolRoleAccounts} from "@balancer-labs/v3-interfaces/contracts/vault/VaultTypes.sol";
 
-import { CastingHelpers } from "@balancer-labs/v3-solidity-utils/contracts/helpers/CastingHelpers.sol";
-import { ArrayHelpers } from "@balancer-labs/v3-solidity-utils/contracts/test/ArrayHelpers.sol";
-import { BalancerPoolToken } from "@balancer-labs/v3-vault/contracts/BalancerPoolToken.sol";
-import { BaseVaultTest } from "@balancer-labs/v3-vault/test/foundry/utils/BaseVaultTest.sol";
+import {CastingHelpers} from "@balancer-labs/v3-solidity-utils/contracts/helpers/CastingHelpers.sol";
+import {ArrayHelpers} from "@balancer-labs/v3-solidity-utils/contracts/test/ArrayHelpers.sol";
+import {BalancerPoolToken} from "@balancer-labs/v3-vault/contracts/BalancerPoolToken.sol";
+import {BaseVaultTest} from "@balancer-labs/v3-vault/test/foundry/utils/BaseVaultTest.sol";
 
-import { QuantAMMWeightedPool } from "../../contracts/QuantAMMWeightedPool.sol";
-import { QuantAMMWeightedPoolFactory } from "../../contracts/QuantAMMWeightedPoolFactory.sol";
-import { QuantAMMWeightedPoolContractsDeployer } from "./utils/QuantAMMWeightedPoolContractsDeployer.sol";
-import { PoolSwapParams, SwapKind } from "@balancer-labs/v3-interfaces/contracts/vault/VaultTypes.sol";
-import { OracleWrapper } from "@balancer-labs/v3-interfaces/contracts/pool-quantamm/OracleWrapper.sol";
-import { MockUpdateWeightRunner } from "../../contracts/mock/MockUpdateWeightRunner.sol";
-import { MockMomentumRule } from "../../contracts/mock/mockRules/MockMomentumRule.sol";
-import { MockChainlinkOracle } from "../../contracts/mock/MockChainlinkOracles.sol";
+import {QuantAMMWeightedPool} from "../../contracts/QuantAMMWeightedPool.sol";
+import {QuantAMMWeightedPoolFactory} from "../../contracts/QuantAMMWeightedPoolFactory.sol";
+import {QuantAMMWeightedPoolContractsDeployer} from "./utils/QuantAMMWeightedPoolContractsDeployer.sol";
+import {PoolSwapParams, SwapKind} from "@balancer-labs/v3-interfaces/contracts/vault/VaultTypes.sol";
+import {OracleWrapper} from "@balancer-labs/v3-interfaces/contracts/pool-quantamm/OracleWrapper.sol";
+import {MockUpdateWeightRunner} from "../../contracts/mock/MockUpdateWeightRunner.sol";
+import {MockMomentumRule} from "../../contracts/mock/mockRules/MockMomentumRule.sol";
+import {MockChainlinkOracle} from "../../contracts/mock/MockChainlinkOracles.sol";
 
 import "@balancer-labs/v3-interfaces/contracts/pool-quantamm/IQuantAMMWeightedPool.sol";
 
@@ -40,7 +40,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
 
     function setUp() public override {
         int216 fixedValue = 1000;
-        uint delay = 3600;
+        uint256 delay = 3600;
 
         super.setUp();
         (address ownerLocal, address addr1Local, address addr2Local) = (vm.addr(1), vm.addr(2), vm.addr(3));
@@ -57,12 +57,8 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
 
         vm.stopPrank();
 
-        quantAMMWeightedPoolFactory = deployQuantAMMWeightedPoolFactory(
-            IVault(address(vault)),
-            365 days,
-            "Factory v1",
-            "Pool v1"
-        );
+        quantAMMWeightedPoolFactory =
+            deployQuantAMMWeightedPoolFactory(IVault(address(vault)), 365 days, "Factory v1", "Pool v1");
         vm.label(address(quantAMMWeightedPoolFactory), "quantamm weighted pool factory");
     }
 
@@ -71,7 +67,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
         params._initialWeights[6] = 0.1e18;
         params._initialWeights[7] = 0.15e18;
 
-        (address quantAMMWeightedPool, ) = quantAMMWeightedPoolFactory.create(params);
+        (address quantAMMWeightedPool,) = quantAMMWeightedPoolFactory.create(params);
 
         uint256[] memory weights = QuantAMMWeightedPool(quantAMMWeightedPool).getNormalizedWeights();
 
@@ -88,7 +84,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
     function testSetWeightInitial() public {
         QuantAMMWeightedPoolFactory.NewPoolParams memory params = _createPoolParams();
 
-        (address quantAMMWeightedPool, ) = quantAMMWeightedPoolFactory.create(params);
+        (address quantAMMWeightedPool,) = quantAMMWeightedPoolFactory.create(params);
 
         int256[] memory newWeights = _getDefaultWeightAndMultiplier();
         newWeights[0] = 0.1e18;
@@ -96,9 +92,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
 
         vm.prank(address(updateWeightRunner));
         QuantAMMWeightedPool(quantAMMWeightedPool).setWeights(
-            newWeights,
-            quantAMMWeightedPool,
-            uint40(block.timestamp + 5)
+            newWeights, quantAMMWeightedPool, uint40(block.timestamp + 5)
         );
 
         uint256[] memory weights = QuantAMMWeightedPool(quantAMMWeightedPool).getNormalizedWeights();
@@ -116,7 +110,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
     function testSetWeightNBlocksAfter() public {
         QuantAMMWeightedPoolFactory.NewPoolParams memory params = _createPoolParams();
 
-        (address quantAMMWeightedPool, ) = quantAMMWeightedPoolFactory.create(params);
+        (address quantAMMWeightedPool,) = quantAMMWeightedPoolFactory.create(params);
 
         vm.prank(address(updateWeightRunner));
 
@@ -128,9 +122,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
         newWeights[9] = 0.001e18;
 
         QuantAMMWeightedPool(quantAMMWeightedPool).setWeights(
-            newWeights,
-            quantAMMWeightedPool,
-            uint40(block.timestamp + 5)
+            newWeights, quantAMMWeightedPool, uint40(block.timestamp + 5)
         );
 
         vm.warp(block.timestamp + 2);
@@ -144,7 +136,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
     function testSetWeightAfterLimit() public {
         QuantAMMWeightedPoolFactory.NewPoolParams memory params = _createPoolParams();
 
-        (address quantAMMWeightedPool, ) = quantAMMWeightedPoolFactory.create(params);
+        (address quantAMMWeightedPool,) = quantAMMWeightedPoolFactory.create(params);
 
         vm.prank(address(updateWeightRunner));
         int256[] memory newWeights = _getDefaultWeightAndMultiplier();
@@ -155,9 +147,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
         newWeights[9] = 0.001e18;
 
         QuantAMMWeightedPool(quantAMMWeightedPool).setWeights(
-            newWeights,
-            quantAMMWeightedPool,
-            uint40(block.timestamp + 5)
+            newWeights, quantAMMWeightedPool, uint40(block.timestamp + 5)
         );
 
         vm.warp(block.timestamp + 7);
@@ -169,7 +159,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
     }
 
     struct testParam {
-        uint index;
+        uint256 index;
         int256 weight;
         int256 multiplier;
     }
@@ -177,12 +167,12 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
     function _computeBalanceInternal(
         testParam memory firstWeight,
         testParam memory secondWeight,
-        uint delay,
+        uint256 delay,
         uint256 expected
     ) internal {
         QuantAMMWeightedPoolFactory.NewPoolParams memory params = _createPoolParams();
 
-        (address quantAMMWeightedPool, ) = quantAMMWeightedPoolFactory.create(params);
+        (address quantAMMWeightedPool,) = quantAMMWeightedPoolFactory.create(params);
 
         vm.prank(address(updateWeightRunner));
         int256[] memory newWeights = _getDefaultWeightAndMultiplier();
@@ -193,9 +183,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
         newWeights[secondWeight.index + 8] = secondWeight.multiplier;
 
         QuantAMMWeightedPool(quantAMMWeightedPool).setWeights(
-            newWeights,
-            quantAMMWeightedPool,
-            uint40(block.timestamp + 5)
+            newWeights, quantAMMWeightedPool, uint40(block.timestamp + 5)
         );
 
         if (delay > 0) {
@@ -204,11 +192,8 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
 
         uint256[] memory balances = _getDefaultBalances();
 
-        uint256 newBalance = QuantAMMWeightedPool(quantAMMWeightedPool).computeBalance(
-            balances,
-            firstWeight.index,
-            uint256(1.2e18)
-        );
+        uint256 newBalance =
+            QuantAMMWeightedPool(quantAMMWeightedPool).computeBalance(balances, firstWeight.index, uint256(1.2e18));
 
         assertEq(newBalance, expected);
     }
@@ -216,66 +201,66 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
     function testComputeBalanceInitialToken0Token1() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(1, 0.15e18, 0.001e18);
-        _computeBalanceInternal(firstWeight, secondWeight, 0, 6191.736422400061905000e18);
+        _computeBalanceInternal(firstWeight, secondWeight, 0, 6191.736422400061905e18);
     }
 
     function testComputeBalanceNBlocksAfterToken0Token1() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(1, 0.15e18, 0.001e18);
-        _computeBalanceInternal(firstWeight, secondWeight, 2, 5974.295859424989510000e18);
+        _computeBalanceInternal(firstWeight, secondWeight, 2, 5974.29585942498951e18);
     }
 
     function testComputeBalanceAfterLimitToken0Token1() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(1, 0.15e18, 0.001e18);
-        _computeBalanceInternal(firstWeight, secondWeight, 7, 5676.845898799479439000e18);
+        _computeBalanceInternal(firstWeight, secondWeight, 7, 5676.845898799479439e18);
     }
 
     function testComputeBalanceInitialToken0Token5() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(5, 0.15e18, 0.001e18);
-        _computeBalanceInternal(firstWeight, secondWeight, 0, 6191.736422400061905000e18);
+        _computeBalanceInternal(firstWeight, secondWeight, 0, 6191.736422400061905e18);
     }
 
     function testComputeBalanceNBlocksAfterToken0Token5() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(5, 0.15e18, 0.001e18);
-        _computeBalanceInternal(firstWeight, secondWeight, 2, 5974.295859424989510000e18);
+        _computeBalanceInternal(firstWeight, secondWeight, 2, 5974.29585942498951e18);
     }
 
     function testComputeBalanceAfterLimitToken0Token5() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(5, 0.15e18, 0.001e18);
-        _computeBalanceInternal(firstWeight, secondWeight, 7, 5676.845898799479439000e18);
+        _computeBalanceInternal(firstWeight, secondWeight, 7, 5676.845898799479439e18);
     }
 
     function testComputeBalanceInitialToken7Token5() public {
         testParam memory firstWeight = testParam(5, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(7, 0.15e18, 0.001e18);
-        _computeBalanceInternal(firstWeight, secondWeight, 0, 46438.023168000464287500e18);
+        _computeBalanceInternal(firstWeight, secondWeight, 0, 46438.0231680004642875e18);
     }
 
     function testComputeBalanceNBlocksAfterToken7Token5() public {
         testParam memory firstWeight = testParam(5, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(7, 0.15e18, 0.001e18);
-        _computeBalanceInternal(firstWeight, secondWeight, 2, 44807.218945687421325000e18);
+        _computeBalanceInternal(firstWeight, secondWeight, 2, 44807.218945687421325e18);
     }
 
     function testComputeBalanceAfterLimitToken7Token5() public {
         testParam memory firstWeight = testParam(5, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(7, 0.15e18, 0.001e18);
-        _computeBalanceInternal(firstWeight, secondWeight, 7, 42576.344240996095792500e18);
+        _computeBalanceInternal(firstWeight, secondWeight, 7, 42576.3442409960957925e18);
     }
 
     function _onSwapOutGivenInInternal(
         testParam memory firstWeight,
         testParam memory secondWeight,
-        uint delay,
+        uint256 delay,
         uint256 expected
     ) internal {
         QuantAMMWeightedPoolFactory.NewPoolParams memory params = _createPoolParams();
 
-        (address quantAMMWeightedPool, ) = quantAMMWeightedPoolFactory.create(params);
+        (address quantAMMWeightedPool,) = quantAMMWeightedPoolFactory.create(params);
 
         vm.prank(address(updateWeightRunner));
         int256[] memory newWeights = _getDefaultWeightAndMultiplier();
@@ -286,9 +271,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
         newWeights[secondWeight.index + 8] = secondWeight.multiplier;
 
         QuantAMMWeightedPool(quantAMMWeightedPool).setWeights(
-            newWeights,
-            quantAMMWeightedPool,
-            uint40(block.timestamp + 5)
+            newWeights, quantAMMWeightedPool, uint40(block.timestamp + 5)
         );
 
         if (delay > 0) {
@@ -315,55 +298,55 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
     function testGetNormalizedWeightOnSwapOutGivenInInitialToken0Token1() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(1, 0.15e18, 0.001e18);
-        _onSwapOutGivenInInternal(firstWeight, secondWeight, 0, 1.332223208952048000e18);
+        _onSwapOutGivenInInternal(firstWeight, secondWeight, 0, 1.332223208952048e18);
     }
 
     function testGetNormalizedWeightOnSwapOutGivenInNBlocksAfterToken0Token1() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(1, 0.15e18, 0.001e18);
-        _onSwapOutGivenInInternal(firstWeight, secondWeight, 2, 1.340984896364186000e18);
+        _onSwapOutGivenInInternal(firstWeight, secondWeight, 2, 1.340984896364186e18);
     }
 
     function testGetNormalizedWeightOnSwapOutGivenInAfterLimitToken0Token1() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(1, 0.15e18, 0.001e18);
-        _onSwapOutGivenInInternal(firstWeight, secondWeight, 7, 1.353703406520588000e18);
+        _onSwapOutGivenInInternal(firstWeight, secondWeight, 7, 1.353703406520588e18);
     }
 
     function testGetNormalizedWeightOnSwapOutGivenInInitialToken0Token5() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(5, 0.15e18, 0.001e18);
-        _onSwapOutGivenInInternal(firstWeight, secondWeight, 0, 4.995837033570180000e18);
+        _onSwapOutGivenInInternal(firstWeight, secondWeight, 0, 4.99583703357018e18);
     }
 
     function testGetNormalizedWeightOnSwapOutGivenInNBlocksAfterToken0Token5() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(5, 0.15e18, 0.001e18);
-        _onSwapOutGivenInInternal(firstWeight, secondWeight, 2, 5.028693361365697500e18);
+        _onSwapOutGivenInInternal(firstWeight, secondWeight, 2, 5.0286933613656975e18);
     }
 
     function testGetNormalizedWeightOnSwapOutGivenInAfterLimitToken0Token5() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(5, 0.15e18, 0.001e18);
-        _onSwapOutGivenInInternal(firstWeight, secondWeight, 7, 5.076387774452205000e18);
+        _onSwapOutGivenInInternal(firstWeight, secondWeight, 7, 5.076387774452205e18);
     }
 
     function testGetNormalizedWeightOnSwapOutGivenInInitialToken7Token5() public {
         testParam memory firstWeight = testParam(7, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(5, 0.15e18, 0.001e18);
-        _onSwapOutGivenInInternal(firstWeight, secondWeight, 0, 0.999833362882522500e18);
+        _onSwapOutGivenInInternal(firstWeight, secondWeight, 0, 0.9998333628825225e18);
     }
 
     function testGetNormalizedWeightOnSwapOutGivenInNBlocksAfterToken7Token5() public {
         testParam memory firstWeight = testParam(7, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(5, 0.15e18, 0.001e18);
-        _onSwapOutGivenInInternal(firstWeight, secondWeight, 2, 1.006410772600252500e18);
+        _onSwapOutGivenInInternal(firstWeight, secondWeight, 2, 1.0064107726002525e18);
     }
 
     function testGetNormalizedWeightOnSwapOutGivenInAfterLimitToken7Token5() public {
         testParam memory firstWeight = testParam(7, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(5, 0.15e18, 0.001e18);
-        _onSwapOutGivenInInternal(firstWeight, secondWeight, 7, 1.015958615150850000e18);
+        _onSwapOutGivenInInternal(firstWeight, secondWeight, 7, 1.01595861515085e18);
     }
 
     // cross swap not working correctly
@@ -371,7 +354,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
         testParam memory firstWeight = testParam(7, 0.1e18, 0.001e18); // indexIn > 4
         testParam memory secondWeight = testParam(3, 0.15e18, 0.001e18); // indexOut < 4
         // will revert on underflow
-        _onSwapOutGivenInInternal(firstWeight, secondWeight, 0, 0.046658890267851050e18);
+        _onSwapOutGivenInInternal(firstWeight, secondWeight, 0, 0.04665889026785105e18);
     }
 
     // index >= 4 not working correctly
@@ -379,7 +362,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(4, 0.15e18, 0.001e18);
         // fails with panic: array out-of-bounds access
-        _onSwapOutGivenInInternal(firstWeight, secondWeight, 0, 0.499583703357018000e18);
+        _onSwapOutGivenInInternal(firstWeight, secondWeight, 0, 0.499583703357018e18);
     }
 
     // index >= 4 not working correctly
@@ -387,18 +370,18 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
         testParam memory firstWeight = testParam(4, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(0, 0.15e18, 0.001e18);
         // fails with panic: array out-of-bounds access
-        _onSwapOutGivenInInternal(firstWeight, secondWeight, 0, 0.887902403682279000e18);
+        _onSwapOutGivenInInternal(firstWeight, secondWeight, 0, 0.887902403682279e18);
     }
 
     function _onSwapInGivenOutInternal(
         testParam memory firstWeight,
         testParam memory secondWeight,
-        uint delay,
+        uint256 delay,
         uint256 expected
     ) internal {
         QuantAMMWeightedPoolFactory.NewPoolParams memory params = _createPoolParams();
 
-        (address quantAMMWeightedPool, ) = quantAMMWeightedPoolFactory.create(params);
+        (address quantAMMWeightedPool,) = quantAMMWeightedPoolFactory.create(params);
 
         vm.prank(address(updateWeightRunner));
         int256[] memory newWeights = _getDefaultWeightAndMultiplier();
@@ -409,9 +392,7 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
         newWeights[secondWeight.index + 8] = secondWeight.multiplier;
 
         QuantAMMWeightedPool(quantAMMWeightedPool).setWeights(
-            newWeights,
-            quantAMMWeightedPool,
-            uint40(block.timestamp + 5)
+            newWeights, quantAMMWeightedPool, uint40(block.timestamp + 5)
         );
 
         if (delay > 0) {
@@ -438,55 +419,55 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
     function testGetNormalizedWeightOnSwapInGivenOutInitialToken0Token1() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(1, 0.15e18, 0.001e18);
-        _onSwapInGivenOutInternal(firstWeight, secondWeight, 0, 0.750469023601402000e18);
+        _onSwapInGivenOutInternal(firstWeight, secondWeight, 0, 0.750469023601402e18);
     }
 
     function testGetNormalizedWeightOnSwapInGivenOutNBlocksAfterToken0Token1() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(1, 0.15e18, 0.001e18);
-        _onSwapInGivenOutInternal(firstWeight, secondWeight, 2, 0.745562169258142000e18);
+        _onSwapInGivenOutInternal(firstWeight, secondWeight, 2, 0.745562169258142e18);
     }
 
     function testGetNormalizedWeightOnSwapInGivenOutAfterLimitToken0Token1() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(1, 0.15e18, 0.001e18);
-        _onSwapInGivenOutInternal(firstWeight, secondWeight, 7, 0.738552419074452000e18);
+        _onSwapInGivenOutInternal(firstWeight, secondWeight, 7, 0.738552419074452e18);
     }
 
     function testGetNormalizedWeightOnSwapInGivenOutInitialToken0Token5() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(5, 0.15e18, 0.001e18);
-        _onSwapInGivenOutInternal(firstWeight, secondWeight, 0, 0.200033338529300000e18);
+        _onSwapInGivenOutInternal(firstWeight, secondWeight, 0, 0.2000333385293e18);
     }
 
     function testGetNormalizedWeightOnSwapInGivenOutNBlocksAfterToken0Token5() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(5, 0.15e18, 0.001e18);
-        _onSwapInGivenOutInternal(firstWeight, secondWeight, 2, 0.198725801188834000e18);
+        _onSwapInGivenOutInternal(firstWeight, secondWeight, 2, 0.198725801188834e18);
     }
 
     function testGetNormalizedWeightOnSwapInGivenOutAfterLimitToken0Token5() public {
         testParam memory firstWeight = testParam(0, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(5, 0.15e18, 0.001e18);
-        _onSwapInGivenOutInternal(firstWeight, secondWeight, 7, 0.196857893667587000e18);
+        _onSwapInGivenOutInternal(firstWeight, secondWeight, 7, 0.196857893667587e18);
     }
 
     function testGetNormalizedWeightOnSwapInGivenOutInitialToken5Token7() public {
         testParam memory firstWeight = testParam(5, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(7, 0.15e18, 0.001e18);
-        _onSwapInGivenOutInternal(firstWeight, secondWeight, 0, 2.250562631354580000e18);
+        _onSwapInGivenOutInternal(firstWeight, secondWeight, 0, 2.25056263135458e18);
     }
 
     function testGetNormalizedWeightOnSwapInGivenOutNBlocksAfterToken5Token7() public {
         testParam memory firstWeight = testParam(5, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(7, 0.15e18, 0.001e18);
-        _onSwapInGivenOutInternal(firstWeight, secondWeight, 2, 2.235850879332765000e18);
+        _onSwapInGivenOutInternal(firstWeight, secondWeight, 2, 2.235850879332765e18);
     }
 
     function testGetNormalizedWeightOnSwapInGivenOutAfterLimitToken5Token7() public {
         testParam memory firstWeight = testParam(5, 0.1e18, 0.001e18);
         testParam memory secondWeight = testParam(7, 0.15e18, 0.001e18);
-        _onSwapInGivenOutInternal(firstWeight, secondWeight, 7, 2.214834140775105000e18);
+        _onSwapInGivenOutInternal(firstWeight, secondWeight, 7, 2.214834140775105e18);
     }
 
     function _getDefaultBalances() internal pure returns (uint256[] memory balances) {
@@ -606,5 +587,46 @@ contract QuantAMMWeightedPool8TokenTest is QuantAMMWeightedPoolContractsDeployer
             0,
             new string[][](0)
         );
+    }
+    // @audit Test for computeBalance function
+
+    function testComputeBalance() public {
+        QuantAMMWeightedPoolFactory.NewPoolParams memory params = _createPoolParams();
+        (address quantAMMWeightedPool,) = quantAMMWeightedPoolFactory.create(params);
+
+        uint256[] memory balancesLiveScaled18 = _getDefaultBalances();
+        uint256 tokenInIndex = 0;
+        uint256 invariantRatio = 1.2e18;
+
+        uint256 newBalance = QuantAMMWeightedPool(quantAMMWeightedPool).computeBalance(
+            balancesLiveScaled18, tokenInIndex, invariantRatio
+        );
+
+        console.log("Computed Balance:", newBalance);
+
+        uint256 expectedBalance = 4299816960000042991000; // Replace with the correct expected value
+        assertEq(newBalance, expectedBalance);
+    }
+
+    // @audit Test for _getNormalizedWeights function
+    function testGetNormalizedWeights() public {
+        QuantAMMWeightedPoolFactory.NewPoolParams memory params = _createPoolParams();
+        (address quantAMMWeightedPool,) = quantAMMWeightedPoolFactory.create(params);
+
+        uint256[] memory normalizedWeights = QuantAMMWeightedPool(quantAMMWeightedPool).getNormalizedWeights();
+
+        uint256[] memory expectedWeights = new uint256[](8);
+        expectedWeights[0] = 0.125e18;
+        expectedWeights[1] = 0.125e18;
+        expectedWeights[2] = 0.125e18;
+        expectedWeights[3] = 0.125e18;
+        expectedWeights[4] = 0.125e18;
+        expectedWeights[5] = 0.125e18;
+        expectedWeights[6] = 0.125e18;
+        expectedWeights[7] = 0.125e18;
+
+        for (uint256 i = 0; i < normalizedWeights.length; i++) {
+            assertEq(normalizedWeights[i], expectedWeights[i]);
+        }
     }
 }

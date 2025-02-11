@@ -28,12 +28,13 @@ contract MinimumVarianceUpdateRule is QuantAMMVarianceBasedRule, UpdateRule {
     /// @notice w(t) = (Λ * w(t − 1)) + ((1 − Λ)*Σ^−1(t)) / N,j=1∑ Σ^−1 j(t) - see whitepaper
     function _getWeights(
         int256[] calldata _prevWeights,
-        int256[]  memory _data,
+        int256[] memory _data,
         int256[][] calldata _parameters, //
         QuantAMMPoolParameters memory _poolParameters
     ) internal override returns (int256[] memory newWeightsConverted) {
         _poolParameters.numberOfAssets = _prevWeights.length;
 
+        //@audit olympix: External call potenial out of gas
         //reuse of the newWeights array allows for saved gas in array initialisation
         int256[] memory newWeights = _calculateQuantAMMVariance(_data, _poolParameters);
 
@@ -44,7 +45,7 @@ contract MinimumVarianceUpdateRule is QuantAMMVarianceBasedRule, UpdateRule {
             int256 mixingVariance = _parameters[0][0];
             // calculating (1 − Λ)*Σ^−1(t)
             int256 oneMinusLambda = ONE - mixingVariance;
-            for (uint i; i < _prevWeights.length; ) {
+            for (uint256 i; i < _prevWeights.length;) {
                 int256 precision = ONE.div(newWeights[i]);
                 divisionFactor += precision;
                 newWeights[i] = oneMinusLambda.mul(precision);
@@ -55,7 +56,7 @@ contract MinimumVarianceUpdateRule is QuantAMMVarianceBasedRule, UpdateRule {
             // To avoid intermediate overflows (because of normalization), we only downcast in the end to an uint64
             // Divide precision vector by the sum of precisions and add Λw(t - 1)
             // (Λ * w(t − 1)) + ((1 − Λ)*Σ^−1(t)) / N,j=1∑ Σ^−1 j(t)
-            for (uint i; i < _prevWeights.length; ) {
+            for (uint256 i; i < _prevWeights.length;) {
                 int256 res = mixingVariance.mul(int256(_prevWeights[i])) + newWeights[i].div(divisionFactor);
                 newWeightsConverted[i] = res;
                 unchecked {
@@ -64,7 +65,7 @@ contract MinimumVarianceUpdateRule is QuantAMMVarianceBasedRule, UpdateRule {
             }
         } else {
             // calculating (1 − Λ)*Σ^−1(t)
-            for (uint i; i < _prevWeights.length; ) {
+            for (uint256 i; i < _prevWeights.length;) {
                 int256 mixingVariance = _parameters[0][i];
                 int256 oneMinusLambda = ONE - mixingVariance;
                 int256 precision = ONE.div(newWeights[i]);
@@ -77,7 +78,7 @@ contract MinimumVarianceUpdateRule is QuantAMMVarianceBasedRule, UpdateRule {
             // To avoid intermediate overflows (because of normalization), we only downcast in the end to an uint64
             // Divide precision vector by the sum of precisions and add Λw(t - 1)
             // (Λ * w(t − 1)) + ((1 − Λ)*Σ^−1(t)) / N,j=1∑ Σ^−1 j(t)
-            for (uint i; i < _prevWeights.length; ) {
+            for (uint256 i; i < _prevWeights.length;) {
                 int256 mixingVariance = _parameters[0][i];
                 int256 res = mixingVariance.mul(int256(_prevWeights[i])) + newWeights[i].div(divisionFactor);
                 newWeightsConverted[i] = res;
@@ -97,7 +98,7 @@ contract MinimumVarianceUpdateRule is QuantAMMVarianceBasedRule, UpdateRule {
     function _setInitialIntermediateValues(
         address _poolAddress,
         int256[] memory _initialValues,
-        uint _numberOfAssets
+        uint256 _numberOfAssets
     ) internal override {
         _setIntermediateVariance(_poolAddress, _initialValues, _numberOfAssets);
     }
@@ -113,7 +114,7 @@ contract MinimumVarianceUpdateRule is QuantAMMVarianceBasedRule, UpdateRule {
     /// @dev If parameters are not valid, either reverts or returns false
     function validParameters(int256[][] calldata _parameters) external pure override returns (bool) {
         if (_parameters.length == 1 && _parameters[0].length >= 1) {
-            for (uint i; i < _parameters[0].length; ) {
+            for (uint256 i; i < _parameters[0].length;) {
                 if (_parameters[0][i] < 0 || _parameters[0][i] > ONE) {
                     return false;
                 }

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.24;
 
-import { FixedPoint } from "./FixedPoint.sol";
+import {FixedPoint} from "./FixedPoint.sol";
 
 /**
  * @notice Stable Pool math library based on Curve's `StableSwap`.
@@ -68,19 +68,21 @@ library StableMath {
      * @param balances The current balances
      * @return invariant The calculated invariant of the pool
      */
-    function computeInvariant(
-        uint256 amplificationParameter,
-        uint256[] memory balances
-    ) internal pure returns (uint256) {
-        /**********************************************************************************************
-        // invariant                                                                                 //
-        // D = invariant                                                  D^(n+1)                    //
-        // A = amplification coefficient      A  n^n S + D = A D n^n + -----------                   //
-        // S = sum of balances                                             n^n P                     //
-        // P = product of balances                                                                   //
-        // n = number of tokens                                                                      //
-        **********************************************************************************************/
-
+    function computeInvariant(uint256 amplificationParameter, uint256[] memory balances)
+        internal
+        pure
+        returns (uint256)
+    {
+        /**
+         *
+         *     // invariant                                                                                 //
+         *     // D = invariant                                                  D^(n+1)                    //
+         *     // A = amplification coefficient      A  n^n S + D = A D n^n + -----------                   //
+         *     // S = sum of balances                                             n^n P                     //
+         *     // P = product of balances                                                                   //
+         *     // n = number of tokens                                                                      //
+         *
+         */
         uint256 sum = 0; // S in the Curve version
         uint256 numTokens = balances.length;
         for (uint256 i = 0; i < numTokens; ++i) {
@@ -102,10 +104,9 @@ library StableMath {
 
             prevInvariant = invariant;
 
-            invariant =
-                ((((ampTimesTotal * sum) / AMP_PRECISION) + (D_P * numTokens)) * invariant) /
-                ((((ampTimesTotal - AMP_PRECISION) * invariant) / AMP_PRECISION) + ((numTokens + 1) * D_P));
-
+            invariant = ((((ampTimesTotal * sum) / AMP_PRECISION) + (D_P * numTokens)) * invariant)
+                / ((((ampTimesTotal - AMP_PRECISION) * invariant) / AMP_PRECISION) + ((numTokens + 1) * D_P));
+            //@audit Unchecked Block with Subtraction
             unchecked {
                 // We are explicitly checking the magnitudes here, so can use unchecked math.
                 if (invariant > prevInvariant) {
@@ -140,18 +141,19 @@ library StableMath {
         uint256 tokenAmountIn,
         uint256 invariant
     ) internal pure returns (uint256) {
-        /**************************************************************************************************************
-        // outGivenExactIn token x for y - polynomial equation to solve                                              //
-        // ay = amount out to calculate                                                                              //
-        // by = balance token out                                                                                    //
-        // y = by - ay (finalBalanceOut)                                                                             //
-        // D = invariant                                               D                     D^(n+1)                 //
-        // A = amplification coefficient               y^2 + ( S + ----------  - D) * y -  ------------- = 0         //
-        // n = number of tokens                                    (A * n^n)               A * n^2n * P              //
-        // S = sum of final balances but y                                                                           //
-        // P = product of final balances but y                                                                       //
-        **************************************************************************************************************/
-
+        /**
+         *
+         *     // outGivenExactIn token x for y - polynomial equation to solve                                              //
+         *     // ay = amount out to calculate                                                                              //
+         *     // by = balance token out                                                                                    //
+         *     // y = by - ay (finalBalanceOut)                                                                             //
+         *     // D = invariant                                               D                     D^(n+1)                 //
+         *     // A = amplification coefficient               y^2 + ( S + ----------  - D) * y -  ------------- = 0         //
+         *     // n = number of tokens                                    (A * n^n)               A * n^2n * P              //
+         *     // S = sum of final balances but y                                                                           //
+         *     // P = product of final balances but y                                                                       //
+         *
+         */
         balances[tokenIndexIn] += tokenAmountIn;
 
         // `computeBalance` rounds up.
@@ -186,18 +188,19 @@ library StableMath {
         uint256 tokenAmountOut,
         uint256 invariant
     ) internal pure returns (uint256) {
-        /**************************************************************************************************************
-        // inGivenExactOut token x for y - polynomial equation to solve                                              //
-        // ax = amount in to calculate                                                                               //
-        // bx = balance token in                                                                                     //
-        // x = bx + ax (finalBalanceIn)                                                                              //
-        // D = invariant                                                D                     D^(n+1)                //
-        // A = amplification coefficient               x^2 + ( S + ----------  - D) * x -  ------------- = 0         //
-        // n = number of tokens                                     (A * n^n)               A * n^2n * P             //
-        // S = sum of final balances but x                                                                           //
-        // P = product of final balances but x                                                                       //
-        **************************************************************************************************************/
-
+        /**
+         *
+         *     // inGivenExactOut token x for y - polynomial equation to solve                                              //
+         *     // ax = amount in to calculate                                                                               //
+         *     // bx = balance token in                                                                                     //
+         *     // x = bx + ax (finalBalanceIn)                                                                              //
+         *     // D = invariant                                                D                     D^(n+1)                //
+         *     // A = amplification coefficient               x^2 + ( S + ----------  - D) * x -  ------------- = 0         //
+         *     // n = number of tokens                                     (A * n^n)               A * n^2n * P             //
+         *     // S = sum of final balances but x                                                                           //
+         *     // P = product of final balances but x                                                                       //
+         *
+         */
         balances[tokenIndexOut] -= tokenAmountOut;
 
         // `computeBalance` rounds up.
@@ -254,7 +257,7 @@ library StableMath {
 
             // Use divUpRaw with tokenBalance, as it is a "raw" 36 decimal value.
             tokenBalance = ((tokenBalance * tokenBalance) + c).divUpRaw((tokenBalance * 2) + b - invariant);
-
+            //@audit Unchecked Block with Subtraction
             // We are explicitly checking the magnitudes here, so can use unchecked math.
             unchecked {
                 if (tokenBalance > prevTokenBalance) {

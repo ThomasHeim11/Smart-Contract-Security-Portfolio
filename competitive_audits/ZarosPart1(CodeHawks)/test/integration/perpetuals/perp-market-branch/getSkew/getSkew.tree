@@ -1,3 +1,0 @@
-GetSkew_Integration_Test
-└── given there's a position created
-    └── it should return the skew

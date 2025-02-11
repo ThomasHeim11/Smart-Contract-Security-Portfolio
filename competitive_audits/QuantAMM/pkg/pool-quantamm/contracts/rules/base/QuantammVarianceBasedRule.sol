@@ -15,7 +15,7 @@ contract QuantAMMVarianceBasedRule is ScalarRuleQuantAMMStorage {
     int256 private constant TENPOWEIGHTEEN = (10 ** 18);
 
     bool private immutable _protectedAccess;
-    
+
     // Key is the pool address and stores the intermediate variance state in a packed array of 128 bit integers
     mapping(address => int256[]) internal intermediateVarianceStates;
 
@@ -48,17 +48,16 @@ contract QuantAMMVarianceBasedRule is ScalarRuleQuantAMMStorage {
     /// @notice Calculates the new variances vector given the intermediate state, i.e. the diagonal entries of Σ(t) = (1 - λ)A(t)
     /// @param _newData p(t)
     /// @param _poolParameters _movingAverage p̅(t), _lambda λ, _numberOfAssets number of assets in the pool, _pool the target pool address
-    function _calculateQuantAMMVariance(
-        int256[] memory _newData,
-        QuantAMMPoolParameters memory _poolParameters
-    ) internal returns (int256[] memory) {
+    function _calculateQuantAMMVariance(int256[] memory _newData, QuantAMMPoolParameters memory _poolParameters)
+        internal
+        returns (int256[] memory)
+    {
         QuantAMMVarianceLocals memory locals;
         locals.n = _poolParameters.numberOfAssets;
         locals.finalState = new int256[](locals.n);
-        locals.intermediateVarianceState = _quantAMMUnpack128Array(
-            intermediateVarianceStates[_poolParameters.pool],
-            locals.n
-        );
+        //@audit olympix: External call potenial out of gas
+        locals.intermediateVarianceState =
+            _quantAMMUnpack128Array(intermediateVarianceStates[_poolParameters.pool], locals.n);
         locals.nMinusOne = locals.n - 1;
         locals.notDivisibleByTwo = locals.n % 2 != 0;
         locals.convertedLambda = int256(_poolParameters.lambda[0]);
@@ -75,14 +74,13 @@ contract QuantAMMVarianceBasedRule is ScalarRuleQuantAMMStorage {
                 }
             }
 
-            for (uint i; i < locals.nMinusOne; ) {
+            for (uint256 i; i < locals.nMinusOne;) {
                 // Intermediate states are calculated in pairs to then SSTORE as we go along saving gas from a redundant SSTORE of length if we did the whole array
                 // calculating and storing in the same loop also saves loop costs
-                locals.intermediateState =
-                    locals.convertedLambda.mul(locals.intermediateVarianceState[i]) +
-                    (_newData[i] - _poolParameters.movingAverage[locals.n + i])
-                        .mul(_newData[i] - _poolParameters.movingAverage[i])
-                        .div(TENPOWEIGHTEEN); // p(t) - p̅(t - 1))_i * (p(t) - p̅(t))_i
+                locals.intermediateState = locals.convertedLambda.mul(locals.intermediateVarianceState[i])
+                    + (_newData[i] - _poolParameters.movingAverage[locals.n + i]).mul(
+                        _newData[i] - _poolParameters.movingAverage[i]
+                    ).div(TENPOWEIGHTEEN); // p(t) - p̅(t - 1))_i * (p(t) - p̅(t))_i
 
                 locals.intermediateVarianceState[i] = locals.intermediateState;
                 locals.finalState[i] = locals.oneMinusLambda.mul(locals.intermediateState);
@@ -91,16 +89,16 @@ contract QuantAMMVarianceBasedRule is ScalarRuleQuantAMMStorage {
                     locals.secondIndex = i + 1;
                 }
 
-                locals.intermediateState =
-                    locals.convertedLambda.mul(locals.intermediateVarianceState[locals.secondIndex]) +
-                    (_newData[locals.secondIndex] - _poolParameters.movingAverage[locals.n + locals.secondIndex])
-                        .mul(_newData[locals.secondIndex] - _poolParameters.movingAverage[locals.secondIndex])
-                        .div(TENPOWEIGHTEEN); // p(t) - p̅(t - 1))_i * (p(t) - p̅(t))_i
+                locals.intermediateState = locals.convertedLambda.mul(
+                    locals.intermediateVarianceState[locals.secondIndex]
+                )
+                    + (_newData[locals.secondIndex] - _poolParameters.movingAverage[locals.n + locals.secondIndex]).mul(
+                        _newData[locals.secondIndex] - _poolParameters.movingAverage[locals.secondIndex]
+                    ).div(TENPOWEIGHTEEN); // p(t) - p̅(t - 1))_i * (p(t) - p̅(t))_i
 
                 locals.intermediateVarianceState[locals.secondIndex] = locals.intermediateState;
                 intermediateVarianceStates[_poolParameters.pool][locals.storageIndex] = _quantAMMPackTwo128(
-                    locals.intermediateVarianceState[i],
-                    locals.intermediateVarianceState[locals.secondIndex]
+                    locals.intermediateVarianceState[i], locals.intermediateVarianceState[locals.secondIndex]
                 );
 
                 locals.finalState[locals.secondIndex] = locals.oneMinusLambda.mul(locals.intermediateState);
@@ -115,30 +113,30 @@ contract QuantAMMVarianceBasedRule is ScalarRuleQuantAMMStorage {
                 unchecked {
                     ++locals.nMinusOne;
                 }
-                locals.intermediateState =
-                    locals.convertedLambda.mul(locals.intermediateVarianceState[locals.nMinusOne]) +
-                    (_newData[locals.nMinusOne] - _poolParameters.movingAverage[locals.n + locals.nMinusOne])
-                        .mul(_newData[locals.nMinusOne] - _poolParameters.movingAverage[locals.nMinusOne])
-                        .div(TENPOWEIGHTEEN); // p(t) - p̅(t - 1))_i * (p(t) - p̅(t))_i
+                locals.intermediateState = locals.convertedLambda.mul(
+                    locals.intermediateVarianceState[locals.nMinusOne]
+                )
+                    + (_newData[locals.nMinusOne] - _poolParameters.movingAverage[locals.n + locals.nMinusOne]).mul(
+                        _newData[locals.nMinusOne] - _poolParameters.movingAverage[locals.nMinusOne]
+                    ).div(TENPOWEIGHTEEN); // p(t) - p̅(t - 1))_i * (p(t) - p̅(t))_i
 
                 locals.intermediateVarianceState[locals.nMinusOne] = locals.intermediateState;
                 locals.finalState[locals.nMinusOne] = locals.oneMinusLambda.mul(locals.intermediateState);
-                intermediateVarianceStates[_poolParameters.pool][locals.storageIndex] = locals
-                    .intermediateVarianceState[locals.nMinusOne];
+                intermediateVarianceStates[_poolParameters.pool][locals.storageIndex] =
+                    locals.intermediateVarianceState[locals.nMinusOne];
             }
         } else {
             //vector parameter calculation is the same but we have to keep track of and access the right vector parameter
-            for (uint i; i < locals.nMinusOne; ) {
+            for (uint256 i; i < locals.nMinusOne;) {
                 unchecked {
                     locals.convertedLambda = int256(_poolParameters.lambda[i]);
                     locals.oneMinusLambda = ONE - locals.convertedLambda;
                 }
                 // p(t) - p̅(t - 1))_i * (p(t) - p̅(t))_i
-                locals.intermediateState =
-                    locals.convertedLambda.mul(locals.intermediateVarianceState[i]) +
-                    (_newData[i] - _poolParameters.movingAverage[locals.n + i])
-                        .mul(_newData[i] - _poolParameters.movingAverage[i])
-                        .div(TENPOWEIGHTEEN);
+                locals.intermediateState = locals.convertedLambda.mul(locals.intermediateVarianceState[i])
+                    + (_newData[i] - _poolParameters.movingAverage[locals.n + i]).mul(
+                        _newData[i] - _poolParameters.movingAverage[i]
+                    ).div(TENPOWEIGHTEEN);
 
                 locals.intermediateVarianceState[i] = locals.intermediateState;
                 locals.finalState[i] = locals.oneMinusLambda.mul(locals.intermediateState);
@@ -149,17 +147,17 @@ contract QuantAMMVarianceBasedRule is ScalarRuleQuantAMMStorage {
                     locals.oneMinusLambda = ONE - locals.convertedLambda;
                 }
                 // p(t) - p̅(t - 1))_i * (p(t) - p̅(t))_i
-                locals.intermediateState =
-                    locals.convertedLambda.mul(locals.intermediateVarianceState[locals.secondIndex]) +
-                    (_newData[locals.secondIndex] - _poolParameters.movingAverage[locals.n + locals.secondIndex])
-                        .mul(_newData[locals.secondIndex] - _poolParameters.movingAverage[locals.secondIndex])
-                        .div(TENPOWEIGHTEEN);
+                locals.intermediateState = locals.convertedLambda.mul(
+                    locals.intermediateVarianceState[locals.secondIndex]
+                )
+                    + (_newData[locals.secondIndex] - _poolParameters.movingAverage[locals.n + locals.secondIndex]).mul(
+                        _newData[locals.secondIndex] - _poolParameters.movingAverage[locals.secondIndex]
+                    ).div(TENPOWEIGHTEEN);
 
                 locals.intermediateVarianceState[locals.secondIndex] = locals.intermediateState;
 
                 intermediateVarianceStates[_poolParameters.pool][locals.storageIndex] = _quantAMMPackTwo128(
-                    locals.intermediateVarianceState[i],
-                    locals.intermediateVarianceState[locals.secondIndex]
+                    locals.intermediateVarianceState[i], locals.intermediateVarianceState[locals.secondIndex]
                 );
                 locals.finalState[locals.secondIndex] = locals.oneMinusLambda.mul(locals.intermediateState);
 
@@ -175,16 +173,17 @@ contract QuantAMMVarianceBasedRule is ScalarRuleQuantAMMStorage {
                     locals.convertedLambda = int256(_poolParameters.lambda[locals.nMinusOne]);
                     locals.oneMinusLambda = ONE - locals.convertedLambda;
                 }
-                locals.intermediateState =
-                    locals.convertedLambda.mul(locals.intermediateVarianceState[locals.nMinusOne]) +
-                    (_newData[locals.nMinusOne] - _poolParameters.movingAverage[locals.n + locals.nMinusOne])
-                        .mul(_newData[locals.nMinusOne] - _poolParameters.movingAverage[locals.nMinusOne])
-                        .div(TENPOWEIGHTEEN); // p(t) - p̅(t - 1))_i * (p(t) - p̅(t))_i
+                locals.intermediateState = locals.convertedLambda.mul(
+                    locals.intermediateVarianceState[locals.nMinusOne]
+                )
+                    + (_newData[locals.nMinusOne] - _poolParameters.movingAverage[locals.n + locals.nMinusOne]).mul(
+                        _newData[locals.nMinusOne] - _poolParameters.movingAverage[locals.nMinusOne]
+                    ).div(TENPOWEIGHTEEN); // p(t) - p̅(t - 1))_i * (p(t) - p̅(t))_i
 
                 locals.intermediateVarianceState[locals.nMinusOne] = locals.intermediateState;
                 locals.finalState[locals.nMinusOne] = locals.oneMinusLambda.mul(locals.intermediateState);
-                intermediateVarianceStates[_poolParameters.pool][locals.storageIndex] = locals
-                    .intermediateVarianceState[locals.nMinusOne];
+                intermediateVarianceStates[_poolParameters.pool][locals.storageIndex] =
+                    locals.intermediateVarianceState[locals.nMinusOne];
             }
         }
 
@@ -194,15 +193,14 @@ contract QuantAMMVarianceBasedRule is ScalarRuleQuantAMMStorage {
     /// @param _poolAddress the target pool address
     /// @param _initialValues the initial variance values
     /// @param _numberOfAssets the number of assets in the pool
-    function _setIntermediateVariance(
-        address _poolAddress,
-        int256[] memory _initialValues,
-        uint _numberOfAssets
-    ) internal {
-        uint storeLength = intermediateVarianceStates[_poolAddress].length;
+    function _setIntermediateVariance(address _poolAddress, int256[] memory _initialValues, uint256 _numberOfAssets)
+        internal
+    {
+        uint256 storeLength = intermediateVarianceStates[_poolAddress].length;
 
         if ((storeLength == 0 && _initialValues.length == _numberOfAssets) || _initialValues.length == storeLength) {
             //should be during create pool
+            //@audit olympix: External call potenial out of gas
             intermediateVarianceStates[_poolAddress] = _quantAMMPack128Array(_initialValues);
         } else {
             revert("Invalid set variance");

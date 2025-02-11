@@ -44,24 +44,23 @@ abstract contract QuantAMMCovarianceBasedRule is VectorRuleQuantAMMStorage {
     /// @param _newData p(t)
     /// @param _poolParameters pool parameters
     /// @return newState new state of the covariance matrix
-    function _calculateQuantAMMCovariance(
-        int256[]  memory _newData,
-        QuantAMMPoolParameters memory _poolParameters
-    ) internal returns (int256[][] memory) {
+    function _calculateQuantAMMCovariance(int256[] memory _newData, QuantAMMPoolParameters memory _poolParameters)
+        internal
+        returns (int256[][] memory)
+    {
         QuantAMMCovariance memory locals;
         locals.n = _poolParameters.numberOfAssets; // Dimension of square matrix
         locals.nSquared = locals.n * locals.n;
-        int256[][] memory intermediateCovarianceState = _quantAMMUnpack128Matrix(
-            intermediateCovarianceStates[_poolParameters.pool],
-            locals.n
-        );
+        //@audit olympix: External call potenial out of gas
+        int256[][] memory intermediateCovarianceState =
+            _quantAMMUnpack128Matrix(intermediateCovarianceStates[_poolParameters.pool], locals.n);
 
         int256[][] memory newState = new int256[][](locals.nSquared);
 
         locals.u = new int256[](locals.n); // (p(t) - p̅(t - 1))
         locals.v = new int256[](locals.n); // (p(t) - p̅(t))
 
-        for (uint i; i < locals.n; ) {
+        for (uint256 i; i < locals.n;) {
             locals.u[i] = _newData[i] - _poolParameters.movingAverage[i + locals.n];
             locals.v[i] = _newData[i] - _poolParameters.movingAverage[i];
             unchecked {
@@ -76,14 +75,13 @@ abstract contract QuantAMMCovarianceBasedRule is VectorRuleQuantAMMStorage {
                 locals.convertedLambda = int256(_poolParameters.lambda[0]);
                 locals.oneMinusLambda = ONE - locals.convertedLambda;
             }
-            for (uint i; i < locals.n; ) {
+            for (uint256 i; i < locals.n;) {
                 newState[i] = new int256[](locals.n);
-                for (uint j; j < locals.n; ) {
+                for (uint256 j; j < locals.n;) {
                     //Better to do this item by item saving 2 SSTORES by not changing the length
                     // locals.u and locals.v are in 18 decimals, need to scale back the result to 18 decimals
-                    locals.intermediateState =
-                        locals.convertedLambda.mul(intermediateCovarianceState[i][j]) +
-                        locals.u[i].mul(locals.v[j]).div(TENPOWEIGHTEEN); // i is the row, j the column -> u_i * v_j the result of the outer product.
+                    locals.intermediateState = locals.convertedLambda.mul(intermediateCovarianceState[i][j])
+                        + locals.u[i].mul(locals.v[j]).div(TENPOWEIGHTEEN); // i is the row, j the column -> u_i * v_j the result of the outer product.
 
                     newState[i][j] = locals.intermediateState.mul(locals.oneMinusLambda);
                     intermediateCovarianceState[i][j] = locals.intermediateState;
@@ -97,18 +95,17 @@ abstract contract QuantAMMCovarianceBasedRule is VectorRuleQuantAMMStorage {
             }
         } else {
             //vector calculation the same apart from accessing the lambda array for each element
-            for (uint i; i < locals.n; ) {
+            for (uint256 i; i < locals.n;) {
                 unchecked {
                     locals.convertedLambda = int256(_poolParameters.lambda[i]);
                     locals.oneMinusLambda = ONE - locals.convertedLambda;
                 }
                 newState[i] = new int256[](locals.n);
-                for (uint j; j < locals.n; ) {
+                for (uint256 j; j < locals.n;) {
                     //Better to do this item by item saving 2 SSTORES by not changing the length
                     // locals.u and locals.v are in 18 decimals, need to scale back the result to 18 decimals
-                    locals.intermediateState =
-                        locals.convertedLambda.mul(intermediateCovarianceState[i][j]) +
-                        locals.u[i].mul(locals.v[j]).div(TENPOWEIGHTEEN); // i is the row, j the column -> u_i * v_j the result of the outer product.
+                    locals.intermediateState = locals.convertedLambda.mul(intermediateCovarianceState[i][j])
+                        + locals.u[i].mul(locals.v[j]).div(TENPOWEIGHTEEN); // i is the row, j the column -> u_i * v_j the result of the outer product.
                     newState[i][j] = locals.intermediateState.mul(locals.oneMinusLambda);
                     intermediateCovarianceState[i][j] = locals.intermediateState;
                     unchecked {
@@ -129,14 +126,12 @@ abstract contract QuantAMMCovarianceBasedRule is VectorRuleQuantAMMStorage {
     /// @param _poolAddress the pool address being initialised
     /// @param _initialValues the values passed in during the creation of the pool
     /// @param _numberOfAssets  the number of assets in the pool being initialised
-    function _setIntermediateCovariance(
-        address _poolAddress,
-        int256[][] memory _initialValues,
-        uint _numberOfAssets
-    ) internal {
-        uint storeLength = intermediateCovarianceStates[_poolAddress].length;
+    function _setIntermediateCovariance(address _poolAddress, int256[][] memory _initialValues, uint256 _numberOfAssets)
+        internal
+    {
+        uint256 storeLength = intermediateCovarianceStates[_poolAddress].length;
         if ((storeLength == 0 && _initialValues.length == _numberOfAssets) || _initialValues.length == storeLength) {
-            for (uint i; i < _numberOfAssets; ) {
+            for (uint256 i; i < _numberOfAssets;) {
                 require(_initialValues[i].length == _numberOfAssets, "Bad init covar row");
                 unchecked {
                     ++i;
@@ -146,9 +141,8 @@ abstract contract QuantAMMCovarianceBasedRule is VectorRuleQuantAMMStorage {
                 if ((_numberOfAssets * _numberOfAssets) % 2 == 0) {
                     intermediateCovarianceStates[_poolAddress] = new int256[]((_numberOfAssets * _numberOfAssets) / 2);
                 } else {
-                    intermediateCovarianceStates[_poolAddress] = new int256[](
-                        (((_numberOfAssets * _numberOfAssets) - 1) / 2) + 1
-                    );
+                    intermediateCovarianceStates[_poolAddress] =
+                        new int256[]((((_numberOfAssets * _numberOfAssets) - 1) / 2) + 1);
                 }
             }
 
